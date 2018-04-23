@@ -1,0 +1,9 @@
+[Section:	Alias	]
+PATH1	/data7/DATA/SKFlat
+
+[Section:	DATA	]
+DoubleMuon	PATH1/DATA/DoubleMuon/
+DoubleEG	PATH1/DATA/DoubleEG/
+
+[Section:	MC	]
+
