@@ -14,9 +14,24 @@ void SKFlatValidation::executeEvent(){
 
       Particle METv = ev.GetMETVector();
 
-      FillHist("DiMuon_mass_DiMuon_OS", (mu[0]+mu[1]).M(), 1., 500, 0., 500.);
+      Particle Z = mu[0]+mu[1];
+
       FillHist("MET_DiMuon_OS", METv.Pt(), 1., 500, 0., 500.);
       FillHist("METphi_DiMuon_OS", METv.Phi(), 1., 60, -3., 3.);
+
+      FillHist("Lepton_0_Pt_DiMuon_OS", mu[0].Pt(), 1., 500, 0., 500.);
+      FillHist("Lepton_0_Eta_DiMuon_OS", mu[0].Eta(), 1., 60, -3., 3.);
+      FillHist("Lepton_0_RelIso_DiMuon_OS", mu[0].RelIso(), 1., 100, 0., 1.);
+
+      FillHist("Lepton_1_Pt_DiMuon_OS", mu[1].Pt(), 1., 500, 0., 500.);
+      FillHist("Lepton_1_Eta_DiMuon_OS", mu[1].Eta(), 1., 60, -3., 3.);
+      FillHist("Lepton_1_RelIso_DiMuon_OS", mu[1].RelIso(), 1., 100, 0., 1.);
+
+      FillHist("Z_Mass_DiMuon_OS", Z.M(), 1., 500, 0., 500.);
+      FillHist("Z_Pt_DiMuon_OS", Z.Pt(), 1., 500, 0., 500.);
+      FillHist("Z_Eta_DiMuon_OS", Z.Eta(), 1., 60, -3., 3.);
+
+
     }
   }
 

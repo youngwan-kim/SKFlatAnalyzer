@@ -93,9 +93,9 @@ now = datetime.datetime.now()
 timestamp =  now.strftime('%Y_%m_%d_%H%M%S')
 
 ## Prepair output
-base_rundir = SKFlatRunlogDir+'/'+timestamp+'/'+args.InputSample
+base_rundir = SKFlatRunlogDir+'/'+timestamp+'__'+args.InputSample
 if IsDATA:
-  base_rundir = base_rundir+'/period'+args.DataPeriod+'/'
+  base_rundir = base_rundir+'__period'+args.DataPeriod+'/'
 
 CheckTotalNFile=0
 for it_job in range(0,len(FileRanges)):
@@ -120,9 +120,9 @@ void run(){{
 '''.format(args.Analyzer)
 
   if IsDATA:
-    out.write('  m.IsThisDataFile = true\n')
+    out.write('  m.IsThisDataFile = true;\n')
   else:
-    out.write('  m.IsThisDataFile = false\n')
+    out.write('  m.IsThisDataFile = false;\n')
 
   out.write('  m.SetOutfilePath("'+thisjob_dir+'/hists.root");\n')
 
