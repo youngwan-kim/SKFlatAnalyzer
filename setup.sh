@@ -1,11 +1,16 @@
 #!/bin/bash
-export PLOTTER_WORKING_DIR=`pwd`
-export OUTPUTDIR=$PLOTTER_WORKING_DIR/outputs/
-export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$PLOTTER_WORKING_DIR/include/:$PLOTTER_WORKING_DIR/src/
+export SKFlat_WD=`pwd`
+export OUTPUTDIR=$SKFlat_WD/outputs/
+export SKFlat_LIB_PATH=$SKFlat_WD/lib/
+
+#export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/Analysis/include/:$SKFlat_WD/PhysicsObjects/include/
+export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/include/:$SKFlat_WD/src/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH
+
 export SKFlatV="v9-4-4.1"
 export SKFlatAnV="v9-4-4.1__1"
-export DATA_DIR=$PLOTTER_WORKING_DIR/data/$SKFlatAnV
+export DATA_DIR=$SKFlat_WD/data/$SKFlatAnV
 mkdir -p $DATA_DIR
 export SKFlatRunlogDir="/data7/Users/jskim/SKFlatRunlog/"
-export MYBIN=$PLOTTER_WORKING_DIR/bin/
+export MYBIN=$SKFlat_WD/bin/
 export PATH=${MYBIN}:${PATH}

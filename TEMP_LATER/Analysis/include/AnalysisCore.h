@@ -3,8 +3,9 @@
 
 #include "TLorentzVector.h"
 #include "TString.h"
+#include "TH1.h"
 
-#include "SKFlatNtuple.C"
+#include "SKFlatNtuple.h"
 #include "Event.h"
 #include "Particle.h"
 #include "Lepton.h"

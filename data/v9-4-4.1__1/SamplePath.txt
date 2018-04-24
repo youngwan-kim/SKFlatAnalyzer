@@ -6,4 +6,4 @@ DoubleMuon	PATH1/DATA/DoubleMuon/
 DoubleEG	PATH1/DATA/DoubleEG/
 
 [Section:	MC	]
-
+DYJets_10to50_MG	PATH1/MC/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8/	1579.07190	-1	-1	-1
