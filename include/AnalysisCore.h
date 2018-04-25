@@ -9,6 +9,7 @@
 #include "Particle.h"
 #include "Lepton.h"
 #include "Muon.h"
+#include "Electron.h"
 
 class AnalysisCore: public SKFlatNtuple {
 
@@ -18,8 +19,12 @@ public:
   ~AnalysisCore();
 
   Event GetEvent();
+
   std::vector<Muon> GetAllMuons();
   std::vector<Muon> GetMuons(TString id, double ptmin=-999., double fetamax=999.);
+
+  std::vector<Electron> GetAllElectrons();
+  std::vector<Electron> GetElectrons(TString id, double ptmin=-999., double fetamax=999.);
 
   virtual void executeEvent(){
 

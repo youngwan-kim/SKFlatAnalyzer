@@ -4,6 +4,7 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TString.h>
 
 // Header file for the classes stored in the TTree if any.
 #include <vector>
@@ -29,6 +30,8 @@ public :
 
    Long64_t MaxEvent;
    bool IsThisDataFile;
+   TString DataStream;
+
    virtual void Init();
    virtual void Loop();
 
@@ -288,6 +291,7 @@ public :
    vector<double>  *muon_phi;
    vector<double>  *muon_eta;
    vector<double>  *muon_pt;
+   vector<double>  *muon_mass;
    vector<double>  *muon_cktpt;
    vector<double>  *muon_cktPx;
    vector<double>  *muon_cktPy;
@@ -705,6 +709,7 @@ public :
    TBranch        *b_muon_phi;   //!
    TBranch        *b_muon_eta;   //!
    TBranch        *b_muon_pt;   //!
+   TBranch        *b_muon_mass;   //!
    TBranch        *b_muon_cktpt;   //!
    TBranch        *b_muon_cktPx;   //!
    TBranch        *b_muon_cktPy;   //!

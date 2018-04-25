@@ -121,6 +121,7 @@ void run(){{
 
   if IsDATA:
     out.write('  m.IsThisDataFile = true;\n')
+    out.write('  m.DataStream = "'+args.InputSample+'";\n')
   else:
     out.write('  m.IsThisDataFile = false;\n')
 

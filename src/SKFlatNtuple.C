@@ -35,6 +35,7 @@ void SKFlatNtuple::Loop(){
 SKFlatNtuple::SKFlatNtuple(){
   MaxEvent = -1;
   IsThisDataFile = false;
+  DataStream = "";
 }
 
 SKFlatNtuple::~SKFlatNtuple()
@@ -277,6 +278,7 @@ void SKFlatNtuple::Init()
    muon_phi = 0;
    muon_eta = 0;
    muon_pt = 0;
+   muon_mass = 0;
    muon_cktpt = 0;
    muon_cktPx = 0;
    muon_cktPy = 0;
@@ -664,6 +666,7 @@ void SKFlatNtuple::Init()
    fChain->SetBranchAddress("muon_phi", &muon_phi, &b_muon_phi);
    fChain->SetBranchAddress("muon_eta", &muon_eta, &b_muon_eta);
    fChain->SetBranchAddress("muon_pt", &muon_pt, &b_muon_pt);
+   fChain->SetBranchAddress("muon_mass", &muon_mass, &b_muon_mass);
    fChain->SetBranchAddress("muon_cktpt", &muon_cktpt, &b_muon_cktpt);
    fChain->SetBranchAddress("muon_cktPx", &muon_cktPx, &b_muon_cktPx);
    fChain->SetBranchAddress("muon_cktPy", &muon_cktPy, &b_muon_cktPy);

@@ -3,36 +3,66 @@
 void SKFlatValidation::executeEvent(){
 
   Event ev = GetEvent();
-  if(!ev.PassTrigger("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8_v")) return;
 
-  std::vector<Muon> muons = GetMuons("TEST",10.,2.4);
-  //cout << muons.size() << endl;
+  bool PassDiMuon = ev.PassTrigger("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8_v");
+  bool PassDiElectron = ev.PassTrigger("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v");
+
+  std::vector<Muon> muons = GetMuons("TEST", 10., 2.4);
+  std::vector<Electron> electrons = GetElectrons("passMVAID_iso_WP80", 10., 2.5);
  
-  if(muons.size()==2){
-    Muon mu[2] = {muons.at(0), muons.at(1)};
-    if(mu[0].Charge()!=mu[1].Charge()){
+  std::map<TString, bool> map_bool_To_Region;
+  map_bool_To_Region["DiMuon"] = PassDiMuon && (muons.size()==2);
+  map_bool_To_Region["DiElectron"] = PassDiElectron && (electrons.size()==2);
 
-      Particle METv = ev.GetMETVector();
+  Particle METv = ev.GetMETVector();
 
-      Particle Z = mu[0]+mu[1];
+  for(std::map<TString, bool>::iterator it_map = map_bool_To_Region.begin(); it_map != map_bool_To_Region.end(); it_map++){
 
-      FillHist("MET_DiMuon_OS", METv.Pt(), 1., 500, 0., 500.);
-      FillHist("METphi_DiMuon_OS", METv.Phi(), 1., 60, -3., 3.);
-
-      FillHist("Lepton_0_Pt_DiMuon_OS", mu[0].Pt(), 1., 500, 0., 500.);
-      FillHist("Lepton_0_Eta_DiMuon_OS", mu[0].Eta(), 1., 60, -3., 3.);
-      FillHist("Lepton_0_RelIso_DiMuon_OS", mu[0].RelIso(), 1., 100, 0., 1.);
-
-      FillHist("Lepton_1_Pt_DiMuon_OS", mu[1].Pt(), 1., 500, 0., 500.);
-      FillHist("Lepton_1_Eta_DiMuon_OS", mu[1].Eta(), 1., 60, -3., 3.);
-      FillHist("Lepton_1_RelIso_DiMuon_OS", mu[1].RelIso(), 1., 100, 0., 1.);
-
-      FillHist("Z_Mass_DiMuon_OS", Z.M(), 1., 500, 0., 500.);
-      FillHist("Z_Pt_DiMuon_OS", Z.Pt(), 1., 500, 0., 500.);
-      FillHist("Z_Eta_DiMuon_OS", Z.Eta(), 1., 60, -3., 3.);
-
-
+/*
+    if(this->DataStream == "DoubleMuon"){
+      if(!( this_region.Contains("Muon") )) continue;
     }
+    if(this->DataStream == "DoubleEG"){
+      if(!( this_region.Contains("Electron") )) continue;
+    }
+*/
+
+    TString this_region = it_map->first;
+    if(it_map->second){
+
+      Lepton lep[2];
+      if(this_region.Contains("Muon")){
+        lep[0] = muons.at(0);
+        lep[1] = muons.at(1);
+      }
+      if(this_region.Contains("Electron")){
+        lep[0] = electrons.at(0);
+        lep[1] = electrons.at(1);
+      }
+
+      if(lep[0].Charge()!=lep[1].Charge()){
+
+        Particle Z = lep[0]+lep[1];
+
+        FillHist("MET_"+this_region, METv.Pt(), 1., 500, 0., 500.);
+        FillHist("METphi_"+this_region, METv.Phi(), 1., 60, -3., 3.);
+
+        FillHist("Lepton_0_Pt_"+this_region, lep[0].Pt(), 1., 500, 0., 500.);
+        FillHist("Lepton_0_Eta_"+this_region, lep[0].Eta(), 1., 60, -3., 3.);
+        FillHist("Lepton_0_RelIso_"+this_region, lep[0].RelIso(), 1., 100, 0., 1.);
+
+        FillHist("Lepton_1_Pt_"+this_region, lep[1].Pt(), 1., 500, 0., 500.);
+        FillHist("Lepton_1_Eta_"+this_region, lep[1].Eta(), 1., 60, -3., 3.);
+        FillHist("Lepton_1_RelIso_"+this_region, lep[1].RelIso(), 1., 100, 0., 1.);
+
+        FillHist("Z_Mass_"+this_region, Z.M(), 1., 500, 0., 500.);
+        FillHist("Z_Pt_"+this_region, Z.Pt(), 1., 500, 0., 500.);
+        FillHist("Z_Eta_"+this_region, Z.Eta(), 1., 60, -3., 3.);
+
+
+      }
+    }
+
   }
 
 }

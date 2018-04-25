@@ -31,7 +31,7 @@ std::vector<Muon> AnalysisCore::GetAllMuons(){
   for(unsigned int i=0; i<muon_pt->size(); i++){
 
     Muon mu;
-    mu.SetPtEtaPhiM(muon_pt->at(i), muon_eta->at(i), muon_phi->at(i), 0.1057); //FIXME should use muon_mass
+    mu.SetPtEtaPhiM(muon_pt->at(i), muon_eta->at(i), muon_phi->at(i), muon_mass->at(i));
     mu.SetCharge(muon_charge->at(i));
     mu.SetdXY(muon_dxyVTX->at(i));
     mu.SetdZ(muon_dzVTX->at(i));
@@ -63,6 +63,61 @@ std::vector<Muon> AnalysisCore::GetMuons(TString id, double ptmin, double fetama
       continue;
     }
     out.push_back(this_muon);
+  }
+  return out;
+
+}
+
+std::vector<Electron> AnalysisCore::GetAllElectrons(){
+
+  std::vector<Electron> out;
+  for(unsigned int i=0; i<electron_pt->size(); i++){
+
+
+    Electron el;
+    el.SetPtEtaPhiE(electron_pt->at(i), electron_eta->at(i), electron_phi->at(i), electron_Energy->at(i));
+    el.SetCharge(electron_charge->at(i));
+    el.SetdXY(electron_dxyVTX->at(i));
+    el.SetdZ(electron_dzVTX->at(i));
+    std::vector<bool> ids = {
+      electron_passVetoID->at(i),
+      electron_passLooseID->at(i),
+      electron_passMediumID->at(i),
+      electron_passTightID->at(i),
+      electron_passMVAID_noIso_WP80->at(i),
+      electron_passMVAID_noIso_WP90->at(i),
+      electron_passMVAID_iso_WP80->at(i),
+      electron_passMVAID_iso_WP90->at(i),
+      electron_passHEEPID->at(i),
+    };
+    el.SetPOGIDs(ids);
+    el.SetRelPFIso_Rho(electron_RelPFIso_Rho->at(i));
+    out.push_back(el);
+
+  }
+  return out;
+
+}
+
+std::vector<Electron> AnalysisCore::GetElectrons(TString id, double ptmin, double fetamax){
+
+  std::vector<Electron> electrons = GetAllElectrons();
+  std::vector<Electron> out;
+  for(unsigned int i=0; i<electrons.size(); i++){
+    Electron this_electron= electrons.at(i);
+    if(!( this_electron.Pt()>ptmin )){
+      //cout << "Fail Pt : pt = " << this_electron.Pt() << ", cut = " << ptmin << endl;
+      continue;
+    }
+    if(!( fabs(this_electron.Eta())<fetamax )){
+      //cout << "Fail Eta : eta = " << fabs(this_electron.Eta()) << ", cut = " << fetamax << endl;
+      continue;
+    }
+    if(!( this_electron.PassID(id) )){
+      //cout << "Fail ID" << endl;
+      continue;
+    }
+    out.push_back(this_electron);
   }
   return out;
 
