@@ -10,10 +10,12 @@ public:
   ~Event();
 
   void SetMCweight(double genw);
+  inline double MCweight() const {return j_MCweight;}
 
   void SetTrigger(vector<string> HLT_TriggerName, vector<bool> HLT_TriggerFired);
   bool PassTrigger(std::string trig);
   bool PassTrigger(std::vector<std::string> trigs);
+  double GetTriggerLumi(TString trig);
 
   void SetMET(double pt, double px, double py);
   inline Particle GetMETVector() const {return j_METVector;}
@@ -74,6 +76,16 @@ bool Event::PassTrigger(std::vector<std::string> trigs){
 
   }
   return false;
+}
+
+double Event::GetTriggerLumi(TString trig){
+
+  if(trig=="Full"){
+    return 41296.465;
+  }
+
+  return 41296.465;
+
 }
 
 void Event::SetMET(double pt, double px, double py){

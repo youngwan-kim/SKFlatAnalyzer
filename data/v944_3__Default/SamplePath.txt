@@ -5,5 +5,9 @@ PATH1	/data7/DATA/SKFlat
 DoubleMuon	PATH1/DATA/DoubleMuon/
 DoubleEG	PATH1/DATA/DoubleEG/
 
-[Section:	MC	]
-DYJets_10to50_MG	PATH1/MC/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8/	1579.07190	-1	-1	-1
+[Section:	MC	] ## alias path xsec nmc sumw
+DYJets_10to50_MG	PATH1/MC/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8/	18610.	38777460	38746500
+TTLL_powheg	PATH1/MC/TTTo2L2Nu_TuneCP5_PSweights_13TeV-powheg-pythia8	88.29	69705556	69141160
+WW_pythia	PATH1/MC/WW_TuneCP5_13TeV-pythia8	118.7	7547472	7547472
+WZ_pythia PATH1/MC/WZ_TuneCP5_13TeV-pythia8 47.13	3928515	3928515
+ZZ_pythia PATH1/MC/ZZ_TuneCP5_13TeV-pythia8 16.523 1949719	1949719

@@ -9,6 +9,8 @@
 // Header file for the classes stored in the TTree if any.
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
@@ -31,6 +33,8 @@ public :
    Long64_t MaxEvent;
    bool IsThisDataFile;
    TString DataStream;
+   TString MCSample;
+   double weight_norm_1invfb;
 
    virtual void Init();
    virtual void Loop();
@@ -38,6 +42,15 @@ public :
    virtual void executeEvent(){
 
    };
+
+   std::string printcurrunttime(){
+
+     std::stringstream out;
+     TDatime datime;
+     out << datime.GetYear()<<"-"<<datime.GetMonth()<<"-"<<datime.GetDay()<<" "<<datime.GetHour()<<":"<<datime.GetMinute()<<":"<<datime.GetSecond();
+     return out.str();
+
+   }
 
    TChain *fChain;
 

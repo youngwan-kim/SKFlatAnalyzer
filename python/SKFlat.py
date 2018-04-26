@@ -2,6 +2,8 @@ import os,sys
 import argparse
 import datetime
 
+print ''
+
 parser = argparse.ArgumentParser(description='SKFlat Command')
 parser.add_argument('-a', dest='Analyzer', default="")
 parser.add_argument('-i', dest='InputSample', default="")
@@ -58,7 +60,10 @@ for line in lines_SamplePath:
       NtupleFilePath = words[1]
       break
 
-  #if not IsDATA and Samplepath_Section=="MC": TODO
+  if not IsDATA and Samplepath_Section=="MC":
+    if words[0]==args.InputSample:
+      NtupleFilePath = words[1]
+      break
     
 for BaseDir in SampleBaseDirs:
   alias = BaseDir[0]
@@ -93,7 +98,7 @@ now = datetime.datetime.now()
 timestamp =  now.strftime('%Y_%m_%d_%H%M%S')
 
 ## Prepair output
-base_rundir = SKFlatRunlogDir+'/'+timestamp+'__'+args.InputSample
+base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+args.InputSample
 if IsDATA:
   base_rundir = base_rundir+'__period'+args.DataPeriod+'/'
 
@@ -112,7 +117,7 @@ for it_job in range(0,len(FileRanges)):
 
 void run(){{
 
-  SKFlatValidation m;
+  {0} m;
 
   TString outputdir = getenv("OUTPUTDIR");
 
@@ -123,6 +128,7 @@ void run(){{
     out.write('  m.IsThisDataFile = true;\n')
     out.write('  m.DataStream = "'+args.InputSample+'";\n')
   else:
+    out.write('  m.MCSample = "'+args.InputSample+'";\n');
     out.write('  m.IsThisDataFile = false;\n')
 
   out.write('  m.SetOutfilePath("'+thisjob_dir+'/hists.root");\n')
@@ -140,17 +146,17 @@ void run(){{
   out.close()
 
   run_commands = open(thisjob_dir+'commands.sh','w')
-  print>>run_commands,'''echo "cmsset_default.sh"
+  print>>run_commands,'''echo "[SKFlat.py] cmsset_default.sh"
 source /cvmfs/cms.cern.ch/cmsset_default.sh
-echo "Going to $CMSSW_BASE/src"
+echo "[SKFlat.py] Going to $CMSSW_BASE/src"
 cd /data7/Users/jskim/CMSSW_9_4_4/src/
 export SCRAM_ARCH=slc6_amd64_gcc630
-echo "Trying cmsenv"
+echo "[SKFlat.py] Trying cmsenv"
 cmsenv
 cd {0}
-echo "Okay, let's run the analysis"
+echo "[SKFlat.py] Okay, let's run the analysis"
 root -l -b -q run.C
-echo "FINISHED!!"
+echo "[SKFlat.py] JOB FINISHED!!"
 '''.format(thisjob_dir)
   run_commands.close()
 
@@ -160,5 +166,91 @@ echo "FINISHED!!"
   if not args.no_exec:
     cwd = os.getcwd()
     os.chdir(thisjob_dir)
-    os.system(cmd)
+    os.system(cmd+' > submitlog.log')
     os.chdir(cwd)
+  sublog = open(thisjob_dir+'/submitlog.log','a')
+  sublog.write('\nSubmission command was : '+cmd+'\n')
+  sublog.close()
+
+## Submission all done. Now check job status ##
+import time
+time.sleep(1)
+
+from CheckJobStatus import CheckJobStatus
+AllDone = False
+GotError = False
+
+JobStartTime = datetime.datetime.now()
+string_JobStartTime =  JobStartTime.strftime('%Y-%m-%d %H:%M:%S')
+
+while not AllDone:
+  AllDone = True
+  statuslog = open(base_rundir+'/JobStatus.log','w')
+
+  statuslog.write('Job started at '+string_JobStartTime+'\n')
+
+  statuslog.write('JobNumber\t| Status\n')
+
+  runnings = []
+  finished = []
+
+  for it_job in range(0,len(FileRanges)):
+    thisjob_dir = base_rundir+'/'
+    this_status = ""
+    this_status = CheckJobStatus(thisjob_dir, args.Analyzer, it_job)
+
+    if "ERROR" in this_status:
+      GotError = True
+      statuslog.write("#### ERROR OCCURED ####\n")
+      statuslog.write(this_status+'\n')
+      break
+
+    if this_status is not "FINISHED":
+      AllDone = False
+
+    outlog = ""
+    if this_status == "FINISHED":
+      finished.append(outlog)
+    elif "RUNNING" in this_status:
+      outlog = str(it_job)+'\t| '+this_status.split()[1]+' %'
+      runnings.append(outlog)
+    else:
+      outlog = str(it_job)+'\t| '+this_status
+      runnings.append(outlog)
+
+  if GotError:
+    break
+
+  for l in runnings:
+    statuslog.write(l+'\n')
+  statuslog.write('\n==============================================================\n')
+  statuslog.write(str(len(runnings))+' jobs are running\n')
+  statuslog.write(str(len(finished))+' jobs are finished\n')
+
+  ThisTime = datetime.datetime.now()
+  string_ThisTime =  ThisTime.strftime('%Y-%m-%d %H:%M:%S')
+  statuslog.write('Last checket at '+string_ThisTime+'\n')
+
+  statuslog.close()
+  time.sleep(5)
+
+outputname = args.Analyzer+'_'+args.InputSample
+if IsDATA:
+  outputname += '_'+args.DataPeriod
+
+if not GotError:
+  cwd = os.getcwd()
+  os.chdir(thisjob_dir)
+  os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
+  os.chdir(cwd)
+
+
+
+
+
+
+
+
+
+
+

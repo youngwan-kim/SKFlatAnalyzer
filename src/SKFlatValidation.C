@@ -16,6 +16,11 @@ void SKFlatValidation::executeEvent(){
 
   Particle METv = ev.GetMETVector();
 
+  double weight = 1.;
+  if(!IsThisDataFile){
+    weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full");
+  }
+
   for(std::map<TString, bool>::iterator it_map = map_bool_To_Region.begin(); it_map != map_bool_To_Region.end(); it_map++){
 
 /*
@@ -44,20 +49,20 @@ void SKFlatValidation::executeEvent(){
 
         Particle Z = lep[0]+lep[1];
 
-        FillHist("MET_"+this_region, METv.Pt(), 1., 500, 0., 500.);
-        FillHist("METphi_"+this_region, METv.Phi(), 1., 60, -3., 3.);
+        FillHist("MET_"+this_region, METv.Pt(), weight, 500, 0., 500.);
+        FillHist("METphi_"+this_region, METv.Phi(), weight, 60, -3., 3.);
 
-        FillHist("Lepton_0_Pt_"+this_region, lep[0].Pt(), 1., 500, 0., 500.);
-        FillHist("Lepton_0_Eta_"+this_region, lep[0].Eta(), 1., 60, -3., 3.);
-        FillHist("Lepton_0_RelIso_"+this_region, lep[0].RelIso(), 1., 100, 0., 1.);
+        FillHist("Lepton_0_Pt_"+this_region, lep[0].Pt(), weight, 500, 0., 500.);
+        FillHist("Lepton_0_Eta_"+this_region, lep[0].Eta(), weight, 60, -3., 3.);
+        FillHist("Lepton_0_RelIso_"+this_region, lep[0].RelIso(), weight, 100, 0., 1.);
 
-        FillHist("Lepton_1_Pt_"+this_region, lep[1].Pt(), 1., 500, 0., 500.);
-        FillHist("Lepton_1_Eta_"+this_region, lep[1].Eta(), 1., 60, -3., 3.);
-        FillHist("Lepton_1_RelIso_"+this_region, lep[1].RelIso(), 1., 100, 0., 1.);
+        FillHist("Lepton_1_Pt_"+this_region, lep[1].Pt(), weight, 500, 0., 500.);
+        FillHist("Lepton_1_Eta_"+this_region, lep[1].Eta(), weight, 60, -3., 3.);
+        FillHist("Lepton_1_RelIso_"+this_region, lep[1].RelIso(), weight, 100, 0., 1.);
 
-        FillHist("Z_Mass_"+this_region, Z.M(), 1., 500, 0., 500.);
-        FillHist("Z_Pt_"+this_region, Z.Pt(), 1., 500, 0., 500.);
-        FillHist("Z_Eta_"+this_region, Z.Eta(), 1., 60, -3., 3.);
+        FillHist("Z_Mass_"+this_region, Z.M(), weight, 500, 0., 500.);
+        FillHist("Z_Pt_"+this_region, Z.Pt(), weight, 500, 0., 500.);
+        FillHist("Z_Eta_"+this_region, Z.Eta(), weight, 60, -3., 3.);
 
 
       }
