@@ -79,6 +79,9 @@ lines_files = open('tmp_filelist.txt').readlines()
 os.system('rm tmp_filelist.txt')
 NTotalFiles = len(lines_files)
 
+if args.NJobs>NTotalFiles:
+  args.NJobs = NTotalFiles
+
 print "<SKFlat> NTotalFiles = "+str(NTotalFiles)
 print "<SKFlat> NJobs = "+str(args.NJobs)
 nfilepjob = int(NTotalFiles/args.NJobs)

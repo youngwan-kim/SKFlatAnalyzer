@@ -27,7 +27,7 @@ def CheckJobStatus(logfiledir, cycle, jobnumber):
 
   ## XX.oXX not created
   if len(log_o) == 0:
-    return "BATH LOG NOT CREATED"
+    return "BATCH LOG NOT CREATED"
 
   IsCycleRan = False
   for l in log_o:
