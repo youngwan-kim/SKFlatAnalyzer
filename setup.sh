@@ -12,5 +12,6 @@ export SKFlatAnV="v944_3__Default"
 export DATA_DIR=$SKFlat_WD/data/$SKFlatAnV
 mkdir -p $DATA_DIR
 export SKFlatRunlogDir="/data7/Users/jskim/SKFlatRunlog/"
+export SKFlatOutputDir="/data7/Users/jskim/SKFlatOutput/"
 export MYBIN=$SKFlat_WD/bin/
 export PATH=${MYBIN}:${PATH}

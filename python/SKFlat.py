@@ -4,12 +4,17 @@ import datetime
 
 print ''
 
+## TimeStamp
+now = datetime.datetime.now()
+timestamp =  now.strftime('%Y_%m_%d_%H%M%S')
+
 parser = argparse.ArgumentParser(description='SKFlat Command')
 parser.add_argument('-a', dest='Analyzer', default="")
 parser.add_argument('-i', dest='InputSample', default="")
 parser.add_argument('-p', dest='DataPeriod', default="ALL")
 parser.add_argument('-n', dest='NJobs', default=1, type=int)
-parser.add_argument('-o', dest='Outputdir', default="./")
+parser.add_argument('-o', dest='Outputdir', default="")
+parser.add_argument('-q', dest='Queue', default="fastq")
 parser.add_argument('--no_exec', action='store_true')
 args = parser.parse_args()
 
@@ -20,20 +25,25 @@ if args.InputSample=="":
   print "No InputSample"
   sys.exit(1)
 
-
-
 ## Environment Variables
 
 SKFlatV = os.environ['SKFlatV']
 SKFlatAnV = os.environ['SKFlatAnV']
 DATA_DIR = os.environ['DATA_DIR']
 SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
+SKFlatOutputDir = os.environ['SKFlatOutputDir']
 
 ## Global Varialbes
 IsDATA = False
 InputSample_Data = ["DoubleMuon", "DoubleEG"]
 if args.InputSample in InputSample_Data:
   IsDATA = True
+
+## Prepair output
+base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+args.InputSample
+if IsDATA:
+  base_rundir = base_rundir+'__period'+args.DataPeriod+'/'
+os.system('mkdir -p '+base_rundir)
 
 ## Get Sample Path
 lines_SamplePath = open(DATA_DIR+"/SamplePath.txt").readlines()
@@ -74,9 +84,8 @@ if IsDATA:
   NtupleFilePath = NtupleFilePath+'period'+args.DataPeriod+'/'
 
 ## Get file list ##
-os.system('ls -1 '+NtupleFilePath+'/*.root > tmp_filelist.txt')
-lines_files = open('tmp_filelist.txt').readlines()
-os.system('rm tmp_filelist.txt')
+os.system('ls -1 '+NtupleFilePath+'/*.root > '+base_rundir+'/input_filelist.txt')
+lines_files = open(base_rundir+'/input_filelist.txt').readlines()
 NTotalFiles = len(lines_files)
 
 if args.NJobs>NTotalFiles:
@@ -95,15 +104,6 @@ for it_job in range(0,nfilepjob_remainder):
   temp_end_largerjob = (it_job+1)*(nfilepjob+1)
 for it_job in range(0,args.NJobs-nfilepjob_remainder):
   FileRanges.append(range(temp_end_largerjob+(it_job*nfilepjob),temp_end_largerjob+((it_job+1)*nfilepjob) ))
-
-## TimeStamp
-now = datetime.datetime.now()
-timestamp =  now.strftime('%Y_%m_%d_%H%M%S')
-
-## Prepair output
-base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+args.InputSample
-if IsDATA:
-  base_rundir = base_rundir+'__period'+args.DataPeriod+'/'
 
 CheckTotalNFile=0
 for it_job in range(0,len(FileRanges)):
@@ -164,7 +164,7 @@ echo "[SKFlat.py] JOB FINISHED!!"
   run_commands.close()
 
   jobname = 'job_'+str(it_job)+'_'+args.Analyzer
-  cmd = 'qsub -V -q fastq -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
+  cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
 
   if not args.no_exec:
     cwd = os.getcwd()
@@ -245,9 +245,32 @@ if not GotError:
   cwd = os.getcwd()
   os.chdir(thisjob_dir)
   os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
+
+  ## Final Outputpath
+  FinalOutputPath = ""
+  if args.Outputdir=="":
+    FinalOutputPath = SKFlatOutputDir+'/'+args.Analyzer+'/'
+    if IsDATA:
+      FinalOutputPath += FinalOutputPath+'/DATA/'
+
+  os.system('mkdir -p '+FinalOutputPath)
+  os.system('cp '+outputname+'.root '+FinalOutputPath)
   os.chdir(cwd)
 
-
+## Send Email now
+from SendEmail import SendEmail
+JobFinishEmail = '''#### Job Info ####
+Analyzer = {0}
+InputSample = {1}
+OutputDir = {2}
+'''.format(args.Analyzer,args.InputSample,FinalOutputPath)
+if IsDATA:
+  JobFinishEmail += "DataPeriod = "+DataPeriod+"\n"
+JobFinishEmail += '''##################
+Job started at {0}
+Job finished at {1}
+'''.format(timestamp,string_ThisTime)
+SendEmail('jskim','jae.sung.kim@cern.ch','Job Summary',JobFinishEmail)
 
 
 

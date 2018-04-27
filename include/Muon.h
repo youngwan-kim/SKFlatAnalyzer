@@ -31,10 +31,11 @@ private:
 
 Muon::Muon() : Lepton() {
   j_isPOGTight = false;
-  j_PFCH04 = 999.;
-  j_PFNH04 = 999.;
-  j_PFPH04 = 999.;
-  j_PU04 = 999.;
+  j_PFCH04 = -999.;
+  j_PFNH04 = -999.;
+  j_PFPH04 = -999.;
+  j_PU04 = -999.;
+  this->SetLeptonFlavour(MUON);
 }
 
 Muon::~Muon(){

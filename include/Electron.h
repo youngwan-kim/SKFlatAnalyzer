@@ -45,15 +45,16 @@ private:
 };
 
 Electron::Electron() : Lepton() {
-  j_passVetoID = 0;
-  j_passLooseID = 0;
-  j_passMediumID = 0;
-  j_passTightID = 0;
-  j_passMVAID_noIso_WP80 = 0;
-  j_passMVAID_noIso_WP90 = 0;
-  j_passMVAID_iso_WP80 = 0;
-  j_passMVAID_iso_WP90 = 0;
-  j_passHEEPID = 0;
+  j_passVetoID = false;
+  j_passLooseID = false;
+  j_passMediumID = false;
+  j_passTightID = false;
+  j_passMVAID_noIso_WP80 = false;
+  j_passMVAID_noIso_WP90 = false;
+  j_passMVAID_iso_WP80 = false;
+  j_passMVAID_iso_WP90 = false;
+  j_passHEEPID = false;
+  this->SetLeptonFlavour(ELECTRON);
 }
 
 Electron::~Electron(){

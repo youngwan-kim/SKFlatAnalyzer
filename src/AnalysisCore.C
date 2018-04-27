@@ -2,6 +2,8 @@
 
 AnalysisCore::AnalysisCore(){
 
+
+
 }
 
 AnalysisCore::~AnalysisCore(){
@@ -123,6 +125,76 @@ std::vector<Electron> AnalysisCore::GetElectrons(TString id, double ptmin, doubl
 
 }
 
+std::vector<Lepton *> AnalysisCore::MakeLeptonPointerVector(std::vector<Muon> muons){
+
+  std::vector<Lepton *> out;
+  for(unsigned int i=0; i<muons.size(); i++){
+    Lepton *l = &(muons.at(i));
+    out.push_back(l);
+  }
+  return out;
+
+}
+std::vector<Lepton *> AnalysisCore::MakeLeptonPointerVector(std::vector<Electron> electrons){
+
+  std::vector<Lepton *> out;
+  for(unsigned int i=0; i<electrons.size(); i++){
+    Lepton *l = &(electrons.at(i));
+    out.push_back(l);
+  }
+  return out;
+
+}
+
+std::vector<Jet> AnalysisCore::GetAllJets(){
+
+  std::vector<Jet> out;
+  for(unsigned int i=0; i<jet_pt->size(); i++){
+    Jet jet;
+    jet.SetPtEtaPhiM(jet_pt->at(i), jet_eta->at(i), jet_phi->at(i), jet_m->at(i));
+    jet.SetCharge(jet_charge->at(i));
+
+    jet.SetAreaAndRho(jet_area->at(i), jet_rho->at(i));
+    jet.SetGenFlavours(jet_partonFlavour->at(i), jet_hadronFlavour->at(i));
+    std::vector<double> tvs = {
+      jet_CSVv2->at(i),
+      jet_DeepCSV->at(i),
+
+      -999, //FIXME
+      //jet_DeepFlavour->at(i), //FIXME
+
+      jet_CvsL->at(i),
+      jet_CvsB->at(i),
+      jet_DeepCvsL->at(i),
+      jet_DeepCvsB->at(i),
+    };
+    jet.SetTaggerResults(tvs);
+    jet.SetEnergyFractions(jet_chargedHadronEnergyFraction->at(i), jet_neutralHadronEnergyFraction->at(i), jet_neutralEmEnergyFraction->at(i), jet_chargedEmEnergyFraction->at(i));
+    jet.SetMultiplicities(jet_chargedMultiplicity->at(i), jet_neutralMultiplicity->at(i));
+    jet.SetPileupJetId(jet_PileupJetId->at(i));
+
+    out.push_back(jet);
+  }
+
+  return out;
+
+}
+
+bool AnalysisCore::IsOnZ(double m, double width){
+  if( fabs(m-M_Z) < width ) return true;
+  else return false;
+}
+
+TH1D* AnalysisCore::GetHist1D(TString histname){
+
+  TH1D *h = NULL;
+  std::map<TString, TH1D*>::iterator mapit = maphist_TH1D.find(histname);
+  if(mapit != maphist_TH1D.end()) return mapit->second;
+
+  return h;
+
+}
+
 void AnalysisCore::FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max){
 
   TH1D *this_hist = GetHist1D(histname);
@@ -135,28 +207,63 @@ void AnalysisCore::FillHist(TString histname, double value, double weight, int n
 
 }
 
-TH1D* AnalysisCore::GetHist1D(TString histname){
+TH1D* AnalysisCore::JSGetHist1D(TString suffix, TString histname){
 
-  TH1D* h = NULL;
-  std::map<TString, TH1D*>::iterator mapit = maphist_TH1D.find(histname);
-  if(mapit != maphist_TH1D.end()) return mapit->second;
+  TH1D *h = NULL;
+
+  std::map< TString, std::map<TString, TH1D*> >::iterator mapit = JSmaphist_TH1D.find(suffix);
+  if(mapit==JSmaphist_TH1D.end()){
+    return h;
+  }
+  else{
+
+    std::map<TString, TH1D*> this_maphist = mapit->second;
+    std::map<TString, TH1D*>::iterator mapitit = this_maphist.find(histname);
+    if(mapitit != this_maphist.end()) return mapitit->second;
+
+  }
 
   return h;
 
 }
 
-void AnalysisCore::WriteHist1D(){
+void AnalysisCore::JSFillHist(TString suffix, TString histname, double value, double weight, int n_bin, double x_min, double x_max){
+
+  TH1D *this_hist = JSGetHist1D(suffix, histname);
+  if( !this_hist ){
+
+    this_hist = new TH1D(histname, "", n_bin, x_min, x_max);
+    (JSmaphist_TH1D[suffix])[histname] = this_hist;
+
+  }
+
+  this_hist->Fill(value, weight);
+
+}
+
+void AnalysisCore::WriteHist(){
 
   outfile->cd();
   for(std::map< TString, TH1D* >::iterator mapit = maphist_TH1D.begin(); mapit!=maphist_TH1D.end(); mapit++){
     mapit->second->Write();
   }
 
-}
+  outfile->cd();
+  for(std::map< TString, std::map<TString, TH1D*> >::iterator mapit=JSmaphist_TH1D.begin(); mapit!=JSmaphist_TH1D.end(); mapit++){
 
-void AnalysisCore::WriteHist(){
+    TString this_suffix = mapit->first;
+    std::map< TString, TH1D* > this_maphist = mapit->second;
 
-  WriteHist1D();
+    outfile->mkdir(this_suffix);
+    outfile->cd(this_suffix);
+
+    for(std::map< TString, TH1D* >::iterator mapit = this_maphist.begin(); mapit!=this_maphist.end(); mapit++){
+      mapit->second->Write();
+    }
+
+    outfile->cd();
+
+  }
 
 }
 
