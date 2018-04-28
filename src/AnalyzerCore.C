@@ -1,12 +1,12 @@
-#include "AnalysisCore.h"
+#include "AnalyzerCore.h"
 
-AnalysisCore::AnalysisCore(){
+AnalyzerCore::AnalyzerCore(){
 
 
 
 }
 
-AnalysisCore::~AnalysisCore(){
+AnalyzerCore::~AnalyzerCore(){
 
   for(std::map< TString, TH1D* >::iterator mapit = maphist_TH1D.begin(); mapit!=maphist_TH1D.end(); mapit++){
     delete mapit->second;
@@ -16,7 +16,7 @@ AnalysisCore::~AnalysisCore(){
   outfile->Close();
 }
 
-Event AnalysisCore::GetEvent(){
+Event AnalyzerCore::GetEvent(){
 
   Event ev;
   if(!IsThisDataFile) ev.SetMCweight(gen_weight);
@@ -27,7 +27,7 @@ Event AnalysisCore::GetEvent(){
 
 }
 
-std::vector<Muon> AnalysisCore::GetAllMuons(){
+std::vector<Muon> AnalyzerCore::GetAllMuons(){
 
   std::vector<Muon> out;
   for(unsigned int i=0; i<muon_pt->size(); i++){
@@ -46,7 +46,7 @@ std::vector<Muon> AnalysisCore::GetAllMuons(){
 
 }
 
-std::vector<Muon> AnalysisCore::GetMuons(TString id, double ptmin, double fetamax){
+std::vector<Muon> AnalyzerCore::GetMuons(TString id, double ptmin, double fetamax){
 
   std::vector<Muon> muons = GetAllMuons();
   std::vector<Muon> out;
@@ -70,7 +70,7 @@ std::vector<Muon> AnalysisCore::GetMuons(TString id, double ptmin, double fetama
 
 }
 
-std::vector<Electron> AnalysisCore::GetAllElectrons(){
+std::vector<Electron> AnalyzerCore::GetAllElectrons(){
 
   std::vector<Electron> out;
   for(unsigned int i=0; i<electron_pt->size(); i++){
@@ -101,7 +101,7 @@ std::vector<Electron> AnalysisCore::GetAllElectrons(){
 
 }
 
-std::vector<Electron> AnalysisCore::GetElectrons(TString id, double ptmin, double fetamax){
+std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, double fetamax){
 
   std::vector<Electron> electrons = GetAllElectrons();
   std::vector<Electron> out;
@@ -125,7 +125,7 @@ std::vector<Electron> AnalysisCore::GetElectrons(TString id, double ptmin, doubl
 
 }
 
-std::vector<Lepton *> AnalysisCore::MakeLeptonPointerVector(std::vector<Muon> muons){
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon> muons){
 
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<muons.size(); i++){
@@ -135,7 +135,7 @@ std::vector<Lepton *> AnalysisCore::MakeLeptonPointerVector(std::vector<Muon> mu
   return out;
 
 }
-std::vector<Lepton *> AnalysisCore::MakeLeptonPointerVector(std::vector<Electron> electrons){
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron> electrons){
 
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<electrons.size(); i++){
@@ -146,7 +146,7 @@ std::vector<Lepton *> AnalysisCore::MakeLeptonPointerVector(std::vector<Electron
 
 }
 
-std::vector<Jet> AnalysisCore::GetAllJets(){
+std::vector<Jet> AnalyzerCore::GetAllJets(){
 
   std::vector<Jet> out;
   for(unsigned int i=0; i<jet_pt->size(); i++){
@@ -180,12 +180,12 @@ std::vector<Jet> AnalysisCore::GetAllJets(){
 
 }
 
-bool AnalysisCore::IsOnZ(double m, double width){
+bool AnalyzerCore::IsOnZ(double m, double width){
   if( fabs(m-M_Z) < width ) return true;
   else return false;
 }
 
-TH1D* AnalysisCore::GetHist1D(TString histname){
+TH1D* AnalyzerCore::GetHist1D(TString histname){
 
   TH1D *h = NULL;
   std::map<TString, TH1D*>::iterator mapit = maphist_TH1D.find(histname);
@@ -195,7 +195,7 @@ TH1D* AnalysisCore::GetHist1D(TString histname){
 
 }
 
-void AnalysisCore::FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max){
+void AnalyzerCore::FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max){
 
   TH1D *this_hist = GetHist1D(histname);
   if( !this_hist ){
@@ -207,7 +207,7 @@ void AnalysisCore::FillHist(TString histname, double value, double weight, int n
 
 }
 
-TH1D* AnalysisCore::JSGetHist1D(TString suffix, TString histname){
+TH1D* AnalyzerCore::JSGetHist1D(TString suffix, TString histname){
 
   TH1D *h = NULL;
 
@@ -227,7 +227,7 @@ TH1D* AnalysisCore::JSGetHist1D(TString suffix, TString histname){
 
 }
 
-void AnalysisCore::JSFillHist(TString suffix, TString histname, double value, double weight, int n_bin, double x_min, double x_max){
+void AnalyzerCore::JSFillHist(TString suffix, TString histname, double value, double weight, int n_bin, double x_min, double x_max){
 
   TH1D *this_hist = JSGetHist1D(suffix, histname);
   if( !this_hist ){
@@ -241,7 +241,7 @@ void AnalysisCore::JSFillHist(TString suffix, TString histname, double value, do
 
 }
 
-void AnalysisCore::WriteHist(){
+void AnalyzerCore::WriteHist(){
 
   outfile->cd();
   for(std::map< TString, TH1D* >::iterator mapit = maphist_TH1D.begin(); mapit!=maphist_TH1D.end(); mapit++){

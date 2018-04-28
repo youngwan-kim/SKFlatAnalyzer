@@ -1,9 +1,9 @@
 #ifndef SKFlatValidation_h
 #define SKFlatValidation_h
 
-#include "AnalysisCore.C"
+#include "AnalyzerCore.C"
 
-class SKFlatValidation : public AnalysisCore {
+class SKFlatValidation : public AnalyzerCore {
 
 public:
 

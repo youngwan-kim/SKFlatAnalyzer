@@ -1,5 +1,5 @@
-#ifndef AnalysisCore_h
-#define AnalysisCore_h
+#ifndef AnalyzerCore_h
+#define AnalyzerCore_h
 
 #include "TLorentzVector.h"
 #include "TString.h"
@@ -14,12 +14,12 @@
 
 #define M_Z 91.1876
 
-class AnalysisCore: public SKFlatNtuple {
+class AnalyzerCore: public SKFlatNtuple {
 
 public:
 
-  AnalysisCore();
-  ~AnalysisCore();
+  AnalyzerCore();
+  ~AnalyzerCore();
 
   virtual void executeEvent(){
 

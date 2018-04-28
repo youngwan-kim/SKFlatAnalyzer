@@ -1,9 +1,9 @@
 #ifndef GetEffLumi_h
 #define GetEffLumi_h
 
-#include "AnalysisCore.C"
+#include "AnalyzerCore.C"
 
-class GetEffLumi : public AnalysisCore {
+class GetEffLumi : public AnalyzerCore {
 
 public:
 
