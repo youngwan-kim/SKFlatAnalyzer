@@ -40,7 +40,7 @@ void SKFlatValidation::executeEvent(){
       if( (muons.at(0)+muons.at(1)).M() < 10. ) continue;
     }
     if(Suffix.Contains("DiElectron")){
-      if( muons.at(0).Pt() < 25. || muons.at(1).Pt() < 15. ) continue;
+      if( electrons.at(0).Pt() < 25. || electrons.at(1).Pt() < 15. ) continue;
     }
 
     if(this->DataStream == "DoubleMuon"){
@@ -72,9 +72,11 @@ void SKFlatValidation::executeEvent(){
       //==== FIXME
       if(Suffix.Contains("DiMuon")){
         for(unsigned int i=0; i<muons.size(); i++){
-          double this_idsf = mccor.MuonIDSF("POGTight",muons.at(i).Eta(),muons.at(i).Pt());
-          cout << "eta = " << muons.at(i).Eta() << ", pt = " << muons.at(i).Pt() << " : " << this_idsf << endl;
-          weight *= this_idsf;
+          double this_idsf = mccor.MuonID_SF("NUM_TightID_DEN_genTracks",muons.at(i).Eta(),muons.at(i).Pt());
+          double this_isosf = mccor.MuonISO_SF("NUM_TightRelIso_DEN_TightIDandIPCut",muons.at(i).Eta(),muons.at(i).Pt());
+          //cout << "eta = " << muons.at(i).Eta() << ", pt = " << muons.at(i).Pt() << " : " << this_idsf << endl;
+          //cout << "eta = " << muons.at(i).Eta() << ", pt = " << muons.at(i).Pt() << " : " << this_isosf << endl;
+          weight *= this_idsf*this_isosf;
         }
       }
 

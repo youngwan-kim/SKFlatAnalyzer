@@ -5,7 +5,8 @@ class MCCorrection{
 
 public:
 
-  double MuonIDSF(TString ID, double eta, double pt, int sys=0);
+  double MuonID_SF(TString ID, double eta, double pt, int sys=0);
+  double MuonISO_SF(TString ID, double eta, double pt, int sys=0);
 
 };
 

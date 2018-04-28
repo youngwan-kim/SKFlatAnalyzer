@@ -1,13 +1,13 @@
 #include "MCCorrection.h"
 
-double MCCorrection::MuonIDSF(TString ID, double eta, double pt, int sys){
+double MCCorrection::MuonID_SF(TString ID, double eta, double pt, int sys){
 
   double value = 1.;
   double error = 0.;
 
   eta = fabs(eta);
 
-  if(ID=="POGTight"){
+  if(ID=="NUM_TightID_DEN_genTracks"){
 
     //==== boundaries
     if(pt<20.) return 1.;
@@ -124,5 +124,128 @@ double MCCorrection::MuonIDSF(TString ID, double eta, double pt, int sys){
 
 }
 
+double MCCorrection::MuonISO_SF(TString ID, double eta, double pt, int sys){
+
+  double value = 1.;
+  double error = 0.;
+
+  eta = fabs(eta);
+
+  if(ID=="NUM_TightRelIso_DEN_TightIDandIPCut"){
+
+    //==== boundaries
+    if(pt<20.) return 1.;
+    if(pt>=120.) return 1.;
+    if(eta>=2.4) return 1.;
+
+    if(eta>=1.2 && eta<2.1){
+      if(pt>=20.0 && pt<25.0){
+        value = 0.991401054632;
+        error = 0.00266822208643;
+      }
+      else if(pt>=50.0 && pt<60.0){
+        value = 0.998596887338;
+        error = 0.000489111385143;
+      }
+      else if(pt>=25.0 && pt<30.0){
+        value = 0.994066766324;
+        error = 0.00146598770113;
+      }
+      else if(pt>=60.0 && pt<120.0){
+        value = 0.999649117604;
+        error = 0.0007066126508;
+      }
+      else if(pt>=30.0 && pt<40.0){
+        value = 0.995523772937;
+        error = 0.000482010496461;
+      }
+      else if(pt>=40.0 && pt<50.0){
+        value = 0.997467918855;
+        error = 0.000223810714069;
+      }
+    }
+    else if(eta>=2.1 && eta<2.4){
+      if(pt>=20.0 && pt<25.0){
+        value = 0.988829710363;
+        error = 0.00365610624011;
+      }
+      else if(pt>=50.0 && pt<60.0){
+        value = 0.99936392435;
+        error = 0.000859753629781;
+      }
+      else if(pt>=25.0 && pt<30.0){
+        value = 0.992319762458;
+        error = 0.00197629461214;
+      }
+      else if(pt>=60.0 && pt<120.0){
+        value = 0.998346811655;
+        error = 0.00136181157567;
+      }
+      else if(pt>=30.0 && pt<40.0){
+        value = 0.994995867277;
+        error = 0.00070835059911;
+      }
+      else if(pt>=40.0 && pt<50.0){
+        value = 0.997926058557;
+        error = 0.000409835920651;
+      }
+    }
+    else if(eta>=0.9 && eta<1.2){
+      if(pt>=20.0 && pt<25.0){
+        value = 0.995732951929;
+        error = 0.00643343277667;
+      }
+      else if(pt>=50.0 && pt<60.0){
+        value = 0.999346249444;
+        error = 0.000904854835854;
+      }
+      else if(pt>=25.0 && pt<30.0){
+        value = 0.988968679025;
+        error = 0.00322373278457;
+      }
+      else if(pt>=60.0 && pt<120.0){
+        value = 1.00001772671;
+        error = 0.00117969595782;
+      }
+      else if(pt>=30.0 && pt<40.0){
+        value = 0.994737975344;
+        error = 0.000923140434339;
+      }
+      else if(pt>=40.0 && pt<50.0){
+        value = 0.997015995715;
+        error = 0.00040090331866;
+      }
+    }
+    else if(eta>=0.0 && eta<0.9){
+      if(pt>=20.0 && pt<25.0){
+        value = 0.992781348803;
+        error = 0.00362150958619;
+      }
+      else if(pt>=50.0 && pt<60.0){
+        value = 0.998446695575;
+        error = 0.000456205995783;
+      }
+      else if(pt>=25.0 && pt<30.0){
+        value = 0.997332232619;
+        error = 0.00177715512476;
+      }
+      else if(pt>=60.0 && pt<120.0){
+        value = 0.999529969744;
+        error = 0.000622124621086;
+      }
+      else if(pt>=30.0 && pt<40.0){
+        value = 0.997576733544;
+        error = 0.000484942712098;
+      }
+      else if(pt>=40.0 && pt<50.0){
+        value = 0.99821234049;
+        error = 0.000251331353176;
+      }
+    }
+  }
+
+  return value+double(sys)*error;
+
+}
 
 
