@@ -35,18 +35,26 @@ void SKFlatValidation::executeEvent(){
     TString Suffix = Suffixs.at(i);
     if( !PassTriggers.at(i) ) continue;
 
+    if(Suffix.Contains("DiMuon")){
+      if( muons.at(0).Pt() < 20. || muons.at(1).Pt() < 10. ) continue;
+      if( (muons.at(0)+muons.at(1)).M() < 10. ) continue;
+    }
+    if(Suffix.Contains("DiElectron")){
+      if( muons.at(0).Pt() < 25. || muons.at(1).Pt() < 15. ) continue;
+    }
+
     if(this->DataStream == "DoubleMuon"){
-      if(!( Suffix.Contains("Muon") )) continue;
+      if(!( Suffix.Contains("DiMuon") )) continue;
     }
     if(this->DataStream == "DoubleEG"){
-      if(!( Suffix.Contains("Electron") )) continue;
+      if(!( Suffix.Contains("DiElectron") )) continue;
     }
 
     std::vector<Lepton *> lep;
-    if(Suffix.Contains("Muon")){
+    if(Suffix.Contains("DiMuon")){
       lep = MakeLeptonPointerVector(muons);
     }
-    if(Suffix.Contains("Electron")){
+    if(Suffix.Contains("DiElectron")){
       lep = MakeLeptonPointerVector(electrons);
     }
 
@@ -60,6 +68,16 @@ void SKFlatValidation::executeEvent(){
       //cout << "weight_norm_1invfb = " << weight_norm_1invfb << endl;
       //cout << "GetTriggerLumi = " << ev.GetTriggerLumi("Full") << endl;
       weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full")*ev.MCweight();
+
+      //==== FIXME
+      if(Suffix.Contains("DiMuon")){
+        for(unsigned int i=0; i<muons.size(); i++){
+          double this_idsf = mccor.MuonIDSF("POGTight",muons.at(i).Eta(),muons.at(i).Pt());
+          cout << "eta = " << muons.at(i).Eta() << ", pt = " << muons.at(i).Pt() << " : " << this_idsf << endl;
+          weight *= this_idsf;
+        }
+      }
+
     }
 
     std::map<TString, bool> map_bool_To_Region;

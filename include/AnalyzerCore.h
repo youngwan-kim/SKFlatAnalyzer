@@ -5,6 +5,7 @@
 #include "TString.h"
 
 #include "SKFlatNtuple.C"
+#include "MCCorrection.C"
 #include "Event.h"
 #include "Particle.h"
 #include "Lepton.h"
@@ -41,6 +42,7 @@ public:
   std::vector<Jet> GetAllJets();
 
   //==== Tools
+  MCCorrection mccor;
   bool IsOnZ(double m, double width);
 
   //==== Plotting
