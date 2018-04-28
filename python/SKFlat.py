@@ -46,7 +46,7 @@ if IsDATA:
 os.system('mkdir -p '+base_rundir)
 
 ## Get Sample Path
-lines_SamplePath = open(DATA_DIR+"/SamplePath.txt").readlines()
+lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
 Samplepath_Section="Alias"
 SampleBaseDirs = []
 NtupleFilePath = ""
@@ -246,12 +246,14 @@ if not GotError:
   os.chdir(thisjob_dir)
   os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
 
+  os.system('rm job_*/*.root')
+
   ## Final Outputpath
   FinalOutputPath = ""
   if args.Outputdir=="":
     FinalOutputPath = SKFlatOutputDir+'/'+args.Analyzer+'/'
     if IsDATA:
-      FinalOutputPath += FinalOutputPath+'/DATA/'
+      FinalOutputPath += '/DATA/'
 
   os.system('mkdir -p '+FinalOutputPath)
   os.system('cp '+outputname+'.root '+FinalOutputPath)
@@ -265,7 +267,7 @@ InputSample = {1}
 OutputDir = {2}
 '''.format(args.Analyzer,args.InputSample,FinalOutputPath)
 if IsDATA:
-  JobFinishEmail += "DataPeriod = "+DataPeriod+"\n"
+  JobFinishEmail += "DataPeriod = "+args.DataPeriod+"\n"
 JobFinishEmail += '''##################
 Job started at {0}
 Job finished at {1}

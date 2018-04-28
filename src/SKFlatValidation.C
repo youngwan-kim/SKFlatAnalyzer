@@ -57,7 +57,9 @@ void SKFlatValidation::executeEvent(){
 
     double weight = 1.;
     if(!IsThisDataFile){
-      weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full");
+      //cout << "weight_norm_1invfb = " << weight_norm_1invfb << endl;
+      //cout << "GetTriggerLumi = " << ev.GetTriggerLumi("Full") << endl;
+      weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full")*ev.MCweight();
     }
 
     std::map<TString, bool> map_bool_To_Region;
@@ -68,6 +70,8 @@ void SKFlatValidation::executeEvent(){
     for(std::map<TString, bool>::iterator it_map = map_bool_To_Region.begin(); it_map != map_bool_To_Region.end(); it_map++){
 
       TString this_region = it_map->first;
+      this_region = Suffix+"_"+this_region;
+
       if(it_map->second){
 
         if(IsOS){

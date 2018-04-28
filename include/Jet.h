@@ -123,45 +123,45 @@ bool Jet::IsTagged(Tagger tg, WP wp){
   double tr = GetTaggerResult(tg);
 
   if(tg==CSVv2){
-    if(wp==Loose) return (tg>0.5803);
-    else if(wp==Medium) return (tg>0.8838);
-    else if(wp==Tight) return (tg>0.9693);
+    if(wp==Loose) return (tr>0.5803);
+    else if(wp==Medium) return (tr>0.8838);
+    else if(wp==Tight) return (tr>0.9693);
     else return false;
   }
   else if(tg==DeepCSV){
-    if(wp==Loose) return (tg>0.1522);
-    else if(wp==Medium) return (tg>0.4941);
-    else if(wp==Tight) return (tg>0.8001);
+    if(wp==Loose) return (tr>0.1522);
+    else if(wp==Medium) return (tr>0.4941);
+    else if(wp==Tight) return (tr>0.8001);
     else return false;
   }
   else if(tg==DeepFlavour){
-    if(wp==Loose) return (tg>0.0574);
-    else if(wp==Medium) return (tg>0.4318);
-    else if(wp==Tight) return (tg>0.9068);
+    if(wp==Loose) return (tr>0.0574);
+    else if(wp==Medium) return (tr>0.4318);
+    else if(wp==Tight) return (tr>0.9068);
     else return false;
   }  
   else if(tg==CvsL){
-    if(wp==Loose) return (tg>-0.53);
-    else if(wp==Medium) return (tg>0.07);
-    else if(wp==Tight) return (tg>0.87);
+    if(wp==Loose) return (tr>-0.53);
+    else if(wp==Medium) return (tr>0.07);
+    else if(wp==Tight) return (tr>0.87);
     else return false;
   }  
   else if(tg==CvsB){
-    if(wp==Loose) return (tg>-0.26);
-    else if(wp==Medium) return (tg>-0.10);
-    else if(wp==Tight) return (tg>-0.3);
+    if(wp==Loose) return (tr>-0.26);
+    else if(wp==Medium) return (tr>-0.10);
+    else if(wp==Tight) return (tr>-0.3);
     else return false;
   }  
   else if(tg==DeepCvsL){
-    if(wp==Loose) return (tg>0.05);
-    else if(wp==Medium) return (tg>0.15);
-    else if(wp==Tight) return (tg>0.8);
+    if(wp==Loose) return (tr>0.05);
+    else if(wp==Medium) return (tr>0.15);
+    else if(wp==Tight) return (tr>0.8);
     else return false;
   }  
   else if(tg==DeepCvsB){
-    if(wp==Loose) return (tg>0.33);
-    else if(wp==Medium) return (tg>0.28);
-    else if(wp==Tight) return (tg>0.1);
+    if(wp==Loose) return (tr>0.33);
+    else if(wp==Medium) return (tr>0.28);
+    else if(wp==Tight) return (tr>0.1);
     else return false;
   }  
   else{

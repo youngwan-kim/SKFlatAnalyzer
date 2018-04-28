@@ -63,7 +63,7 @@ void SKFlatNtuple::Init()
     //std::cout << "[SKFlatNtuple::Init] MCSample = " << MCSample << std::endl;
 
     TString datadir = getenv("DATA_DIR");
-    TString lumitxtpath = datadir+"/SamplePath.txt";
+    TString lumitxtpath = datadir+"/Sample/SamplePath.txt";
     //std::cout << "[SKFlatNtuple::Init] lumitxtpath = " << lumitxtpath << endl;
 
     std::string elline;
