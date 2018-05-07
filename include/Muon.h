@@ -17,6 +17,13 @@ public:
   void SetIso(double ch04, double nh04, double ph04, double pu04);
   void CalcPFRelIso();
 
+  void SetMiniAODPt(double d);
+  double MiniAODPt() const {return j_MiniAODPt;}
+
+  void SetMomentumUpDown(double up, double down);
+  double MomentumUp() const {return j_MomentumUp;}
+  double MomentumDown() const {return j_MomentumDown;}
+
   //==== ID
   bool PassID(TString ID);
   bool Pass_POGTight();
@@ -26,6 +33,7 @@ private:
 
   bool j_isPOGTight;
   double j_PFCH04, j_PFNH04, j_PFPH04, j_PU04;
+  double j_MiniAODPt, j_MomentumUp, j_MomentumDown;
 
 };
 
@@ -36,6 +44,9 @@ Muon::Muon() : Lepton() {
   j_PFPH04 = -999.;
   j_PU04 = -999.;
   this->SetLeptonFlavour(MUON);
+  j_MiniAODPt = -999.;
+  j_MomentumUp = -999.;
+  j_MomentumDown = -999.;
 }
 
 Muon::~Muon(){
@@ -56,6 +67,14 @@ void Muon::SetIso(double ch04, double nh04, double ph04, double pu04){
 void Muon::CalcPFRelIso(){
   double reliso = j_PFCH04+std::max( 0., j_PFNH04 + j_PFPH04 - 0.5*j_PU04 );
   this->SetRelIso(reliso);
+}
+
+void Muon::SetMiniAODPt(double d){
+  j_MiniAODPt = d;
+}
+void Muon::SetMomentumUpDown(double up, double down){
+  j_MomentumUp = up;
+  j_MomentumDown = down;
 }
 
 bool Muon::PassID(TString ID){

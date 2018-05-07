@@ -1,5 +1,43 @@
 #include "MCCorrection.h"
 
+MCCorrection::MCCorrection(){
+
+  TString datapath = getenv("DATA_DIR");
+
+  string elline;
+  ifstream in(datapath+"/Electron/histmap.txt");
+  while(getline(in,elline)){
+    std::istringstream is( elline );
+    TString a,b,c,d,e;
+    is >> a; // ID,RERCO
+    is >> b; // Eff,SF
+    is >> c; // <WPnames>
+    is >> d; // <rootfilename>
+    is >> e; // <histname>
+    TFile *file = new TFile(datapath+"/Electron/"+d);
+    map_hist_Electron[a+"_"+b+"_"+c] = (TH2F *)file->Get(e);
+  }
+
+  string elline2;
+  ifstream in2(datapath+"/Muon/histmap.txt");
+  while(getline(in2,elline2)){
+    std::istringstream is( elline2 );
+    TString a,b,c,d,e;
+    is >> a; // ID,RERCO
+    is >> b; // Eff,SF
+    is >> c; // <WPnames>
+    is >> d; // <rootfilename>
+    is >> e; // <histname>
+    TFile *file = new TFile(datapath+"/Muon/"+d);
+    map_hist_Muon[a+"_"+b+"_"+c] = (TH2F *)file->Get(e);
+  }
+
+}
+
+MCCorrection::~MCCorrection(){
+
+}
+
 double MCCorrection::MuonID_SF(TString ID, double eta, double pt, int sys){
 
   double value = 1.;
@@ -247,5 +285,113 @@ double MCCorrection::MuonISO_SF(TString ID, double eta, double pt, int sys){
   return value+double(sys)*error;
 
 }
+
+double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, double eta, double pt, int sys){
+
+  //cout << "[MCCorrection::MuonTrigger_Eff] eta = " << eta << ", pt = " << pt << endl;
+
+  double value = 1.;
+  double error = 0.;
+
+  eta = fabs(eta);
+
+  if(trig=="IsoMu27"){
+    if(pt<29.) return 0.;
+    if(pt>=1200.) return 1.;
+    if(eta>=2.4) return 1.;
+  }
+
+  TString histkey = "Trigger_Eff_DATA_"+trig+"_"+ID;
+  if(DataOrMC==1) histkey = "Trigger_Eff_MC_"+trig+"_"+ID;
+  TH2F *this_hist = map_hist_Muon[histkey];
+
+  int this_bin = this_hist->FindBin(eta,pt);
+  value = this_hist->GetBinContent(this_bin);
+  error = this_hist->GetBinError(this_bin);
+
+  //cout << "[MCCorrection::MuonTrigger_Eff] value = " << value << endl;
+
+  return value+double(sys)*error;
+
+
+}
+
+double MCCorrection::MuonTrigger_SF(TString ID, TString trig, std::vector<Muon> muons, int sys){
+
+  double value = 1.;
+
+  if(trig=="IsoMu27"){
+
+    double eff_DATA = 1.;
+    double eff_MC = 1.;
+
+    for(unsigned int i=0; i<muons.size(); i++){
+      eff_DATA *= ( 1.-MuonTrigger_Eff(ID, trig, 0, muons.at(i).Eta(), muons.at(i).Pt(), sys) );
+      eff_MC   *= ( 1.-MuonTrigger_Eff(ID, trig, 1, muons.at(i).Eta(), muons.at(i).Pt(), -sys) );
+    }
+
+    eff_DATA = 1.-eff_DATA;
+    eff_MC = 1.-eff_MC;
+
+    value = eff_DATA/eff_MC;
+
+  }
+
+  return value;
+
+}
+
+double MCCorrection::ElectronID_SF(TString ID, double sceta, double pt, int sys){
+
+  double value = 1.;
+  double error = 0.;
+
+  if(ID=="passMVAID_iso_WP80"){
+    if(pt<10.) return 1.;
+    if(pt>=500.) return 1.;
+    if(fabs(sceta)>=2.5) return 1.;
+  }
+
+  TH2F *this_hist = map_hist_Electron["ID_SF_"+ID];
+  //cout << "[MCCorrection::ElectronID_SF] " << this_hist->GetBinContent(4,4) << endl;
+
+  int this_bin = this_hist->FindBin(sceta,pt);
+  value = this_hist->GetBinContent(this_bin);
+  error = this_hist->GetBinError(this_bin);
+
+  return value+double(sys)*error;
+
+}
+
+double MCCorrection::ElectronReco_SF(double sceta, double pt, int sys){
+
+  double value = 1.;
+  double error = 0.;
+
+  TString ptrange = "ptgt20";
+  if(pt<20.) ptrange = "ptlt20";
+
+  TH2F *this_hist = map_hist_Electron["RECO_SF_"+ptrange];
+  //cout << "[MCCorrection::ElectronReco_SF] " << this_hist->GetBinContent(1,1) << endl;
+
+  int this_bin = this_hist->FindBin(sceta,pt);
+  value = this_hist->GetBinContent(this_bin);
+  error = this_hist->GetBinError(this_bin);
+
+  return value+double(sys)*error;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 

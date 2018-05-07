@@ -3,6 +3,7 @@
 
 #include "TLorentzVector.h"
 #include "TString.h"
+#include "TMath.h"
 
 #include "SKFlatNtuple.C"
 #include "MCCorrection.C"
@@ -36,14 +37,15 @@ public:
   std::vector<Electron> GetAllElectrons();
   std::vector<Electron> GetElectrons(TString id, double ptmin=-999., double fetamax=999.);
 
-  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Muon> muons);
-  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Electron> electrons);
+  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Muon>& muons);
+  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Electron>& electrons);
 
   std::vector<Jet> GetAllJets();
 
   //==== Tools
   MCCorrection mccor;
   bool IsOnZ(double m, double width);
+  double MT(TLorentzVector a, TLorentzVector b);
 
   //==== Plotting
 

@@ -2,6 +2,10 @@ import os
 
 #commands.sh  job_0_GetEffLumi.e6409440  job_0_GetEffLumi.o6409440  run.C  submitlog.log
 
+def GetJobID(logfiledir, cycle, jobnumber):
+  jobid = open(logfiledir+'/submitlog.log').readlines()[0].split()[2]
+  return jobid
+
 def CheckJobStatus(logfiledir, cycle, jobnumber):
   FinishString = "[SKFlat.py] JOB FINISHED"
 

@@ -4,6 +4,8 @@ PATH1	/data7/DATA/SKFlat
 [Section:	DATA	]
 DoubleMuon	PATH1/DATA/DoubleMuon/
 DoubleEG	PATH1/DATA/DoubleEG/
+SingleElectron	PATH1/DATA/SingleElectron/
+SingleMuon	PATH1/DATA/SingleMuon/
 
 [Section:	MC	] ## alias path xsec nmc sumw
 DYJets	PATH1/MC/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8	5765.4	185963258	126020748

@@ -11,6 +11,10 @@ public:
   Electron();
   ~Electron();
 
+  void SetSC(double sceta, double dcphi);
+  double scEta() const {return j_scEta;};
+  double scPhi() const {return j_scPhi;};
+
   void SetPOGIDs(std::vector<bool> bs);
   inline bool passVetoID() const {return j_passVetoID;}
   inline bool passLooseID() const {return j_passLooseID;}
@@ -30,6 +34,8 @@ public:
 
 private:
 
+  double j_scEta,j_scPhi;
+
   bool j_passVetoID;
   bool j_passLooseID;
   bool j_passMediumID;
@@ -45,6 +51,8 @@ private:
 };
 
 Electron::Electron() : Lepton() {
+  j_scEta = -999.;
+  j_scPhi = -999.;
   j_passVetoID = false;
   j_passLooseID = false;
   j_passMediumID = false;
@@ -58,6 +66,11 @@ Electron::Electron() : Lepton() {
 }
 
 Electron::~Electron(){
+}
+
+void Electron::SetSC(double sceta, double dcphi){
+  j_scEta = sceta;
+  j_scPhi = dcphi;
 }
 
 void Electron::SetPOGIDs(std::vector<bool> bs){

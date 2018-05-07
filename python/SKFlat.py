@@ -35,7 +35,7 @@ SKFlatOutputDir = os.environ['SKFlatOutputDir']
 
 ## Global Varialbes
 IsDATA = False
-InputSample_Data = ["DoubleMuon", "DoubleEG"]
+InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron"]
 if args.InputSample in InputSample_Data:
   IsDATA = True
 
@@ -179,7 +179,16 @@ echo "[SKFlat.py] JOB FINISHED!!"
 import time
 time.sleep(1)
 
-from CheckJobStatus import CheckJobStatus
+from CheckJobStatus import *
+
+## Write Kill Command
+KillCommand = open(base_rundir+'/Script_JobKill.sh','w')
+for it_job in range(0,len(FileRanges)):
+  thisjob_dir = base_rundir+'/job_'+str(it_job)+'/'
+  jobid = GetJobID(thisjob_dir, args.Analyzer, it_job)
+  KillCommand.write('qdel '+jobid+' ## job_'+str(it_job)+' ##\n')
+KillCommand.close()
+
 AllDone = False
 GotError = False
 
@@ -249,7 +258,7 @@ if not GotError:
   os.system('rm job_*/*.root')
 
   ## Final Outputpath
-  FinalOutputPath = ""
+  FinalOutputPath = args.Outputdir
   if args.Outputdir=="":
     FinalOutputPath = SKFlatOutputDir+'/'+args.Analyzer+'/'
     if IsDATA:

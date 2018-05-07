@@ -33,7 +33,12 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
   for(unsigned int i=0; i<muon_pt->size(); i++){
 
     Muon mu;
-    mu.SetPtEtaPhiM(muon_pt->at(i), muon_eta->at(i), muon_phi->at(i), muon_mass->at(i));
+    double rc = muon_roch_sf->at(i);
+    double rc_err = muon_roch_sf_up->at(i);
+
+    mu.SetMiniAODPt(muon_pt->at(i));
+    mu.SetPtEtaPhiM(muon_pt->at(i)*rc, muon_eta->at(i), muon_phi->at(i), muon_mass->at(i));
+    mu.SetMomentumUpDown( (rc+rc_err)*muon_pt->at(i), (rc-rc_err)*muon_pt->at(i) );
     mu.SetCharge(muon_charge->at(i));
     mu.SetdXY(muon_dxyVTX->at(i));
     mu.SetdZ(muon_dzVTX->at(i));
@@ -78,6 +83,7 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
 
     Electron el;
     el.SetPtEtaPhiE(electron_pt->at(i), electron_eta->at(i), electron_phi->at(i), electron_Energy->at(i));
+    el.SetSC(electron_scEta->at(i), electron_scPhi->at(i));
     el.SetCharge(electron_charge->at(i));
     el.SetdXY(electron_dxyVTX->at(i));
     el.SetdZ(electron_dzVTX->at(i));
@@ -125,21 +131,22 @@ std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, doubl
 
 }
 
-std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon> muons){
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& muons){
 
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<muons.size(); i++){
-    Lepton *l = &(muons.at(i));
+    Lepton *l = (Lepton *)(&muons.at(i));
+    //cout << muons.at(i).Pt() << " -> " << l->Pt() << endl;
     out.push_back(l);
   }
   return out;
 
 }
-std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron> electrons){
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron>& electrons){
 
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<electrons.size(); i++){
-    Lepton *l = &(electrons.at(i));
+    Lepton *l = (Lepton *)(&electrons.at(i));
     out.push_back(l);
   }
   return out;
@@ -183,6 +190,11 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
 bool AnalyzerCore::IsOnZ(double m, double width){
   if( fabs(m-M_Z) < width ) return true;
   else return false;
+}
+
+double AnalyzerCore::MT(TLorentzVector a, TLorentzVector b){
+  double dphi = a.DeltaPhi(b);
+  return TMath::Sqrt( 2.*a.Pt()*b.Pt()*(1.- TMath::Cos(dphi) ) );
 }
 
 TH1D* AnalyzerCore::GetHist1D(TString histname){
