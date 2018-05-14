@@ -161,19 +161,21 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetPtEtaPhiM(jet_pt->at(i), jet_eta->at(i), jet_phi->at(i), jet_m->at(i));
     jet.SetCharge(jet_charge->at(i));
 
-    jet.SetAreaAndRho(jet_area->at(i), jet_rho->at(i));
+    jet.SetArea(jet_area->at(i));
     jet.SetGenFlavours(jet_partonFlavour->at(i), jet_hadronFlavour->at(i));
     std::vector<double> tvs = {
       jet_CSVv2->at(i),
       jet_DeepCSV->at(i),
-
-      -999, //FIXME
-      //jet_DeepFlavour->at(i), //FIXME
-
-      jet_CvsL->at(i),
-      jet_CvsB->at(i),
       jet_DeepCvsL->at(i),
       jet_DeepCvsB->at(i),
+      jet_DeepFlavour_b->at(i),
+      jet_DeepFlavour_bb->at(i),
+      jet_DeepFlavour_lepb->at(i),
+      jet_DeepFlavour_c->at(i),
+      jet_DeepFlavour_uds->at(i),
+      jet_DeepFlavour_g->at(i),
+      jet_CvsL->at(i),
+      jet_CvsB->at(i),
     };
     jet.SetTaggerResults(tvs);
     jet.SetEnergyFractions(jet_chargedHadronEnergyFraction->at(i), jet_neutralHadronEnergyFraction->at(i), jet_neutralEmEnergyFraction->at(i), jet_chargedEmEnergyFraction->at(i));
@@ -184,6 +186,22 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
   }
 
   return out;
+
+}
+
+bool AnalyzerCore::PassMETFilter(){
+
+  if(!Flag_goodVertices) return false;
+  if(!Flag_globalTightHalo2016Filter) return false;
+  if(!Flag_HBHENoiseFilter) return false;
+  if(!Flag_HBHENoiseIsoFilter) return false;
+  if(!Flag_EcalDeadCellTriggerPrimitiveFilter) return false;
+  if(!Flag_BadPFMuonFilter) return false;
+  if(!Flag_BadChargedCandidateFilter) return false;
+  if(IsThisDataFile && !Flag_eeBadScFilter) return false;
+  if(!Flag_ecalBadCalibFilter) return false;
+
+  return true;
 
 }
 

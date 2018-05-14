@@ -2,6 +2,8 @@
 
 void SKFlatValidation::executeEvent(){
 
+  if(!PassMETFilter()) return;
+
   Event ev = GetEvent();
 
   //bool PassDiMuon = ev.PassTrigger("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8_v");

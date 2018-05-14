@@ -42,7 +42,12 @@ public:
 
   std::vector<Jet> GetAllJets();
 
+  //==== Event Filters
+
+  bool PassMETFilter();
+
   //==== Tools
+
   MCCorrection mccor;
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
