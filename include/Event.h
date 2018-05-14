@@ -81,10 +81,10 @@ bool Event::PassTrigger(std::vector<std::string> trigs){
 double Event::GetTriggerLumi(TString trig){
 
   if(trig=="Full"){
-    return 41296.465;
+    return 41527.540;
   }
 
-  return 41296.465;
+  return 41527.540;
 
 }
 
