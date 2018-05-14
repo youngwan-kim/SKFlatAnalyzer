@@ -32,6 +32,7 @@ SKFlatAnV = os.environ['SKFlatAnV']
 DATA_DIR = os.environ['DATA_DIR']
 SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
 SKFlatOutputDir = os.environ['SKFlatOutputDir']
+SKFlat_LIB_PATH = os.environ['SKFlat_LIB_PATH']
 
 ## Global Varialbes
 IsDATA = False
@@ -44,6 +45,10 @@ base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+args.InputSa
 if IsDATA:
   base_rundir = base_rundir+'__period'+args.DataPeriod+'/'
 os.system('mkdir -p '+base_rundir)
+
+## Copy shared library file
+os.system('mkdir -p '+base_rundir+'/libs/')
+os.system('cp '+SKFlat_LIB_PATH+'/* '+base_rundir+'/libs')
 
 ## Get Sample Path
 lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
@@ -116,7 +121,7 @@ for it_job in range(0,len(FileRanges)):
   os.system('mkdir -p '+thisjob_dir)
 
   out = open(thisjob_dir+'run.C','w')
-  print>>out,'''R__LOAD_LIBRARY({0}_C.so)
+  print>>out,'''R__LOAD_LIBRARY({1}/{0}_C.so)
 
 void run(){{
 
@@ -125,7 +130,7 @@ void run(){{
   TString outputdir = getenv("OUTPUTDIR");
 
   m.SetTreeName("recoTree/SKFlat");
-'''.format(args.Analyzer)
+'''.format(args.Analyzer, (base_rundir+'/libs').replace('///','/').replace('//','/'))
 
   if IsDATA:
     out.write('  m.IsThisDataFile = true;\n')
