@@ -2,6 +2,16 @@ import os
 
 #commands.sh  job_0_GetEffLumi.e6409440  job_0_GetEffLumi.o6409440  run.C  submitlog.log
 
+def GetEventDone(l):
+  # [SKFlatNtuple::Loop] 1185000/1207307 (98.1523 %) @ 2018-5-16 11:0:9
+  w = l.split()[1]
+  nums = w.split('/')
+
+  if len(nums)<2:
+    print nums
+
+  return str(nums[0])+':'+str(nums[1])
+
 def GetJobID(logfiledir, cycle, jobnumber):
   jobid = open(logfiledir+'/submitlog.log').readlines()[0].split()[2]
   return jobid
@@ -47,18 +57,31 @@ def CheckJobStatus(logfiledir, cycle, jobnumber):
 
   LASTLINE = log_o[-1]
   if "Processing run.C" in LASTLINE:
-    return "RUNNING 0"
+    return "EVENT NOT STARTED"
+
+  if "Event Loop Started" in LASTLINE:
+    return "EVENT NOT STARTED"
+
+  line_JobStart = ""
+  for l in log_o:
+    # [SKFlatNtuple::Loop] Event Loop Started 2018-05-17 19:51:10
+    if "Event Loop Started" in l:
+      line_JobStart = l.replace("[SKFlatNtuple::Loop] Event Loop Started ","")
+      break
+  ForTimeEst = LASTLINE
 
   ## 2) Job Finished
   if FinishString in LASTLINE:
-    return "FINISHED"
+    ForTimeEst = log_o[-2]
+    EventDone = GetEventDone(ForTimeEst)
+    return "FINISHED"+"\tEVDONE:"+EventDone+"\t"+line_JobStart
 
-  ## 3) "Processing run.C" not yet done
+  ## 3) Running
   elif "SKFlatNtuple::Loop" in LASTLINE:
     # [SKFlatNtuple::Loop] 2011000/38777460 (5.186 %)
     perct =  LASTLINE.split()[2].strip('(')
-    return "RUNNING "+perct
+    EventDone = GetEventDone(ForTimeEst)
+    return "RUNNING\t"+perct+"\tEVDONE:"+EventDone+"\t"+line_JobStart
   else:
     return "WTF"
 
-#print CheckJobStatus('/data7/Users/jskim/SKFlatRunlog/2018_04_26_142127__DYJets_10to50_MG/', 'GetEffLumi', 0)
