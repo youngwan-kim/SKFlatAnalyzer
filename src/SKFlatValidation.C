@@ -17,10 +17,12 @@ void SKFlatValidation::executeEvent(){
   std::vector<Jet> alljets = GetAllJets();
   std::vector<Jet> myjets;
   int NBJets=0;
+  double HT=0;
   for(unsigned int i=0; i<alljets.size(); i++){
     Jet this_jet = alljets.at(i);
     if(this_jet.Pt() > 30. && fabs(this_jet.Eta())<2.5){
       myjets.push_back(this_jet);
+      HT += this_jet.Pt();
       if(this_jet.IsTagged(Jet::CSVv2, Jet::Medium)) NBJets++;
     }
   }
@@ -141,6 +143,8 @@ void SKFlatValidation::executeEvent(){
 
         JSFillHist(this_region, "MET_"+this_region, METv.Pt(), weight, 500, 0., 500.);
         JSFillHist(this_region, "METphi_"+this_region, METv.Phi(), weight, 60, -3., 3.);
+
+        JSFillHist(this_region, "HT_"+this_region, HT, weight, 1000, 0., 1000.);
 
         JSFillHist(this_region, "Jet_Size_"+this_region, myjets.size(), weight, 10, 0., 10.);
         JSFillHist(this_region, "NBJets_"+this_region, NBJets, weight, 10, 0., 10.);

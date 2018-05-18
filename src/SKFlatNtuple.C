@@ -14,6 +14,8 @@ void SKFlatNtuple::Loop(){
     nentries = std::min(nentries,MaxEvent);
   }
 
+  cout << "[SKFlatNtuple::Loop] Event Loop Started " << printcurrunttime() << endl;
+
   for(Long64_t jentry=0; jentry<nentries;jentry++){
 
     if(jentry%1000==0){

@@ -43,11 +43,20 @@ public :
 
    };
 
+   std::string AddZeroToTime(int twodigit){
+     if(twodigit<10){
+       return "0"+std::to_string(twodigit);
+     }
+     else{
+       return std::to_string(twodigit);
+     }
+   }
+
    std::string printcurrunttime(){
 
      std::stringstream out;
      TDatime datime;
-     out << datime.GetYear()<<"-"<<datime.GetMonth()<<"-"<<datime.GetDay()<<" "<<datime.GetHour()<<":"<<datime.GetMinute()<<":"<<datime.GetSecond();
+     out << datime.GetYear()<<"-"<<AddZeroToTime(datime.GetMonth())<<"-"<<AddZeroToTime(datime.GetDay())<<" "<<AddZeroToTime(datime.GetHour())<<":"<<AddZeroToTime(datime.GetMinute())<<":"<<AddZeroToTime(datime.GetSecond());
      return out.str();
 
    }

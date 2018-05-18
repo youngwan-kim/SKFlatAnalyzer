@@ -2,8 +2,6 @@ import os,sys
 import argparse
 import datetime
 
-print ''
-
 ## TimeStamp
 
 JobStartTime = datetime.datetime.now()
@@ -109,15 +107,17 @@ NTotalFiles = len(lines_files)
 if args.NJobs>NTotalFiles:
   args.NJobs = NTotalFiles
 
-print "<SKFlat> NTotalFiles = "+str(NTotalFiles)
-print "<SKFlat> NJobs = "+str(args.NJobs)
+SubmitOutput = open(base_rundir+'/SubmitOutput.log','w')
+
+SubmitOutput.write("<SKFlat> NTotalFiles = "+str(NTotalFiles)+'\n')
+SubmitOutput.write("<SKFlat> NJobs = "+str(args.NJobs)+'\n')
 nfilepjob = int(NTotalFiles/args.NJobs)
-print "<SKFlat> --> # of files per job = "+str(nfilepjob)
+SubmitOutput.write("<SKFlat> --> # of files per job = "+str(nfilepjob)+'\n')
 nfilepjob_remainder = NTotalFiles-(args.NJobs)*(nfilepjob)
 if nfilepjob_remainder>=(args.NJobs):
-  print 'nfilepjob_remainder = '+str(nfilepjob_remainder)
-  print 'while, (args.NJobs) = '+str((args.NJobs))
-  print '--> exit'
+  SubmitOutput.write('nfilepjob_remainder = '+str(nfilepjob_remainder)+'\n')
+  SubmitOutput.write('while, (args.NJobs) = '+str((args.NJobs))+'\n')
+  SubmitOutput.write('--> exit'+'\n')
   sys.exit()
 
 FileRanges = []
@@ -132,8 +132,8 @@ for it_job in range(0,nfilepjob_remainder):
 for it_job in range(0,(args.NJobs)-nfilepjob_remainder):
   FileRanges.append(range(temp_end_largerjob+(it_job*nfilepjob),temp_end_largerjob+((it_job+1)*nfilepjob) ))
   nfile_checksum += len(range(temp_end_largerjob+(it_job*nfilepjob),temp_end_largerjob+((it_job+1)*nfilepjob) ))
-print 'nfile_checksum = '+str(nfile_checksum)
-print 'NTotalFiles = '+str(NTotalFiles)
+SubmitOutput.write('nfile_checksum = '+str(nfile_checksum)+'\n')
+SubmitOutput.write('NTotalFiles = '+str(NTotalFiles)+'\n')
 
 
 ## Write run script
@@ -296,8 +296,8 @@ while not AllDone:
       outlog = str(it_job)+'\t| '+this_status.split()[1]+' %'
 
       if len(this_status.split())<3 :
-        print 'len(this_status.split())<3;; Priting this_status.split()'
-        print this_status.split()
+        SubmitOutput.write('len(this_status.split())<3;; Priting this_status.split()\n')
+        SubmitOutput.write(this_status.split()+'\n')
 
       EventInfo = this_status.split()[2].split(':')
 
