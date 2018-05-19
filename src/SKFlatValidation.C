@@ -125,6 +125,8 @@ void SKFlatValidation::executeEvent(){
       map_bool_To_Region["OS"] = IsOS;
       //==== OnZ event
       map_bool_To_Region["OnZ_OS"] = IsOS && IsOnZ(Z.M(), 15.);
+      //==== OnZ event
+      map_bool_To_Region["ZMassgt50_OS"] = IsOS && (Z.M()>50.);
       //==== With B-jet, MET > 30 for dilepton ttbar
       map_bool_To_Region["WithBJet_METgt30_OS"] = IsOS && (NBJets>0) && (METv.Pt()>30.);
     }
@@ -163,7 +165,7 @@ void SKFlatValidation::executeEvent(){
           JSFillHist(this_region, "Lepton_1_Eta_"+this_region, lep[1]->Eta(), weight, 60, -3., 3.);
           JSFillHist(this_region, "Lepton_1_RelIso_"+this_region, lep[1]->RelIso(), weight, 100, 0., 1.);
 
-          JSFillHist(this_region, "Z_Mass_"+this_region, Z.M(), weight, 500, 0., 500.);
+          JSFillHist(this_region, "Z_Mass_"+this_region, Z.M(), weight, 7000, 0., 7000.);
           JSFillHist(this_region, "Z_Pt_"+this_region, Z.Pt(), weight, 500, 0., 500.);
           JSFillHist(this_region, "Z_Eta_"+this_region, Z.Eta(), weight, 60, -3., 3.);
 

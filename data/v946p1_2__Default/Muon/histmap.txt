@@ -1,0 +1,2 @@
+Trigger	Eff_DATA	IsoMu27_POGTight	EfficienciesAndSF_RunBtoF_Nov17Nov2017.root	IsoMu27_PtEtaBins/efficienciesDATA/abseta_pt_DATA
+Trigger Eff_MC  IsoMu27_POGTight  EfficienciesAndSF_RunBtoF_Nov17Nov2017.root IsoMu27_PtEtaBins/efficienciesMC/abseta_pt_MC
