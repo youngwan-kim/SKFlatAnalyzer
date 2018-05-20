@@ -27,6 +27,7 @@ string_JobStartTime =  JobStartTime.strftime('%Y-%m-%d %H:%M:%S')
 
 ## Environment Variables
 
+SKFlat_WD = os.environ['SKFlat_WD']
 SKFlatV = os.environ['SKFlatV']
 SKFlatAnV = os.environ['SKFlatAnV']
 DATA_DIR = os.environ['SAMPLE_DATA_DIR']
@@ -104,17 +105,19 @@ for InputSample in InputSamples:
     base_rundir = base_rundir+'__period'+DataPeriod+'/'
 
   os.system('mkdir -p '+base_rundir)
+  os.system('mkdir -p '+base_rundir+'/output/')
 
   ## Copy shared library file
 
-  os.system('mkdir -p '+base_rundir+'/libs/')
-  os.system('cp '+SKFlat_LIB_PATH+'/* '+base_rundir+'/libs')
+  os.system('mkdir -p '+base_rundir+'/lib/')
+  os.system('cp '+SKFlat_LIB_PATH+'/* '+base_rundir+'/lib')
   if IsKISTI:
-    os.system('tar -czvf data.tar.gz data')
+    os.chdir(SKFlat_WD)
+    os.system('tar -czf data.tar.gz data')
     os.system('mv data.tar.gz '+base_rundir)
     cwd = os.getcwd()
     os.chdir(base_rundir)
-    os.system('tar -czvf libs.tar.gz libs/*')
+    os.system('tar -czf lib.tar.gz lib/*')
     os.chdir(cwd)
 
   ## Create webdir
@@ -218,29 +221,53 @@ for InputSample in InputSamples:
   if IsKISTI:
 
     commandsfilename = args.Analyzer+'_'+InputSample
+    if IsDATA:
+      commandsfilename += '_'+DataPeriod
     run_commands = open(base_rundir+'/'+commandsfilename+'.sh','w')
     print>>run_commands,'''#!/bin/bash
 SECTION=`printf %03d $1`
 WORKDIR=`pwd`
-tar -zxvf libs.tar.gz
+echo "#### Extracting libraries ####"
+tar -zxvf lib.tar.gz
+echo "#### Extracting run files ####"
 tar -zxvf runFile.tar.gz
+echo "#### Extracting data files ####"
 tar -zxvf data.tar.gz
-#tar -zxvf CMSSW_9_4_4_EMPTY.tar.gz
+echo "#### cmsenv ####"
 export CMS_PATH=/cvmfs/cms.cern.ch
 source $CMS_PATH/cmsset_default.sh
 export SCRAM_ARCH=slc6_amd64_gcc630
 cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/src/
 eval `scramv1 runtime -sh`
 cd -
+echo "#### setup root ####"
 source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/external/slc6_amd64_gcc630/bin/thisroot.sh
-root -l -b -q run_${SECTION}.C
-for FILE in hists.root; do
-  EXT=${FILE##*.}
-  PREFIX=${FILE%%.${EXT}}
-'''
 
-    run_commands.write('  xrdcp --silent $FILE root://cms-xrdr.sdfarm.kr:1094//xrd//'+SKFlatSEDir.replace('/xrootd','')+'/'+base_rundir.replace(SKFlatRunlogDir,'')+'/${PREFIX}_${SECTION}.${EXT}\n')
-    run_commands.write('done\n')
+NoAuthError=999
+Trial=0
+
+while [ "$NoAuthError" -ne 0 ]; do
+
+  if [ "$Trial" -gt 10 ]; then
+    break
+  fi
+
+  echo "#### running ####"
+  echo "root -l -b -q run_${SECTION}.C"
+  root -l -b -q run_${SECTION}.C 2> err.log
+  NoAuthError=`grep "Error in <TNetXNGFile::Open>" err.log -R | wc -l`
+
+  if [ "$NoAuthError" -ne 0 ]; then
+    echo "NoAuthError="$NoAuthError
+    echo "AUTH error occured.. running again in 30 seconds.."
+    Trial=$((Trial+=1))
+    sleep 30
+  fi
+
+done
+
+cat err.log >&2
+'''
     run_commands.close()
 
     submit_command = open(base_rundir+'/submit.jds','w')
@@ -254,10 +281,11 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 output = job_$(Process).log
 error = job_$(Process).err
-transfer_input_files = {0}, {1}, data.tar.gz
+transfer_input_files = {0}, {1}, {4}
 use_x509userproxy = true
+transfer_output_remaps = "hists.root = output/hists_$(Process).root"
 queue {2}
-'''.format(base_rundir+'/runFile.tar.gz', base_rundir+'/libs.tar.gz',str(NJobs), commandsfilename)
+'''.format(base_rundir+'/runFile.tar.gz', base_rundir+'/lib.tar.gz',str(NJobs), commandsfilename, base_rundir+'/data.tar.gz')
     submit_command.close()
 
   CheckTotalNFile=0
@@ -272,9 +300,9 @@ queue {2}
     thisjob_dir = base_rundir+'/job_'+str(it_job)+'/'
 
     runfunctionname = "run"
-    libdir = (base_rundir+'/libs').replace('///','/').replace('//','/')
+    libdir = (base_rundir+'/lib').replace('///','/').replace('//','/')
     if IsKISTI:
-      libdir = 'libs'
+      libdir = 'lib'
       runfunctionname = "run_"+str(it_job).zfill(3)
       out = open(base_rundir+'/run_'+str(it_job).zfill(3)+'.C','w')
     else:
@@ -349,7 +377,7 @@ echo "[SKFlat.py] JOB FINISHED!!"
 
     cwd = os.getcwd()
     os.chdir(base_rundir)
-    os.system('tar -czvf runFile.tar.gz run_*.C')
+    os.system('tar -czf runFile.tar.gz run_*.C')
     os.system('condor_submit submit.jds')
     os.chdir(cwd)
 
@@ -588,11 +616,11 @@ try:
             os.chdir(base_rundir)
 
             if IsKISTI:
-              os.system('hadd -f '+outputname+'.root '+SKFlatSEDir+'/'+base_rundir.replace(SKFlatRunlogDir,'')+'/*.root >> JobStatus.log')
-              os.system('rm '+SKFlatSEDir+'/'+base_rundir.replace(SKFlatRunlogDir,'')+'*.root')
+              os.system('hadd -f '+outputname+'.root output/*.root >> JobStatus.log')
+              #os.system('rm output/*.root')
             else:
               os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
-              os.system('rm job_*/*.root')
+              #os.system('rm job_*/*.root')
 
             ## Final Outputpath
 
