@@ -30,6 +30,8 @@ void SKFlatNtuple::Loop(){
 
   }
 
+  cout << "[SKFlatNtuple::Loop] JOB FINISHED " << printcurrunttime() << endl;
+
 }
 
 //==== Basic

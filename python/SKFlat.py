@@ -29,10 +29,14 @@ string_JobStartTime =  JobStartTime.strftime('%Y-%m-%d %H:%M:%S')
 
 SKFlatV = os.environ['SKFlatV']
 SKFlatAnV = os.environ['SKFlatAnV']
-DATA_DIR = os.environ['DATA_DIR']
+DATA_DIR = os.environ['SAMPLE_DATA_DIR']
 SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
 SKFlatOutputDir = os.environ['SKFlatOutputDir']
+SKFlatSEDir = os.environ['SKFlatSEDir']
 SKFlat_LIB_PATH = os.environ['SKFlat_LIB_PATH']
+HOSTNAME = os.environ['HOSTNAME']
+UID = str(os.getuid())
+IsKISTI = ("ui10.sdfarm.kr" in HOSTNAME)
 
 ## Make Sample List
 
@@ -58,10 +62,10 @@ else:
         StringForHash += line
     elif args.DataPeriod in AvailableDataPeriods:
       InputSamples.append(args.InputSample+":"+args.DataPeriod)
-      StringForHash += line
+      StringForHash += args.InputSample+":"+args.DataPeriod
   else:
     InputSamples.append(args.InputSample)
-    StringForHash += line
+    StringForHash += args.InputSample
 FileRangesForEachSample = []
 
 ## Get Random Number for webdir
@@ -105,6 +109,13 @@ for InputSample in InputSamples:
 
   os.system('mkdir -p '+base_rundir+'/libs/')
   os.system('cp '+SKFlat_LIB_PATH+'/* '+base_rundir+'/libs')
+  if IsKISTI:
+    os.system('tar -czvf data.tar.gz data')
+    os.system('mv data.tar.gz '+base_rundir)
+    cwd = os.getcwd()
+    os.chdir(base_rundir)
+    os.system('tar -czvf libs.tar.gz libs/*')
+    os.chdir(cwd)
 
   ## Create webdir
 
@@ -115,46 +126,59 @@ for InputSample in InputSamples:
 
   ## Get Sample Path
 
-  lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
-  Samplepath_Section="Alias"
-  SampleBaseDirs = []
-  NtupleFilePath = ""
-  for line in lines_SamplePath:
+  lines_files = []
+  if IsKISTI:
+    tmpfilepath = DATA_DIR+'/Sample/ForKISTI/'+InputSample+'.txt'
+    if IsDATA:
+      tmpfilepath = DATA_DIR+'/Sample/ForKISTI/'+InputSample+'_'+DataPeriod+'.txt'
+    lines_files = open(tmpfilepath).readlines()
+    os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
 
-    if len(line.split())==0:
-      continue
+  else:
+    lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
+    Samplepath_Section="Alias"
+    SampleBaseDirs = []
+    NtupleFilePath = ""
+    for line in lines_SamplePath:
 
-    words = line.split()
+      if len(line.split())==0:
+        continue
 
-    if "Section:" in line:
-      Samplepath_Section = words[1]
-      continue
+      words = line.split()
 
-    if Samplepath_Section=="Alias":
-      SampleBaseDirs.append( (words[0], words[1]) )
+      if "Section:" in line:
+        Samplepath_Section = words[1]
+        continue
+
+      if Samplepath_Section=="Alias":
+        SampleBaseDirs.append( (words[0], words[1]) )
 
 
-    if IsDATA and Samplepath_Section=="DATA":
-      if words[0]==InputSample:
-        NtupleFilePath = words[1]
-        break
+      if IsDATA and Samplepath_Section=="DATA":
+        if words[0]==InputSample:
+          NtupleFilePath = words[1]
+          break
 
-    if not IsDATA and Samplepath_Section=="MC":
-      if words[0]==InputSample:
-        NtupleFilePath = words[1]
-        break
-      
-  for BaseDir in SampleBaseDirs:
-    alias = BaseDir[0]
-    path = BaseDir[1]
-    if alias in NtupleFilePath:
-      NtupleFilePath = NtupleFilePath.replace(alias,path+'/'+SKFlatV+'/')
-  if IsDATA:
-    NtupleFilePath = NtupleFilePath+'period'+DataPeriod+'/'
+      if not IsDATA and Samplepath_Section=="MC":
+        if words[0]==InputSample:
+          NtupleFilePath = words[1]
+          break
+        
+    for BaseDir in SampleBaseDirs:
+      alias = BaseDir[0]
+      path = BaseDir[1]
+      if alias in NtupleFilePath:
+        if IsKISTI:
+          NtupleFilePath = NtupleFilePath.replace(alias,path)
+          NtupleFilePath = NtupleFilePath.replace('<SKFlatV>','SKFlat_'+SKFlatV)
+        else:
+          NtupleFilePath = NtupleFilePath.replace(alias,path+'/'+SKFlatV+'/')
+    if IsDATA:
+      NtupleFilePath = NtupleFilePath+'period'+DataPeriod+'/'
 
-  ## Get input file list ##
-  os.system('ls -1 '+NtupleFilePath+'/*.root > '+base_rundir+'/input_filelist.txt')
-  lines_files = open(base_rundir+'/input_filelist.txt').readlines()
+    os.system('ls -1 '+NtupleFilePath+'/*.root > '+base_rundir+'/input_filelist.txt')
+    lines_files = open(base_rundir+'/input_filelist.txt').readlines()
+
   NTotalFiles = len(lines_files)
 
   if NJobs>NTotalFiles:
@@ -189,8 +213,52 @@ for InputSample in InputSamples:
   SubmitOutput.write('NTotalFiles = '+str(NTotalFiles)+'\n')
   FileRangesForEachSample.append(FileRanges)
 
-
   ## Write run script
+
+  if IsKISTI:
+
+    commandsfilename = args.Analyzer+'_'+InputSample
+    run_commands = open(base_rundir+'/'+commandsfilename+'.sh','w')
+    print>>run_commands,'''#!/bin/bash
+SECTION=`printf %03d $1`
+WORKDIR=`pwd`
+tar -zxvf libs.tar.gz
+tar -zxvf runFile.tar.gz
+tar -zxvf data.tar.gz
+#tar -zxvf CMSSW_9_4_4_EMPTY.tar.gz
+export CMS_PATH=/cvmfs/cms.cern.ch
+source $CMS_PATH/cmsset_default.sh
+export SCRAM_ARCH=slc6_amd64_gcc630
+cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/src/
+eval `scramv1 runtime -sh`
+cd -
+source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/external/slc6_amd64_gcc630/bin/thisroot.sh
+root -l -b -q run_${SECTION}.C
+for FILE in hists.root; do
+  EXT=${FILE##*.}
+  PREFIX=${FILE%%.${EXT}}
+'''
+
+    run_commands.write('  xrdcp --silent $FILE root://cms-xrdr.sdfarm.kr:1094//xrd//'+SKFlatSEDir.replace('/xrootd','')+'/'+base_rundir.replace(SKFlatRunlogDir,'')+'/${PREFIX}_${SECTION}.${EXT}\n')
+    run_commands.write('done\n')
+    run_commands.close()
+
+    submit_command = open(base_rundir+'/submit.jds','w')
+    print>>submit_command,'''executable = {3}.sh
+universe   = vanilla
+arguments  = $(Process)
+requirements = OpSysMajorVer == 6
+log = condor.log
+getenv     = True
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+output = job_$(Process).log
+error = job_$(Process).err
+transfer_input_files = {0}, {1}, data.tar.gz
+use_x509userproxy = true
+queue {2}
+'''.format(base_rundir+'/runFile.tar.gz', base_rundir+'/libs.tar.gz',str(NJobs), commandsfilename)
+    submit_command.close()
 
   CheckTotalNFile=0
   for it_job in range(0,len(FileRanges)):
@@ -202,19 +270,27 @@ for InputSample in InputSamples:
     CheckTotalNFile = CheckTotalNFile+len(FileRanges[it_job])
 
     thisjob_dir = base_rundir+'/job_'+str(it_job)+'/'
-    os.system('mkdir -p '+thisjob_dir)
 
-    out = open(thisjob_dir+'run.C','w')
+    runfunctionname = "run"
+    libdir = (base_rundir+'/libs').replace('///','/').replace('//','/')
+    if IsKISTI:
+      libdir = 'libs'
+      runfunctionname = "run_"+str(it_job).zfill(3)
+      out = open(base_rundir+'/run_'+str(it_job).zfill(3)+'.C','w')
+    else:
+      os.system('mkdir -p '+thisjob_dir)
+      out = open(thisjob_dir+'run.C','w')
+    
     print>>out,'''R__LOAD_LIBRARY({1}/{0}_C.so)
 
-  void run(){{
+void {2}(){{
 
-    {0} m;
+  {0} m;
 
-    TString outputdir = getenv("OUTPUTDIR");
+  TString outputdir = getenv("OUTPUTDIR");
 
-    m.SetTreeName("recoTree/SKFlat");
-  '''.format(args.Analyzer, (base_rundir+'/libs').replace('///','/').replace('//','/'))
+  m.SetTreeName("recoTree/SKFlat");
+'''.format(args.Analyzer, libdir, runfunctionname)
 
     if IsDATA:
       out.write('  m.IsThisDataFile = true;\n')
@@ -223,55 +299,70 @@ for InputSample in InputSamples:
       out.write('  m.MCSample = "'+InputSample+'";\n');
       out.write('  m.IsThisDataFile = false;\n')
 
-    out.write('  m.SetOutfilePath("'+thisjob_dir+'/hists.root");\n')
+    if IsKISTI:
+      out.write('  m.SetOutfilePath("hists.root");\n')
+    else:
+      out.write('  m.SetOutfilePath("'+thisjob_dir+'/hists.root");\n')
 
     for it_file in FileRanges[it_job]:
-      out.write('  m.AddFile("'+lines_files[it_file].strip('\n')+'");\n')
+      thisfilename = lines_files[it_file].strip('\n')
+      out.write('  m.AddFile("'+thisfilename+'");\n')
 
     print>>out,'''  m.Init();
 
-    m.Loop();
+  m.Loop();
 
-    m.WriteHist();
+  m.WriteHist();
 
-  }'''
+}'''
     out.close()
 
-    run_commands = open(thisjob_dir+'commands.sh','w')
-    print>>run_commands,'''echo "[SKFlat.py] cmsset_default.sh"
-  source /cvmfs/cms.cern.ch/cmsset_default.sh
-  echo "[SKFlat.py] Going to $CMSSW_BASE/src"
-  cd /data7/Users/jskim/CMSSW_9_4_4/src/
-  export SCRAM_ARCH=slc6_amd64_gcc630
-  echo "[SKFlat.py] Trying cmsenv"
-  cmsenv
-  cd {0}
-  echo "[SKFlat.py] Okay, let's run the analysis"
-  root -l -b -q run.C
-  echo "[SKFlat.py] JOB FINISHED!!"
-  '''.format(thisjob_dir)
-    run_commands.close()
+    if not IsKISTI:
+      run_commands = open(thisjob_dir+'commands.sh','w')
+      print>>run_commands,'''echo "[SKFlat.py] cmsset_default.sh"
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+echo "[SKFlat.py] Going to $CMSSW_BASE/src"
+cd /data7/Users/jskim/CMSSW_9_4_4/src/
+export SCRAM_ARCH=slc6_amd64_gcc630
+echo "[SKFlat.py] Trying cmsenv"
+cmsenv
+cd {0}
+echo "[SKFlat.py] Okay, let's run the analysis"
+root -l -b -q run.C
+echo "[SKFlat.py] JOB FINISHED!!"
+'''.format(thisjob_dir)
+      run_commands.close()
 
-    jobname = 'job_'+str(it_job)+'_'+args.Analyzer
-    cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
+      jobname = 'job_'+str(it_job)+'_'+args.Analyzer
+      cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
 
-    if not args.no_exec:
-      cwd = os.getcwd()
-      os.chdir(thisjob_dir)
-      os.system(cmd+' > submitlog.log')
-      os.chdir(cwd)
-    sublog = open(thisjob_dir+'/submitlog.log','a')
-    sublog.write('\nSubmission command was : '+cmd+'\n')
-    sublog.close()
+      if not args.no_exec:
+        cwd = os.getcwd()
+        os.chdir(thisjob_dir)
+        os.system(cmd+' > submitlog.log')
+        os.chdir(cwd)
+      sublog = open(thisjob_dir+'/submitlog.log','a')
+      sublog.write('\nSubmission command was : '+cmd+'\n')
+      sublog.close()
 
-  ## Write Kill Command
+  if IsKISTI:
 
-  KillCommand = open(base_rundir+'/Script_JobKill.sh','w')
-  for it_job in range(0,len(FileRanges)):
-    thisjob_dir = base_rundir+'/job_'+str(it_job)+'/'
-    jobid = GetJobID(thisjob_dir, args.Analyzer, it_job)
-    KillCommand.write('qdel '+jobid+' ## job_'+str(it_job)+' ##\n')
-  KillCommand.close()
+    cwd = os.getcwd()
+    os.chdir(base_rundir)
+    os.system('tar -czvf runFile.tar.gz run_*.C')
+    os.system('condor_submit submit.jds')
+    os.chdir(cwd)
+
+  else:
+
+    ## Write Kill Command
+
+    KillCommand = open(base_rundir+'/Script_JobKill.sh','w')
+    for it_job in range(0,len(FileRanges)):
+      thisjob_dir = base_rundir+'/job_'+str(it_job)+'/'
+      jobid = GetJobID(thisjob_dir, args.Analyzer, it_job)
+      KillCommand.write('qdel '+jobid+' ## job_'+str(it_job)+' ##\n')
+    KillCommand.close()
 
 ##########################
 ## Submittion all done. ##
@@ -281,9 +372,14 @@ for InputSample in InputSamples:
 ## Loop over samples again
 
 AllSampleFinished = False
+GotError = False
+ErrorLog = ""
 
 try:
   while not AllSampleFinished:
+
+    if GotError:
+      break
 
     AllSampleFinished = True
 
@@ -292,7 +388,6 @@ try:
       InputSample = InputSamples[it_sample]
       SampleFinished = SampleFinishedForEachSample[it_sample]
       PostJobFinished = PostJobFinishedForEachSample[it_sample]
-      GotError = False
 
       if PostJobFinished:
         continue
@@ -342,14 +437,19 @@ try:
         FileRanges = FileRangesForEachSample[it_sample]
 
         for it_job in range(0,len(FileRanges)):
+
           thisjob_dir = base_rundir+'/'
+          if IsKISTI:
+            thisjob_dir = base_rundir
+
           this_status = ""
-          this_status = CheckJobStatus(thisjob_dir, args.Analyzer, it_job)
+          this_status = CheckJobStatus(thisjob_dir, args.Analyzer, it_job, IsKISTI)
 
           if "ERROR" in this_status:
             GotError = True
             statuslog.write("#### ERROR OCCURED ####\n")
             statuslog.write(this_status+'\n')
+            ErrorLog = this_status
             break
 
           if "FINISHED" not in this_status:
@@ -431,6 +531,7 @@ try:
         for l in ToStatuslog:
           statuslog.write(l+'\n')
         statuslog.write('\n==============================================================\n')
+        statuslog.write('HOSTNAME = '+HOSTNAME+'\n')
         statuslog.write('queue = '+args.Queue+'\n')
         statuslog.write(str(len(FileRanges))+' jobs submitted\n')
         statuslog.write(str(n_eventran)+' jobs are running\n')
@@ -485,9 +586,13 @@ try:
           if not GotError:
             cwd = os.getcwd()
             os.chdir(base_rundir)
-            os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
 
-            os.system('rm job_*/*.root')
+            if IsKISTI:
+              os.system('hadd -f '+outputname+'.root '+SKFlatSEDir+'/'+base_rundir.replace(SKFlatRunlogDir,'')+'/*.root >> JobStatus.log')
+              os.system('rm '+SKFlatSEDir+'/'+base_rundir.replace(SKFlatRunlogDir,'')+'*.root')
+            else:
+              os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
+              os.system('rm job_*/*.root')
 
             ## Final Outputpath
 
@@ -518,12 +623,19 @@ JobFinishEmail = '''#### Job Info ####
 Analyzer = {0}
 InputSample = {1}
 OutputDir = {2}
-'''.format(args.Analyzer,InputSamples,FinalOutputPath)
+'''.format(args.Analyzer,InputSamples,args.Outputdir)
 JobFinishEmail += '''##################
 Job started at {0}
 Job finished at {1}
 '''.format(string_JobStartTime,string_ThisTime)
-SendEmail('jskim','jae.sung.kim@cern.ch','Job Summary',JobFinishEmail)
+
+EmailTitle = 'Job Summary'
+if GotError:
+  JobFinishEmail = "#### ERROR OCCURED ####\n"+JobFinishEmail
+  JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
+  EmailTitle = '[ERROR] Job Summary'
+
+SendEmail('jskim','jae.sung.kim@cern.ch',EmailTitle,JobFinishEmail)
 
 
 

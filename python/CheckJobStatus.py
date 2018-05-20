@@ -16,13 +16,19 @@ def GetJobID(logfiledir, cycle, jobnumber):
   jobid = open(logfiledir+'/submitlog.log').readlines()[0].split()[2]
   return jobid
 
-def CheckJobStatus(logfiledir, cycle, jobnumber):
-  FinishString = "[SKFlat.py] JOB FINISHED"
+def CheckJobStatus(logfiledir, cycle, jobnumber, IsKISTI):
+  FinishString = "JOB FINISHED"
 
-  jobid = open(logfiledir+'/job_'+str(jobnumber)+'/submitlog.log').readlines()[0].split()[2]
+  path_log_e = ""
+  path_log_o = ""
 
-  path_log_e = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.e'+jobid
-  path_log_o = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.o'+jobid
+  if IsKISTI:
+    path_log_e = logfiledir+"/job_"+str(jobnumber)+".err"
+    path_log_o = logfiledir+"/job_"+str(jobnumber)+".log"
+  else:
+    jobid = open(logfiledir+'/job_'+str(jobnumber)+'/submitlog.log').readlines()[0].split()[2]
+    path_log_e = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.e'+jobid
+    path_log_o = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.o'+jobid
 
   if (not os.path.exists(path_log_e)) or (not os.path.exists(path_log_o)):
     return "BATCH JOB NOT STARTED"
@@ -45,7 +51,7 @@ def CheckJobStatus(logfiledir, cycle, jobnumber):
 
   IsCycleRan = False
   for l in log_o:
-    if "Processing run.C" in l:
+    if "Processing run" in l:
       IsCycleRan = True
       break
 
