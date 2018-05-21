@@ -65,8 +65,13 @@ void Muon::SetIso(double ch04, double nh04, double ph04, double pu04){
 }
 
 void Muon::CalcPFRelIso(){
-  double reliso = j_PFCH04+std::max( 0., j_PFNH04 + j_PFPH04 - 0.5*j_PU04 );
-  this->SetRelIso(reliso);
+  double absiso = j_PFCH04+std::max( 0., j_PFNH04 + j_PFPH04 - 0.5*j_PU04 );
+  //cout << "[Muon::CalcPFRelIso] j_PFCH04 = " << j_PFCH04 << endl;
+  //cout << "[Muon::CalcPFRelIso] j_PFNH04 = " << j_PFNH04 << endl;
+  //cout << "[Muon::CalcPFRelIso] j_PFPH04 = " << j_PFPH04 << endl;
+  //cout << "[Muon::CalcPFRelIso] j_PU04 = " << j_PU04 << endl;
+  //cout << "[Muon::CalcPFRelIso] --> absiso = " << absiso << endl;
+  this->SetRelIso(absiso/this->Pt());
 }
 
 void Muon::SetMiniAODPt(double d){

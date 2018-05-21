@@ -248,7 +248,7 @@ Trial=0
 
 while [ "$NoAuthError" -ne 0 ]; do
 
-  if [ "$Trial" -gt 10 ]; then
+  if [ "$Trial" -gt 50 ]; then
     break
   fi
 

@@ -106,7 +106,11 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   eta = fabs(eta);
 
   if(trig=="IsoMu27"){
-    if(pt<29.) return 0.;
+    //==== MiniAODPt Pt
+    //==== 28.9918	29.0363
+    //==== This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
+    //==== So when I return 0., SF goes nan.. let's returning 1. for now..
+    if(pt<29.) return 1.; //FIXME
     if(pt>=1200.) return 1.;
     if(eta>=2.4) return 1.;
   }
@@ -145,6 +149,15 @@ double MCCorrection::MuonTrigger_SF(TString ID, TString trig, std::vector<Muon> 
     eff_MC = 1.-eff_MC;
 
     value = eff_DATA/eff_MC;
+
+/*
+    if(eff_DATA==0||eff_MC==0){
+      cout << "==== Zero Trigger Eff ====" << endl;
+      for(unsigned int i=0;i<muons.size();i++){
+        cout << muons.at(i).MiniAODPt() << "\t" << muons.at(i).Pt() << endl;
+      }
+    }
+*/
 
   }
 
