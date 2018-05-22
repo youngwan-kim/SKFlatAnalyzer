@@ -11,7 +11,7 @@ void SKFlatValidation::executeEvent(){
   bool PassDiElectron = ev.PassTrigger("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v");
   bool PassSingleElectron = ev.PassTrigger("HLT_Ele35_WPTight_Gsf_v");
 
-  std::vector<Muon> muons = GetMuons("TEST", 10., 2.4);
+  std::vector<Muon> muons = GetMuons("POGTightWithTightIso", 10., 2.4);
   std::vector<Electron> electrons = GetElectrons("passMVAID_iso_WP80", 10., 2.5);
 
   std::vector<Jet> alljets = GetAllJets();
@@ -57,7 +57,7 @@ void SKFlatValidation::executeEvent(){
 
     }
 
-    if(this->IsThisDataFile){
+    if(this->IsDATA){
       if(this->DataStream == "SingleMuon"){
         if(!( Suffix.Contains("SingleMuon") )) continue;
       }
@@ -72,15 +72,15 @@ void SKFlatValidation::executeEvent(){
       }
     }
     
-    std::vector<Lepton *> lep;
+    std::vector<Lepton *> leps;
     if(Suffix.Contains("SingleMuon")){
-      lep = MakeLeptonPointerVector(muons);
+      leps = MakeLeptonPointerVector(muons);
     }
     else if(Suffix.Contains("DiElectron")){
-      lep = MakeLeptonPointerVector(electrons);
+      leps = MakeLeptonPointerVector(electrons);
     }
     else if(Suffix.Contains("SingleElectron")){
-      lep = MakeLeptonPointerVector(electrons);
+      leps = MakeLeptonPointerVector(electrons);
     }
     else{
 
@@ -88,22 +88,22 @@ void SKFlatValidation::executeEvent(){
 
     Particle METv = ev.GetMETVector();
 
-    int n_lepton = lep.size();
+    int n_lepton = leps.size();
     //==== DiLepton variables
     bool IsOS = false;
     Particle Z;
     if(n_lepton==2){
-      IsOS = (lep[0]->Charge() != lep[1]->Charge());
-      Z = (*lep[0])+(*lep[1]);
+      IsOS = (leps[0]->Charge() != leps[1]->Charge());
+      Z = (*leps[0])+(*leps[1]);
     }
     //==== SingleLepton variables
     double this_MT=-999.;
     if(n_lepton==1){
-      this_MT = MT( METv, (*lep[0]) );
+      this_MT = MT( METv, (*leps[0]) );
     }
 
     double weight = 1.;
-    if(!IsThisDataFile){
+    if(!IsDATA){
       //cout << "weight_norm_1invfb = " << weight_norm_1invfb << endl;
       //cout << "GetTriggerLumi = " << ev.GetTriggerLumi("Full") << endl;
       weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full")*ev.MCweight();
@@ -162,19 +162,13 @@ void SKFlatValidation::executeEvent(){
         JSFillHist(this_region, "Jet_Size_"+this_region, myjets.size(), weight, 10, 0., 10.);
         JSFillHist(this_region, "NBJets_"+this_region, NBJets, weight, 10, 0., 10.);
 
-        JSFillHist(this_region, "Lepton_0_Pt_"+this_region, lep[0]->Pt(), weight, 500, 0., 500.);
-        JSFillHist(this_region, "Lepton_0_Eta_"+this_region, lep[0]->Eta(), weight, 60, -3., 3.);
-        JSFillHist(this_region, "Lepton_0_RelIso_"+this_region, lep[0]->RelIso(), weight, 100, 0., 1.);
+        FillLeptonPlots(leps, this_region, weight);
 
         if(n_lepton==1){
           JSFillHist(this_region, "MT_"+this_region, this_MT, weight, 500, 0., 500.);
         }
 
         if(n_lepton>=2){
-
-          JSFillHist(this_region, "Lepton_1_Pt_"+this_region, lep[1]->Pt(), weight, 500, 0., 500.);
-          JSFillHist(this_region, "Lepton_1_Eta_"+this_region, lep[1]->Eta(), weight, 60, -3., 3.);
-          JSFillHist(this_region, "Lepton_1_RelIso_"+this_region, lep[1]->RelIso(), weight, 100, 0., 1.);
 
           JSFillHist(this_region, "Z_Mass_"+this_region, Z.M(), weight, 7000, 0., 7000.);
           JSFillHist(this_region, "Z_Pt_"+this_region, Z.Pt(), weight, 500, 0., 500.);
