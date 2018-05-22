@@ -38,7 +38,7 @@ void SKFlatNtuple::Loop(){
 
 SKFlatNtuple::SKFlatNtuple(){
   MaxEvent = -1;
-  IsThisDataFile = false;
+  IsDATA = false;
   DataStream = "";
   MCSample = "";
   weight_norm_1invfb = 1.;
@@ -62,7 +62,7 @@ void SKFlatNtuple::Init()
 
   //std::cout << "[SKFlatNtuple::Init] called" << std::endl; 
 
-  if(!IsThisDataFile){
+  if(!IsDATA){
 
     //std::cout << "[SKFlatNtuple::Init] MCSample = " << MCSample << std::endl;
 
@@ -836,7 +836,7 @@ void SKFlatNtuple::Init()
    fChain->SetBranchAddress("muon_PfGammaMiniIso", &muon_PfGammaMiniIso, &b_muon_PfGammaMiniIso);
    fChain->SetBranchAddress("muon_PFSumPUMiniIso", &muon_PFSumPUMiniIso, &b_muon_PFSumPUMiniIso);
 
-   if(!IsThisDataFile){
+   if(!IsDATA){
    fChain->SetBranchAddress("PDFWeights_Scale", &PDFWeights_Scale, &b_PDFWeights_Scale);
    fChain->SetBranchAddress("PDFWeights_Error", &PDFWeights_Error, &b_PDFWeights_Error);
    fChain->SetBranchAddress("PDFWeights_AlphaS", &PDFWeights_AlphaS, &b_PDFWeights_AlphaS);

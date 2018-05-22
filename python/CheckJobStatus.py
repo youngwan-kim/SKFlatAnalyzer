@@ -89,5 +89,13 @@ def CheckJobStatus(logfiledir, cycle, jobnumber, IsKISTI):
     EventDone = GetEventDone(ForTimeEst)
     return "RUNNING\t"+perct+"\tEVDONE:"+EventDone+"\t"+line_JobStart
   else:
-    return "WTF"
+
+    for it_l in range(0,log_o):
+      l = log_o[len(log_o)-1-it_l]
+      if ("[SKFlatNtuple::Loop]" in l) and ("@" in l):
+        perct =  l.split()[2].strip('(')
+        EventDone = GetEventDone(l)
+        return "RUNNING\t"+perct+"\tEVDONE:"+EventDone+"\t"+line_JobStart
+
+      return "WTF"
 

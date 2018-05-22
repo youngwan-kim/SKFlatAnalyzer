@@ -321,11 +321,11 @@ void {2}(){{
 '''.format(args.Analyzer, libdir, runfunctionname)
 
     if IsDATA:
-      out.write('  m.IsThisDataFile = true;\n')
+      out.write('  m.IsDATA = true;\n')
       out.write('  m.DataStream = "'+InputSample+'";\n')
     else:
       out.write('  m.MCSample = "'+InputSample+'";\n');
-      out.write('  m.IsThisDataFile = false;\n')
+      out.write('  m.IsDATA = false;\n')
 
     if IsKISTI:
       out.write('  m.SetOutfilePath("hists.root");\n')
@@ -617,7 +617,7 @@ try:
 
             if IsKISTI:
               os.system('hadd -f '+outputname+'.root output/*.root >> JobStatus.log')
-              #os.system('rm output/*.root')
+              os.system('rm output/*.root')
             else:
               os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
               #os.system('rm job_*/*.root')

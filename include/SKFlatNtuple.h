@@ -31,7 +31,7 @@ public :
    }
 
    Long64_t MaxEvent;
-   bool IsThisDataFile;
+   bool IsDATA;
    TString DataStream;
    TString MCSample;
    double weight_norm_1invfb;
