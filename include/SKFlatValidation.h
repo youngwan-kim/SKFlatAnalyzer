@@ -7,6 +7,8 @@ class SKFlatValidation : public AnalyzerCore {
 
 public:
 
+  void executeEventFromParameter(AnalyzerParameter param);
+
   void executeEvent();
 
 };

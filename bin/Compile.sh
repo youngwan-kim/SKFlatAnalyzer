@@ -1,5 +1,5 @@
 #!/bin/bash
-for cy in SKFlatValidation GetEffLumi
+for cy in SKFlatValidation GetEffLumi CalcCFRate
 do
   root -l -b -q src/$cy.C+
   mv src/$cy"_C_ACLiC_dict_rdict.pcm" $SKFlat_LIB_PATH/

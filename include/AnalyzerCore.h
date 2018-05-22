@@ -9,10 +9,13 @@
 #include "MCCorrection.C"
 #include "Event.h"
 #include "Particle.h"
+#include "Gen.h"
 #include "Lepton.h"
 #include "Muon.h"
 #include "Electron.h"
 #include "Jet.h"
+
+#include "AnalyzerParameter.h"
 
 #define M_Z 91.1876
 
@@ -41,6 +44,9 @@ public:
   std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Electron>& electrons);
 
   std::vector<Jet> GetAllJets();
+  std::vector<Jet> GetJets(TString id, double ptmin=-999, double fetamax=999.);
+
+  std::vector<Gen> GetGens();
 
   //==== Event Filters
 
@@ -51,6 +57,11 @@ public:
   MCCorrection mccor;
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
+  void PrintGen(std::vector<Gen> gens);
+
+  //==== GenMatching
+  Gen GetGenMatchedLepton(Lepton lep, std::vector<Gen> gens);
+  int GetLeptonType(Lepton lep, std::vector<Gen> gens);
 
   //==== Plotting
 
@@ -63,6 +74,9 @@ public:
   void JSFillHist(TString suffix, TString histname, double value, double weight, int n_bin, double x_min, double x_max);
 
   void WriteHist();
+
+  //==== Quick Plotters
+  void FillLeptonPlots(std::vector<Lepton *> leps, TString this_region, double weight);
 
   //==== Output rootfile
 

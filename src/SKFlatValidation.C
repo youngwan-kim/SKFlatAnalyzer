@@ -2,6 +2,26 @@
 
 void SKFlatValidation::executeEvent(){
 
+  AnalyzerParameter param;
+
+  //==== POG IDs
+
+  param.Electron_Tight_ID = "passMVAID_iso_WP80";
+  param.Electron_ID_SF_Key = "passMVAID_iso_WP80";
+
+  param.Muon_Tight_ID = "POGTightWithTightIso";
+  param.Muon_ID_SF_Key = "NUM_TightID_DEN_genTracks";
+  param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
+  param.Muon_Trigger_SF_Key = "POGTight";
+
+  param.Jet_ID = "HN";
+
+  executeEventFromParameter(param);
+
+}
+
+void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
+
   if(!PassMETFilter()) return;
 
   Event ev = GetEvent();
@@ -11,8 +31,8 @@ void SKFlatValidation::executeEvent(){
   bool PassDiElectron = ev.PassTrigger("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v");
   bool PassSingleElectron = ev.PassTrigger("HLT_Ele35_WPTight_Gsf_v");
 
-  std::vector<Muon> muons = GetMuons("POGTightWithTightIso", 10., 2.4);
-  std::vector<Electron> electrons = GetElectrons("passMVAID_iso_WP80", 10., 2.5);
+  std::vector<Muon> muons = GetMuons(param.Muon_Tight_ID, 10., 2.4);
+  std::vector<Electron> electrons = GetElectrons(param.Electron_Tight_ID, 10., 2.5);
 
   std::vector<Jet> alljets = GetAllJets();
   std::vector<Jet> myjets;
@@ -111,9 +131,9 @@ void SKFlatValidation::executeEvent(){
       //==== FIXME add third lepton veto later
       if(Suffix.Contains("SingleMuon")){
         for(unsigned int i=0; i<muons.size(); i++){
-          double this_idsf  = mccor.MuonID_SF ("NUM_TightID_DEN_genTracks",          muons.at(i).Eta(),muons.at(i).MiniAODPt());
-          double this_isosf = mccor.MuonISO_SF("NUM_TightRelIso_DEN_TightIDandIPCut",muons.at(i).Eta(),muons.at(i).MiniAODPt());
-          double this_trigsf = mccor.MuonTrigger_SF("POGTight", "IsoMu27", muons);
+          double this_idsf  = mccor.MuonID_SF (param.Muon_ID_SF_Key,  muons.at(i).Eta(), muons.at(i).MiniAODPt());
+          double this_isosf = mccor.MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt());
+          double this_trigsf = mccor.MuonTrigger_SF(param.Muon_Trigger_SF_Key, "IsoMu27", muons);
 
           weight *= this_idsf*this_isosf*this_trigsf;
 
@@ -122,11 +142,10 @@ void SKFlatValidation::executeEvent(){
       if(Suffix.Contains("DiElectron") || Suffix.Contains("SingleElectron")){
         for(unsigned int i=0; i<electrons.size(); i++){
           double this_recosf = mccor.ElectronReco_SF(electrons.at(i).scEta(),electrons.at(i).Pt());
-          double this_idsf = mccor.ElectronID_SF("passMVAID_iso_WP80",electrons.at(i).scEta(),electrons.at(i).Pt());
+          double this_idsf = mccor.ElectronID_SF(param.Electron_ID_SF_Key, electrons.at(i).scEta(), electrons.at(i).Pt());
           weight *= this_recosf*this_idsf;
         }
       }
-
 
     }
 
