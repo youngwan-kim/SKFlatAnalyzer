@@ -16,6 +16,13 @@ public:
   void SetMultiplicities(double cM, double nM);
   void SetPileupJetId(double v);
 
+  inline void SetTightJetID(double b) { j_tightJetID = b; }
+  inline void SetTightLepVetoJetID(double b) { j_tightLepVetoJetID = b; }
+  inline bool Pass_tightJetID() const { return j_tightJetID; }
+  inline bool Pass_tightLepVetoJetID() const { return j_tightLepVetoJetID; }
+
+  bool PassID(TString id);
+  bool Pass_HN();
 
   enum Tagger{
     CSVv2,
@@ -53,6 +60,7 @@ private:
   int j_chargedMultiplicity;
   int j_neutralMultiplicity;
   double j_PileupJetId;
+  bool j_tightJetID, j_tightLepVetoJetID;
 };
 
 Jet::Jet() : Particle() {
@@ -78,6 +86,8 @@ Jet::Jet() : Particle() {
   j_chargedMultiplicity=-999;
   j_neutralMultiplicity=-999;
   j_PileupJetId=-999.;
+  j_tightJetID=false;
+  j_tightLepVetoJetID=false;
 }
 
 Jet::~Jet(){
@@ -117,6 +127,23 @@ void Jet::SetMultiplicities(double cM, double nM){
 }
 void Jet::SetPileupJetId(double v){
   j_PileupJetId = v;
+}
+
+bool Jet::PassID(TString id){
+
+  if(id=="tight") return Pass_tightJetID();
+  if(id=="tightLepVeto") return Pass_tightLepVetoJetID();
+  if(id=="HN") return Pass_HN();
+  return false;
+
+}
+
+bool Jet::Pass_HN(){
+
+  if(! Pass_tightJetID() ) return false;
+
+  return true;
+
 }
 
 double Jet::GetTaggerResult(Tagger tg){
