@@ -78,7 +78,13 @@ def CheckJobStatus(logfiledir, cycle, jobnumber, IsKISTI):
 
   ## 2) Job Finished
   if FinishString in LASTLINE:
-    ForTimeEst = log_o[-2]
+
+    for i in range(0,len(log_o)):
+      l = log_o[len(log_o)-1-1-i]
+      if "[SKFlatNtuple::Loop]" in l:
+        ForTimeEst = l
+        break
+
     EventDone = GetEventDone(ForTimeEst)
     return "FINISHED"+"\tEVDONE:"+EventDone+"\t"+line_JobStart
 
