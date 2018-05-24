@@ -165,7 +165,10 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& m
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<muons.size(); i++){
     Lepton *l = (Lepton *)(&muons.at(i));
-    //cout << muons.at(i).Pt() << " -> " << l->Pt() << endl;
+    if( !(l->LeptonFlavour() == Lepton::MUON) ){
+      cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& muons)] Not muon.." << endl;
+      exit(EXIT_FAILURE);
+    }
     out.push_back(l);
   }
   return out;
@@ -176,6 +179,10 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<electrons.size(); i++){
     Lepton *l = (Lepton *)(&electrons.at(i));
+    if( !(l->LeptonFlavour() == Lepton::ELECTRON) ){
+      cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<ELECTRON>& electrons)] Not electron.." << endl;
+      exit(EXIT_FAILURE);
+    }
     out.push_back(l);
   }
   return out;
@@ -460,17 +467,31 @@ void AnalyzerCore::FillLeptonPlots(std::vector<Lepton *> leps, TString this_regi
 
     TString this_itoa = TString::Itoa(i,10);
 
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_Pt_"+this_region, leps[i]->Pt(), weight, 500, 0., 500.);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_Eta_"+this_region, leps[i]->Eta(), weight, 60, -3., 3.);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_RelIso_"+this_region, leps[i]->RelIso(), weight, 100, 0., 1.);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_MiniRelIso_"+this_region, leps[i]->MiniRelIso(), weight, 100, 0., 1.);
+    Lepton *lep = leps[i];
 
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_dXY_"+this_region, fabs(leps[i]->dXY()), weight, 500, 0., 0.05);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_dXYSig_"+this_region, fabs(leps[i]->dXY()/leps[i]->dXYerr()), weight, 100, 0., 10);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_dZ_"+this_region, fabs(leps[i]->dZ()), weight, 500, 0., 0.5);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_dZSig_"+this_region, fabs(leps[i]->dZ()/leps[i]->dZerr()), weight, 100, 0., 10);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_IP3D_"+this_region, fabs(leps[i]->IP3D()), weight, 500, 0., 0.5);
-    JSFillHist(this_region, "Lepton_"+this_itoa+"_IP3DSig_"+this_region, fabs(leps[i]->IP3D()/leps[i]->IP3Derr()), weight, 100, 0., 10);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_Pt_"+this_region, lep->Pt(), weight, 500, 0., 500.);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_Eta_"+this_region, lep->Eta(), weight, 60, -3., 3.);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_RelIso_"+this_region, lep->RelIso(), weight, 100, 0., 1.);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_MiniRelIso_"+this_region, lep->MiniRelIso(), weight, 100, 0., 1.);
+
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_dXY_"+this_region, fabs(lep->dXY()), weight, 500, 0., 0.05);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_dXYSig_"+this_region, fabs(lep->dXY()/lep->dXYerr()), weight, 100, 0., 10);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_dZ_"+this_region, fabs(lep->dZ()), weight, 500, 0., 0.5);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_dZSig_"+this_region, fabs(lep->dZ()/lep->dZerr()), weight, 100, 0., 10);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_IP3D_"+this_region, fabs(lep->IP3D()), weight, 500, 0., 0.5);
+    JSFillHist(this_region, "Lepton_"+this_itoa+"_IP3DSig_"+this_region, fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
+
+    if(lep->LeptonFlavour()==Lepton::ELECTRON){
+      Electron *el = (Electron *)lep;
+      JSFillHist(this_region, "Lepton_"+this_itoa+"_MVANoIso_"+this_region, el->MVANoIso(), weight, 200, -1., 1.);
+    }
+    else if(lep->LeptonFlavour()==Lepton::MUON){
+
+    }
+    else{
+      cout << "[AnalyzerCore::FillLeptonPlots] lepton flavour wrong.." << endl;
+      exit(EXIT_FAILURE);
+    }
 
 
   }
