@@ -6,6 +6,8 @@ void SKFlatValidation::executeEvent(){
 
   //==== POG IDs
 
+  param.Name = "POG";
+
   param.Electron_Tight_ID = "passMVAID_iso_WP80";
   param.Electron_ID_SF_Key = "passMVAID_iso_WP80";
 
@@ -16,6 +18,29 @@ void SKFlatValidation::executeEvent(){
 
   param.Jet_ID = "HN";
 
+  executeEventFromParameter(param);
+
+  //=== Same but pt>65 GeV
+  param.Name = "POG_pt65";
+  executeEventFromParameter(param);
+
+  //==== SUSY without ID
+
+  param.Clear();
+  param.Name = "SUSY";
+
+  param.MCCorrrectionIgnoreNoHist = true;
+
+  param.Electron_Tight_ID = "SUSYTight";
+
+  param.Muon_Tight_ID = "SUSYTight";
+
+  param.Jet_ID = "HN";
+
+  executeEventFromParameter(param);
+
+  //=== Same but pt>65 GeV
+  param.Name = "SUSY_pt65";
   executeEventFromParameter(param);
 
 }
@@ -31,8 +56,11 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
   bool PassDiElectron = ev.PassTrigger("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v");
   bool PassSingleElectron = ev.PassTrigger("HLT_Ele35_WPTight_Gsf_v");
 
-  std::vector<Muon> muons = GetMuons(param.Muon_Tight_ID, 10., 2.4);
-  std::vector<Electron> electrons = GetElectrons(param.Electron_Tight_ID, 10., 2.5);
+  double MinLeptonPt = 10.;
+  if(param.Name.Contains("pt65")) MinLeptonPt = 65.;
+
+  std::vector<Muon> muons = GetMuons(param.Muon_Tight_ID, MinLeptonPt, 2.4);
+  std::vector<Electron> electrons = GetElectrons(param.Electron_Tight_ID, MinLeptonPt, 2.5);
 
   std::vector<Jet> alljets = GetAllJets();
   std::vector<Jet> myjets;
@@ -128,6 +156,8 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
       //cout << "GetTriggerLumi = " << ev.GetTriggerLumi("Full") << endl;
       weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full")*ev.MCweight();
 
+      mccor.IgnoreNoHist = param.MCCorrrectionIgnoreNoHist;
+
       //==== FIXME add third lepton veto later
       if(Suffix.Contains("SingleMuon")){
         for(unsigned int i=0; i<muons.size(); i++){
@@ -167,7 +197,7 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
     for(std::map<TString, bool>::iterator it_map = map_bool_To_Region.begin(); it_map != map_bool_To_Region.end(); it_map++){
 
       TString this_region = it_map->first;
-      this_region = Suffix+"_"+this_region;
+      this_region = (param.Name)+"_"+Suffix+"_"+this_region;
 
       if(it_map->second){
 

@@ -58,8 +58,11 @@ double MCCorrection::MuonID_SF(TString ID, double eta, double pt, int sys){
 
   TH2F *this_hist = map_hist_Muon["ID_SF_"+ID];
   if(!this_hist){
-    cout << "[MCCorrection::MuonID_SF] No"<<"ID_SF_"+ID<<endl;
-    return 1.;
+    if(IgnoreNoHist) return 1.;
+    else{
+      cout << "[MCCorrection::MuonID_SF] No"<<"ID_SF_"+ID<<endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   int this_bin = this_hist->FindBin(pt,eta);
@@ -92,8 +95,11 @@ double MCCorrection::MuonISO_SF(TString ID, double eta, double pt, int sys){
 
   TH2F *this_hist = map_hist_Muon["ISO_SF_"+ID];
   if(!this_hist){
-    cout << "[MCCorrection::MuonISO_SF] No"<<"ISO_SF_"+ID<<endl;
-    return 1.;
+    if(IgnoreNoHist) return 1.;
+    else{
+      cout << "[MCCorrection::MuonISO_SF] No"<<"ISO_SF_"+ID<<endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   int this_bin = this_hist->FindBin(pt,eta);
@@ -130,7 +136,11 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   //cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
   TH2F *this_hist = map_hist_Muon[histkey];
   if(!this_hist){
-    cout << "[MCCorrection::MuonTrigger_Eff] No"<<histkey<<endl;
+    if(IgnoreNoHist) return 1.;
+    else{
+      cout << "[MCCorrection::MuonTrigger_Eff] No"<<histkey<<endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   int this_bin = this_hist->FindBin(pt,eta);
@@ -191,8 +201,11 @@ double MCCorrection::ElectronID_SF(TString ID, double sceta, double pt, int sys)
 
   TH2F *this_hist = map_hist_Electron["ID_SF_"+ID];
   if(!this_hist){
-    cout << "[MCCorrection::ElectronID_SF] No "<<"ID_SF_"+ID<<endl;
-    return 1.;
+    if(IgnoreNoHist) return 1.;
+    else{
+      cout << "[MCCorrection::ElectronID_SF] No"<<"ID_SF_"+ID<<endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   //cout << "[MCCorrection::ElectronID_SF] " << this_hist->GetBinContent(4,4) << endl;
@@ -215,8 +228,11 @@ double MCCorrection::ElectronReco_SF(double sceta, double pt, int sys){
 
   TH2F *this_hist = map_hist_Electron["RECO_SF_"+ptrange];
   if(!this_hist){
-    cout << "[MCCorrection::ElectronReco_SF] No "<<"RECO_SF_"+ptrange<<endl;
-    return 1.;
+    if(IgnoreNoHist) return 1.;
+    else{
+      cout << "[MCCorrection::ElectronReco_SF] No"<<"RECO_SF_"+ptrange<<endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   //cout << "[MCCorrection::ElectronReco_SF] " << this_hist->GetBinContent(1,1) << endl;
