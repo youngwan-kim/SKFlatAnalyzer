@@ -34,6 +34,7 @@ public:
   bool Pass_POGTight();
   bool Pass_POGTightWithTightIso();
   bool Pass_SUSYTight();
+  bool Pass_SUSYLoose();
   bool Pass_TESTID();
 
 private:
@@ -104,6 +105,7 @@ bool Muon::PassID(TString ID){
   if(ID=="POGLoose") return isPOGLoose();
   if(ID=="POGTightWithTightIso") return Pass_POGTightWithTightIso();
   if(ID=="SUSYTight") return Pass_SUSYTight();
+  if(ID=="SUSYLoose") return Pass_SUSYLoose();
   if(ID=="TEST") return Pass_TESTID();
   return false;
 }
@@ -115,6 +117,12 @@ bool Muon::Pass_POGTightWithTightIso(){
 bool Muon::Pass_SUSYTight(){
   if(! isPOGMedium() ) return false;
   if(! (MiniRelIso()<0.2) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  return true;
+}
+bool Muon::Pass_SUSYLoose(){
+  if(! isPOGMedium() ) return false;
+  if(! (MiniRelIso()<0.4) ) return false;
   if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
   return true;
 }

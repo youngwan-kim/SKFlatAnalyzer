@@ -43,12 +43,29 @@ public:
     return std::max(mindr, std::min(maxdr, float(kt_scale/this->Pt())));
   }
 
+  void SetPtCone(double f){ j_ptcone = f; }
+  bool IsPtConeAvailable(){
+    if(j_ptcone<0) return false;
+    else return true;
+  }
+  inline double PtCone() const {
+    if(j_ptcone<0){
+      cout << "[Lepton::PtCone] ptcone not set" << endl;
+      exit(EXIT_FAILURE);
+    }
+    return j_ptcone;
+  }
+  inline double CalcPtCone(double this_reliso, double Tight_reliso){
+    return ( this->Pt() ) * ( 1. + max(0., (this_reliso-Tight_reliso)) );
+  }
+
 private:
   double j_dXY, j_dXYerr;
   double j_dZ, j_dZerr;
   double j_IP3D, j_IP3Derr;
 
   double j_RelIso, j_MiniRelIso;
+  double j_ptcone;
   Flavour j_LeptonFlavour;
 
 };
@@ -62,6 +79,7 @@ Lepton::Lepton() : Particle() {
   j_IP3Derr = -999.;
   j_RelIso = -999.;
   j_MiniRelIso = -999.;
+  j_ptcone = -999.;
   j_LeptonFlavour = NONE;
 }
 

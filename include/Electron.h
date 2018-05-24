@@ -46,6 +46,7 @@ public:
   inline bool passHEEPID() const {return j_passHEEPID;}
   bool Pass_SUSYMVAWP(TString wp);
   bool Pass_SUSYTight();
+  bool Pass_SUSYLoose();
 
   void SetRelPFIso_Rho(double r);
   double EA();
@@ -153,6 +154,8 @@ bool Electron::PassID(TString ID){
   if(ID=="passMVAID_iso_WP90") return passMVAID_iso_WP90();
   if(ID=="passHEEPID") return passHEEPID();
   if(ID=="SUSYTight") return Pass_SUSYTight();
+  if(ID=="SUSYLoose") return Pass_SUSYLoose();
+
   return false;
 }
 
@@ -168,11 +171,18 @@ bool Electron::Pass_SUSYMVAWP(TString wp){
     else if(sceta<1.479){ cutA = 0.56; cutB = 0.11; } 
     else                { cutA = 0.48; cutB =-0.01; }
   }
+  else if(wp=="Loose"){
+    if     (sceta<0.8)  { cutA =-0.48; cutB =-0.85; }
+    else if(sceta<1.479){ cutA =-0.67; cutB =-0.91; }
+    else                { cutA =-0.49; cutB =-0.83; }
+  }
+  else{}
 
   double cutSlope = (cutB-cutA) / 10.;
   double cutFinal = std::min( cutA, std::max(cutB , cutA + cutSlope*(this->Pt()-15.) ) );
 
-  if(MVAIso()>cutFinal) return true;
+  //==== Using NoIso MVA, because we apply MiniIso later
+  if(MVANoIso()>cutFinal) return true;
   else return false;
 
 }
@@ -180,6 +190,16 @@ bool Electron::Pass_SUSYMVAWP(TString wp){
 bool Electron::Pass_SUSYTight(){
   if(! Pass_SUSYMVAWP("Tight") ) return false;
   if(! (MiniRelIso()<0.1) ) return false;	
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  //if(! PassConversionVeto() ) return false; //FIXME 
+  if(! (NMissingHits()==0) ) return false;
+
+  return true;
+}
+
+bool Electron::Pass_SUSYLoose(){
+  if(! Pass_SUSYMVAWP("Loose") ) return false;
+  if(! (MiniRelIso()<0.4) ) return false;
   if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
   //if(! PassConversionVeto() ) return false; //FIXME 
   if(! (NMissingHits()==0) ) return false;
