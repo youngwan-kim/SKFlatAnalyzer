@@ -22,6 +22,9 @@ public:
   void CalcPFRelIso();
   double EA();
 
+  void SetChi2(double chi2){ j_chi2 = chi2; }
+  double Chi2() const { return j_chi2; }
+
   void SetMiniAODPt(double d);
   double MiniAODPt() const {return j_MiniAODPt;}
 
@@ -40,6 +43,7 @@ public:
 private:
 
   bool j_isPOGTight, j_isPOGMedium, j_isPOGLoose;
+  double j_chi2;
   double j_PFCH04, j_PFNH04, j_PFPH04, j_PU04;
   double j_MiniAODPt, j_MomentumUp, j_MomentumDown;
 
@@ -47,6 +51,9 @@ private:
 
 Muon::Muon() : Lepton() {
   j_isPOGTight = false;
+  j_isPOGMedium = false;
+  j_isPOGLoose = false;
+  j_chi2 = 999.;
   j_PFCH04 = -999.;
   j_PFNH04 = -999.;
   j_PFPH04 = -999.;
@@ -127,8 +134,9 @@ bool Muon::Pass_SUSYLoose(){
   return true;
 }
 bool Muon::Pass_TESTID(){
-  if(!( isPOGTight() )) return false;
-  if(!( RelIso()<0.15 ))  return false;
+  if(! isPOGMedium() ) return false;
+  if(! (MiniRelIso()<0.6) ) return false;
+  //if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
   return true;
 }
 

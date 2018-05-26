@@ -27,11 +27,11 @@ void SKFlatValidation::executeEvent(){
   //==== SUSY without ID
 
   param.Clear();
-  param.Name = "SUSY";
+  param.Name = "HN";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "SUSYTight";
+  param.Electron_Tight_ID = "passLooseID";
 
   param.Muon_Tight_ID = "SUSYTight";
 
@@ -54,6 +54,7 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
   //bool PassDiMuon = ev.PassTrigger("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8_v");
   bool PassSingleMuon = ev.PassTrigger("HLT_IsoMu27_v");
   bool PassDiElectron = ev.PassTrigger("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v");
+  bool PassDiPhoton = ev.PassTrigger("HLT_DoublePhoton70_v");
   bool PassSingleElectron = ev.PassTrigger("HLT_Ele35_WPTight_Gsf_v");
 
   double MinLeptonPt = 10.;
@@ -80,11 +81,13 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
     "SingleMuon",
     "DiElectron",
     "SingleElectron",
+    "DiPhoton",
   };
   std::vector< bool > PassTriggers = {
     PassSingleMuon && (muons.size()>=1) && (electrons.size()==0),
     PassDiElectron && (electrons.size()==2) && (muons.size()==0),
     PassSingleElectron && (electrons.size()>=1) && (muons.size()==0),
+    PassDiPhoton && (electrons.size()==2) && (muons.size()==0),
   };
 
   for(unsigned int i=0; i<Suffixs.size(); i++){
@@ -101,6 +104,9 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
     else if(Suffix.Contains("SingleElectron")){
       if( electrons.at(0).Pt() < 38. ) continue;
     }
+    else if(Suffix.Contains("DiPhoton")){
+      if( electrons.at(0).Pt() < 75. || electrons.at(1).Pt() < 75. ) continue;
+    }
     else{
 
     }
@@ -110,7 +116,7 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
         if(!( Suffix.Contains("SingleMuon") )) continue;
       }
       else if(this->DataStream == "DoubleEG"){
-        if(!( Suffix.Contains("DiElectron") )) continue;
+        if(!( Suffix.Contains("DiElectron")||Suffix.Contains("DiPhoton") )) continue;
       }
       else if(this->DataStream == "SingleElectron"){
         if(!( Suffix.Contains("SingleElectron") )) continue;
@@ -124,7 +130,7 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
     if(Suffix.Contains("SingleMuon")){
       leps = MakeLeptonPointerVector(muons);
     }
-    else if(Suffix.Contains("DiElectron")){
+    else if(Suffix.Contains("DiElectron")||Suffix.Contains("DiPhoton")){
       leps = MakeLeptonPointerVector(electrons);
     }
     else if(Suffix.Contains("SingleElectron")){
@@ -169,7 +175,7 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
 
         }
       }
-      if(Suffix.Contains("DiElectron") || Suffix.Contains("SingleElectron")){
+      if( Suffix.Contains("DiElectron") || Suffix.Contains("SingleElectron") || Suffix.Contains("DiPhoton") ){
         for(unsigned int i=0; i<electrons.size(); i++){
           double this_recosf = mccor.ElectronReco_SF(electrons.at(i).scEta(),electrons.at(i).Pt());
           double this_idsf = mccor.ElectronID_SF(param.Electron_ID_SF_Key, electrons.at(i).scEta(), electrons.at(i).Pt());

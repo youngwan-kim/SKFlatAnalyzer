@@ -47,6 +47,7 @@ public:
   bool Pass_SUSYMVAWP(TString wp);
   bool Pass_SUSYTight();
   bool Pass_SUSYLoose();
+  bool Pass_HNTight();
 
   void SetRelPFIso_Rho(double r);
   double EA();
@@ -155,6 +156,11 @@ bool Electron::PassID(TString ID){
   if(ID=="passHEEPID") return passHEEPID();
   if(ID=="SUSYTight") return Pass_SUSYTight();
   if(ID=="SUSYLoose") return Pass_SUSYLoose();
+  if(ID=="HNTight") return Pass_HNTight();
+  if(ID=="NOCUT") return true;
+
+  cout << "[Electron::PassID] No id : " << ID << endl;
+  exit(EXIT_FAILURE);
 
   return false;
 }
@@ -203,6 +209,11 @@ bool Electron::Pass_SUSYLoose(){
   if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
   //if(! PassConversionVeto() ) return false; //FIXME 
   if(! (NMissingHits()==0) ) return false;
+
+  return true;
+}
+
+bool Electron::Pass_HNTight(){
 
   return true;
 }

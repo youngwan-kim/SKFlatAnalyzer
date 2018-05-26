@@ -30,7 +30,8 @@ public :
      fChain->Add(filename);
    }
 
-   Long64_t MaxEvent;
+   Long64_t MaxEvent, NSkipEvent;
+   int LogEvery;
    bool IsDATA;
    TString DataStream;
    TString MCSample;

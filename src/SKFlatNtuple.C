@@ -18,7 +18,13 @@ void SKFlatNtuple::Loop(){
 
   for(Long64_t jentry=0; jentry<nentries;jentry++){
 
-    if(jentry%1000==0){
+    if(jentry<NSkipEvent){
+      cout << "[SKFlatNtuple::Loop] Skipping " << jentry << "'th event" << endl;
+      //exit(EXIT_FAILURE);
+      continue;
+    }
+
+    if(jentry%LogEvery==0){
       cout << "[SKFlatNtuple::Loop] " << jentry << "/" << nentries << " ("<<100.*jentry/nentries<<" %) @ " << printcurrunttime() << endl;
     }
 
@@ -38,6 +44,8 @@ void SKFlatNtuple::Loop(){
 
 SKFlatNtuple::SKFlatNtuple(){
   MaxEvent = -1;
+  NSkipEvent = 0;
+  LogEvery = 1000;
   IsDATA = false;
   DataStream = "";
   MCSample = "";
