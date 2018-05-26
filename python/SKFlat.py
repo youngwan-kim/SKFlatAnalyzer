@@ -24,6 +24,7 @@ timestamp =  JobStartTime.strftime('%Y_%m_%d_%H%M%S')
 # 2) log style
 JobStartTime = datetime.datetime.now()
 string_JobStartTime =  JobStartTime.strftime('%Y-%m-%d %H:%M:%S')
+string_ThisTime = ""
 
 ## Environment Variables
 
@@ -248,7 +249,7 @@ Trial=0
 
 while [ "$NoAuthError" -ne 0 ]; do
 
-  if [ "$Trial" -gt 50 ]; then
+  if [ "$Trial" -gt 9999 ]; then
     break
   fi
 
