@@ -46,6 +46,7 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetisPOGTight(muon_isTight->at(i));
     mu.SetisPOGMedium(muon_isMedium->at(i));
     mu.SetisPOGLoose(muon_isLoose->at(i));
+    mu.SetChi2(muon_normchi->at(i));
     mu.SetIso(muon_PfChargedHadronIsoR04->at(i),muon_PfNeutralHadronIsoR04->at(i),muon_PfGammaIsoR04->at(i),muon_PFSumPUIsoR04->at(i));
 
     //==== Should be set after Eta is set
@@ -259,7 +260,7 @@ std::vector<Gen> AnalyzerCore::GetGens(){
     gen.SetIsEmpty(false);
     gen.SetPtEtaPhiE(gen_pt->at(i), gen_eta->at(i), gen_phi->at(i), gen_E->at(i));
     gen.SetCharge(gen_charge->at(i));
-    gen.SetPIDandStatus(gen_PID->at(i), gen_status->at(i));
+    gen.SetIndexPIDStatus(i, gen_PID->at(i), gen_status->at(i));
     gen.SetMother(gen_mother_PID->at(i), gen_mother_index->at(i));
     gen.SetGenStatusFlag_isPrompt( gen_isPrompt->at(i) );
     gen.SetGenStatusFlag_isPromptFinalState( gen_isPromptFinalState->at(i) );
@@ -310,40 +311,49 @@ double AnalyzerCore::MT(TLorentzVector a, TLorentzVector b){
   return TMath::Sqrt( 2.*a.Pt()*b.Pt()*(1.- TMath::Cos(dphi) ) );
 }
 
+//=========================================================
+//==== Gen Matching Tools
+
 void AnalyzerCore::PrintGen(std::vector<Gen> gens){
 
   cout << "===========================================================" << endl;
   cout << "RunNumber:EventNumber = " << run << ":" << event << endl;
-  cout << "index\tPID\tStatus\tMIdx\tMPID\tPt\tEta\tPhi\tM" << endl;
+  cout << "index\tPID\tStatus\tMIdx\tMPID\tStart\tPt\tEta\tPhi\tM" << endl;
   for(unsigned int i=0; i<gens.size(); i++){
     Gen gen = gens.at(i);
-    cout << i << "\t" << gen.PID() << "\t" << gen.Status() << "\t" << gen.MotherIndex() << "\t" << gen.MotherPID() << "\t";
+    vector<int> history = TrackGenSelfHistory(gen, gens);
+    cout << i << "\t" << gen.PID() << "\t" << gen.Status() << "\t" << gen.MotherIndex() << "\t" << gen.MotherPID() << "\t" << history[0] << "\t";
     printf("%.2f\t%.2f\t%.2f\t%.2f\n",gen.Pt(), gen.Eta(), gen.Phi(), gen.M());
-
   }
 
 }
 
 Gen AnalyzerCore::GetGenMatchedLepton(Lepton lep, std::vector<Gen> gens){
 
+  //==== find status 1 lepton
+
   int reco_PID = -999;
   if(lep.LeptonFlavour()==Lepton::ELECTRON) reco_PID = 11;
   else if(lep.LeptonFlavour()==Lepton::MUON) reco_PID = 13;
   else{
-    cout << "[AnalyzerCore::GetLeptonType] input lepton flavour not set" << endl;
+    cout << "[AnalyzerCore::GetGenMatchedLepton] input lepton flavour not set" << endl;
     exit(EXIT_FAILURE);
   }
 
-  double min_dR = 0.3;
+  double min_dR = 0.1;
   Gen gen_closest;
   bool GenMatched = false;
   for(unsigned int i=0; i<gens.size(); i++){
 
     Gen gen = gens.at(i);
 
+    //==== Status 1
+    if( gen.Status() != 1 ) continue;
     //==== PID & deltaR matching first
     if( abs(gen.PID() ) != reco_PID ) continue;
-
+    //==== reject ISR?
+    if( gen.MotherIndex() < 0 ) continue;
+    //==== dR matching
     if( gen.DeltaR( lep ) < min_dR ){
       GenMatched = true;
       min_dR = gen.DeltaR( lep ) ;
@@ -356,13 +366,154 @@ Gen AnalyzerCore::GetGenMatchedLepton(Lepton lep, std::vector<Gen> gens){
 
 }
 
+Gen AnalyzerCore::GetGenMathcedPhoton(Lepton lep, std::vector<Gen> gens){
+
+  double min_dR = 0.2;
+  Gen gen_closest;
+  bool GenMatched = false;
+  double pt_min = 10.;
+  for(unsigned int i=0; i<gens.size(); i++){
+
+    Gen gen = gens.at(i);
+
+    //==== reject ISR?
+    if( gen.MotherIndex() < 0 ) continue;
+    //==== Hard scattered photon
+    //==== PID==22 && (status=1 or 23)
+    //==== FIXME why not status 2?
+    if( ! ( abs(gen.PID())==22 && (gen.Status()==1 || gen.Status()==23) ) ) continue;
+    //==== min pt
+    if( gen.Pt() < pt_min ) continue;
+    //==== pt balance
+    if( !(lep.Pt()/gen.Pt()>0.8 && lep.Pt()/gen.Pt()<1.2) ) continue;
+
+    //==== TODO
+    //==== if( TruthColl.at(i).GenStatus()==23 && !IsFinalPhotonSt23(TruthColl) ) continue;//4)
+
+    //==== dR matching
+    if( gen.DeltaR( lep ) < min_dR ){
+      GenMatched = true;
+      min_dR = gen.DeltaR( lep ) ;
+      gen_closest = gen;
+    }
+
+  }
+
+  return gen_closest;
+
+}
+
+vector<int> AnalyzerCore::TrackGenSelfHistory(Gen me, std::vector<Gen> gens){
+
+  int myindex = me.Index();
+
+  if(myindex<2){
+    vector<int> out = {myindex, -1};
+    return out;
+  }
+
+  int mypid = gens.at(myindex).PID();
+
+  int currentidx = myindex;
+  int motherindex = me.MotherIndex();
+
+  while(gens.at(motherindex).PID() == mypid){
+
+    //==== Go one generation up
+    currentidx = motherindex;
+    motherindex = gens.at(motherindex).MotherIndex();
+
+    if(motherindex<0) break;
+  }
+
+  vector<int> out = {currentidx, motherindex};
+
+  return out;
+
+}
+
+bool AnalyzerCore::IsFromHadron(Gen me, std::vector<Gen> gens){
+
+  bool out = false;
+
+  int myindex = me.Index();
+  if(myindex<2) return true;
+
+  vector<int> my_history = TrackGenSelfHistory(me, gens);
+  Gen          Start = gens.at( my_history[0] );
+  Gen MotherOf_Start = gens.at( my_history[1] );
+
+  //==== Status 21~29 are from hardprocess
+  //==== Means it's lepton from hardprocess
+  //==== e.g., leptons frtom Z start their lives with status 23
+  if( 20 < Start.Status() && Start.Status() < 30 ) return false;
+
+  Gen current_me = Start; // me will always be Start
+  Gen current_mother = Start; // initializing
+  while( current_mother.Index() >= 2 ){
+
+    vector<int> current_history = TrackGenSelfHistory(current_me, gens);
+
+    //==== Go one generation up
+    //==== not being used after this line
+    current_me = gens.at(current_history[1]);
+
+    //==== Now look at mother of previous "me"
+    current_mother = gens.at(current_history[1]);
+
+    vector<int> current_mother_history = TrackGenSelfHistory(current_mother, gens);
+    Gen StartOf_current_mother = gens.at(current_mother_history[0]);
+    int current_mother_PID = current_mother.PID();
+
+    if( current_mother_PID==23 || current_mother_PID==24 || current_mother_PID==25 || current_mother_PID==6 || current_mother_PID==36 || current_mother_PID==32 ){
+      out = false;
+      break;
+    }
+    if( (current_mother_PID==11 || current_mother_PID==13 || current_mother_PID==15 || current_mother_PID==22) && (StartOf_current_mother.Status()>20 && StartOf_current_mother.Status()<30)){
+      out = false;
+      break;
+    }
+    if( current_mother_PID>50 ){
+      out=true;
+      break;
+    }
+    if( (current_mother_PID>=1 && current_mother_PID<=5) || current_mother_PID==21 ){
+      out=true; 
+      break;
+    }
+
+  }
+
+  return out;
+
+}
+
 int AnalyzerCore::GetLeptonType(Lepton lep, std::vector<Gen> gens){
 
-  Gen gen_closest = GetGenMatchedLepton(lep, gens);
+  //==== [Type]
+  //====  1 : EWPrompt
+  //====  2 : Signal Daughter
+  //====  3 : EWtau daughter
+  //====  4 : Internal Conversion daughter from t/EWV/EWlep(Implicit,Explicit)
+  //====  5 : Internal Conversion daughter from HardScatterPhoton
+  //==== -1 : Unmatched & not EW Conversion candidate
+  //==== -2 : Hadron daughter
+  //==== -3 : Daughter of tau from hadron or parton
+  //==== -4 : Internal conversion daughter(implicit,explicit) having hadronic origin 
+  //==== -5 : External conversion candidate(Hard scattered photon)
+  //==== -6 : External conversion from t/EWV/EWlep
+  //==== (-4: Daughter of Non-hard scattered photon & has parton or hadron ancestor OR implicit Conv from quark)
+  //==== -------------------------------------------------------------
+  //====  0 : Error
+  //==== >0 : Non-fake; Non-hadronic origin
+  //==== <0 : Fakes   ; Hadronic origin or external conversion
 
-  //==== No mathced gen-lepton -> fake
-  if(gen_closest.IsEmpty()) return -1;
+  Gen gen_closest = GetGenMatchedLepton(lep, gens); // if gen_closest.IsEmpty(), we should then look for a near photon
+  //cout << "[AnalyzerCore::GetLeptonType] [Reco] pt = " << lep.Pt() << "\t, eta = " << lep.Eta() << endl;
+  //cout << "[AnalyzerCore::GetLeptonType] [Gen] Index = " << gen_closest.Index() << endl;
 
+/*
+  //==== 1) Using Simple Flags
   //==== Prompt
   if( gen_closest.isPromptFinalState() ){
     return 1;
@@ -375,8 +526,235 @@ int AnalyzerCore::GetLeptonType(Lepton lep, std::vector<Gen> gens){
     //=== Fake
     return -1;
   }
-    
+*/  
+
+  //==== 2) Use Gen history
+
+  //==== No matched gen lepton
+  if( gen_closest.IsEmpty() ){
+
+    //==== Find if we have near photon
+    Gen gen_photon_closest = GetGenMathcedPhoton(lep, gens);
+    int photontype = GetGenPhotonType(gen_photon_closest,gens);
+    if(photontype<=0){
+      return -1;
+    }
+    else if(photontype==1){
+      return -5;
+    }
+    else if(photontype==2){
+      return -6;
+    }
+    else{
+      return 0;
+    }
+
+  }
+  //==== Has macthed gen lepton
+  else{
+
+    vector<int> my_history = TrackGenSelfHistory(gen_closest, gens);
+    Gen          Start = gens.at( my_history[0] );
+    Gen MotherOf_Start = gens.at( my_history[1] );
+    int MotherOf_Start_PID = abs(MotherOf_Start.PID()); // |PID|
+
+    //cout << "[AnalyzerCore::GetLeptonType] Start Index = " << Start.Index() << endl;
+    //cout << "[AnalyzerCore::GetLeptonType] MotherOf_Start Index = " << MotherOf_Start.Index() << endl;
+
+    bool fromhadron = IsFromHadron(gen_closest, gens);
+
+    if     ( 20 < Start.Status() && Start.Status() < 30 ){
+      return 1;
+    }
+    else if( MotherOf_Start_PID==23 || MotherOf_Start_PID==24 || MotherOf_Start_PID==25 ){
+      return 1;
+    }
+    else if( MotherOf_Start_PID>9900000){
+      return 2;
+    }
+    else if( MotherOf_Start_PID>50 ){
+      return -2;
+    }
+
+    //==== Mother is tau,
+    //==== and this tau is decayed by pythia (so status is 2, not 23)
+    else if( MotherOf_Start_PID==15 && MotherOf_Start.Status()==2 ){
+
+      //==== [Histody of this lepton]
+      //====    GrandMother
+      //====
+      //==== => StartOf_MotherOf_StartOf_tau (V/a/Hadron/*lepton)
+      //==== ~>         MotherOf_StartOf_tau (V/a/Hadron/*lepton)
+      //====
+      //==== =>                  StartOf_tau (tau)
+      //==== ~>                          tau (tau)
+      //====
+      //==== =>                       (MY LEPTON) + !@#$
+
+      vector<int> tau_history = TrackGenSelfHistory(MotherOf_Start, gens);
+      
+      Gen          StartOf_tau = gens.at( tau_history[0] );
+      Gen MotherOf_StartOf_tau = gens.at( tau_history[1] );
+      int MotherOf_StartOf_tau_PID = abs(MotherOf_StartOf_tau.PID()); // |PID|
+
+      vector<int> motheroftau_history = TrackGenSelfHistory(MotherOf_StartOf_tau, gens);
+      Gen StartOf_MotherOf_StartOf_tau = gens.at( motheroftau_history[0] );
+
+      //==== tau from Z,W,H
+      if     ( MotherOf_StartOf_tau_PID==23 || MotherOf_StartOf_tau_PID==24 || MotherOf_StartOf_tau_PID==25 ){
+        return 3;
+      }
+      else if( 20 < StartOf_MotherOf_StartOf_tau.Status() && StartOf_MotherOf_StartOf_tau.Status() < 30 ){
+        return 3;
+      }
+
+      else if( fromhadron ){
+        return -3;
+      }
+
+      else if( MotherOf_StartOf_tau_PID==22 && (20 < StartOf_MotherOf_StartOf_tau.Status() && StartOf_MotherOf_StartOf_tau.Status() < 30) ){
+        return 5;
+      }
+
+      else if( MotherOf_StartOf_tau_PID==22 ){
+        return 4;
+      }
+
+      //==== conversions for;
+      //==== l > (*a)+l, (*a)>tau+tau, tau>(MyLepton)+2nu
+      //==== this case, first "l" status is not 2 when it radiates photon like this..
+      else if( (MotherOf_StartOf_tau_PID==11||MotherOf_StartOf_tau_PID==13||MotherOf_StartOf_tau_PID==15) && (MotherOf_StartOf_tau.Status()!=2) ){
+        return 4;
+      }
+      else{
+        return 0;
+      }
+
+    }
+
+    //==== Mother is photon
+    else if( MotherOf_Start_PID==22 ){
+
+      //==== [Histody of this lepton]
+      //====    GrandMother
+      //====
+      //==== => StartOf_MotherOf_StartOf_photon (V/a/Hadron/*lepton)
+      //==== ~>         MotherOf_StartOf_photon (V/a/Hadron/*lepton)
+      //====
+      //==== =>                  StartOf_photon (photon)
+      //==== ~>                          photon (photon)
+      //====
+      //==== =>                       (MY LEPTON) + !@#$
+
+      vector<int> photon_history = TrackGenSelfHistory(MotherOf_Start, gens);
+      
+      Gen          StartOf_photon = gens.at( photon_history[0] );
+      Gen MotherOf_StartOf_photon = gens.at( photon_history[1] );
+      int MotherOf_StartOf_photon_PID = abs(MotherOf_StartOf_photon.PID()); // |PID|
+      vector<int> motherofphoton_history = TrackGenSelfHistory(MotherOf_StartOf_photon, gens);
+      Gen StartOf_MotherOf_StartOf_photon = gens.at( motherofphoton_history[0] );
+
+      if     ( 20 < StartOf_MotherOf_StartOf_photon.Status() && StartOf_MotherOf_StartOf_photon.Status() < 30 ){
+        return 5;
+      }
+
+      else if( fromhadron ){
+        return -4;
+      }
+
+      //==== Photon from Z,W,top
+      else if( MotherOf_StartOf_photon_PID==23 || MotherOf_StartOf_photon_PID==24 || MotherOf_StartOf_photon_PID==6 ){
+        return 4;
+      }
+
+      //==== Photon from lepton
+      else if( MotherOf_StartOf_photon_PID==11 || MotherOf_StartOf_photon_PID==13 || MotherOf_StartOf_photon_PID==15 ){
+        return 4;
+      }
+
+      else{
+        return 0;
+      }
+
+    }
+
+    //==== Mother is Lepton,
+    //==== Lepton is not from hadron
+    //==== Internal conversion
+    else if( (MotherOf_Start_PID==11||MotherOf_Start_PID==13||MotherOf_Start_PID==15) && (MotherOf_Start.Status()!=2) && (!fromhadron) ){
+      return 4;
+    }
+
+    else if( ( (1<=MotherOf_Start_PID && MotherOf_Start_PID<=5) || MotherOf_Start_PID==21 ) && (MotherOf_Start.Status()!=2) ){
+      return -4;
+    }
+
+    //==== mother is top
+    else if( MotherOf_Start_PID==6 ){
+      return 4;
+    }
+
+    else{
+      return 0;
+    }
+
+  }
+
+
 }
+
+int AnalyzerCore::GetGenPhotonType(Gen genph, std::vector<Gen> gens){
+
+  //==== [Type]
+  //====  0 : Invalid input or Error or HardScatter is input when hardscatter is not final state
+  //====  1 : HardScatter / 2: Else prompt daughter(l,V,t)
+  //==== -1 : Reserved for unmatched(Not used now) / -2: Hadronic origin
+
+  if(genph.IsEmpty()) return 0;
+
+  int genph_index = genph.Index();
+
+  if( genph_index<2 ) return 0;
+  if( !(gens.at(genph_index).PID()==22 && (gens.at(genph_index).Status()==1 || gens.at(genph_index).Status()==23)) ) return 0;
+
+  //==== TODO
+  //==== if(gens.at(genph_index).Status()==23){
+  //====   if(IsFinalPhotonSt23(gens)) return 1;
+  //====   else                             return 0;
+  //==== }//From this pt, only St1 Photon is treated.
+
+  vector<int> phhist = TrackGenSelfHistory(genph, gens);
+
+  int out=0;
+  Gen          Start = gens.at(phhist[0]);
+  Gen MotherOf_Start = gens.at(phhist[1]);
+  int MotherOf_Start_PID = abs(MotherOf_Start.PID()); // |PID|
+
+  bool fromhadron = IsFromHadron(genph, gens);
+
+  //==== hardscattered photon
+  if     ( 20 < Start.Status() && Start.Status() < 30 ) return 1;
+
+  //==== ZG; Z>l*l, l*>la, then sometimes mother of a is Z (becaues l* is not shown)
+  //==== neutral boson
+  else if( MotherOf_Start_PID==23 || MotherOf_Start_PID==25) return 1;
+
+  //==== t or W+- or h+-
+  else if( MotherOf_Start_PID==24 || MotherOf_Start_PID==6 || MotherOf_Start_PID==37 ) return 2;
+
+  //==== from hadron
+  else if( fromhadron ) return -2;
+
+  //==== radiated from lepton
+  else if( MotherOf_Start_PID==11 || MotherOf_Start_PID==13 || MotherOf_Start_PID==15 ) return 2;
+
+
+  else return 0;
+
+}
+
+//==== END Gen Matching Tools
+//==============================================================
 
 TH1D* AnalyzerCore::GetHist1D(TString histname){
 
@@ -486,7 +864,8 @@ void AnalyzerCore::FillLeptonPlots(std::vector<Lepton *> leps, TString this_regi
       JSFillHist(this_region, "Lepton_"+this_itoa+"_MVANoIso_"+this_region, el->MVANoIso(), weight, 200, -1., 1.);
     }
     else if(lep->LeptonFlavour()==Lepton::MUON){
-
+      Muon *mu = (Muon *)lep;
+      JSFillHist(this_region, "Lepton_"+this_itoa+"_Chi2_"+this_region, mu->Chi2(), weight, 500, 0., 50.);
     }
     else{
       cout << "[AnalyzerCore::FillLeptonPlots] lepton flavour wrong.." << endl;
