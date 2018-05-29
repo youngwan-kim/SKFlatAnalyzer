@@ -11,12 +11,16 @@ public:
   Electron();
   ~Electron();
 
-  void SetSC(double sceta, double dcphi);
-  inline double scEta() const {return j_scEta;};
-  inline double scPhi() const {return j_scPhi;};
+  void SetSC(double sceta, double scphi, double sce);
+  inline double scEta() const { return j_scEta; }
+  inline double scPhi() const { return j_scPhi; }
+  inline double scE() const { return j_scE; }
   void SetMVA(double mvaiso, double mvanoiso);
-  inline double MVAIso() const {return j_mvaiso;}
-  inline double MVANoIso() const {return j_mvanoiso;}
+  inline double MVAIso() const { return j_mvaiso; }
+  inline double MVANoIso() const { return j_mvanoiso; }
+
+  void SetUncorrE(double une){ j_EnergyUnCorr = une; }
+  double UncorrE() const { return j_EnergyUnCorr; }
 
   inline void SetPassConversionVeto(bool b) { j_passConversionVeto = b; }
   inline int PassConversionVeto() const { return j_passConversionVeto; }
@@ -33,6 +37,25 @@ public:
     else if( sceta < 1.566 ) return GAP;
     else return EC;
   }
+
+  void SetCutBasedIDVariables(
+    double full5x5_sigmaIetaIeta,
+    double dEtaSeed,
+    double dPhiIn,
+    double HoverE,
+    double InvEminusInvP
+  ){
+    j_full5x5_sigmaIetaIeta = full5x5_sigmaIetaIeta;
+    j_dEtaSeed = dEtaSeed;
+    j_dPhiIn = dPhiIn;
+    j_HoverE = HoverE;
+    j_InvEminusInvP = InvEminusInvP;
+  }
+  double full5x5_sigmaIetaIeta() const { return j_full5x5_sigmaIetaIeta; }
+  double dEtaSeed() const { return j_dEtaSeed; }
+  double dPhiIn() const { return j_dPhiIn; }
+  double HoverE() const { return j_HoverE; }
+  double InvEminusInvP() const { return j_InvEminusInvP; }
 
   void SetPOGIDs(std::vector<bool> bs);
   inline bool passVetoID() const {return j_passVetoID;}
@@ -56,12 +79,18 @@ public:
   bool PassID(TString ID);
   bool Pass_TESTID();
 
+  bool Pass_CustCBID();
+  void SetRho(double r){ j_Rho = r; }
+  double Rho() const { return j_Rho; }
+
 private:
 
-  double j_scEta,j_scPhi;
+  double j_scEta,j_scPhi, j_scE;
   double j_mvaiso, j_mvanoiso;
+  double j_EnergyUnCorr;
   bool j_passConversionVeto;
   int j_NMissingHits;
+  double j_full5x5_sigmaIetaIeta, j_dEtaSeed, j_dPhiIn, j_HoverE, j_InvEminusInvP;
   bool j_passVetoID;
   bool j_passLooseID;
   bool j_passMediumID;
@@ -74,13 +103,17 @@ private:
 
   double j_RelPFIso_Rho;
 
+  double j_Rho;
+
 };
 
 Electron::Electron() : Lepton() {
   j_scEta = -999.;
   j_scPhi = -999.;
+  j_scE = -999.;
   j_mvaiso = -999.;
   j_mvanoiso = -999.;
+  j_EnergyUnCorr = -999.;
   j_passConversionVeto = false;
   j_NMissingHits = 0;
   j_passVetoID = false;
@@ -92,15 +125,17 @@ Electron::Electron() : Lepton() {
   j_passMVAID_iso_WP80 = false;
   j_passMVAID_iso_WP90 = false;
   j_passHEEPID = false;
+  j_Rho = -999.;
   this->SetLeptonFlavour(ELECTRON);
 }
 
 Electron::~Electron(){
 }
 
-void Electron::SetSC(double sceta, double dcphi){
+void Electron::SetSC(double sceta, double scphi, double sce){
   j_scEta = sceta;
-  j_scPhi = dcphi;
+  j_scPhi = scphi;
+  j_scE = sce;
 }
 void Electron::SetMVA(double mvaiso, double mvanoiso){
   j_mvaiso = mvaiso;
@@ -145,6 +180,7 @@ bool Electron::PassID(TString ID){
   if(etaRegion()==GAP) return false;
 
   if(ID=="TEST") return Pass_TESTID();
+  if(ID=="CustCB") return Pass_CustCBID(); //TODO
   if(ID=="passVetoID") return passVetoID();
   if(ID=="passLooseID") return passLooseID();
   if(ID=="passMediumID") return passMediumID();
@@ -221,5 +257,40 @@ bool Electron::Pass_HNTight(){
 bool Electron::Pass_TESTID(){
   return true;
 }
+
+bool Electron::Pass_CustCBID(){
+
+  if( fabs(scEta()) <= 1.479 ){
+
+    if(! (full5x5_sigmaIetaIeta() < 0.0105) ) return false;
+    if(! (fabs(dEtaSeed()) < 0.00387) ) return false;
+    if(! (fabs(dPhiIn()) < 0.0716) ) return false;
+    if(! (HoverE() < 0.05 + 1.12/scE() + 0.0368*Rho()/scE()) ) return false;
+    if(! (RelIso() < 0.133) ) return false;
+    if(! (fabs(InvEminusInvP()) < 0.129) ) return false;
+    if(! (NMissingHits() <= 1) ) return false;
+    //if(! (PassConversionVeto()) ) return false; //FIXME
+
+    return true;
+
+  }
+  else{
+
+    if(! (full5x5_sigmaIetaIeta() < 0.0356) ) return false;
+    if(! (fabs(dEtaSeed()) < 0.0072) ) return false;
+    if(! (fabs(dPhiIn()) < 0.147) ) return false;
+    if(! (HoverE() < 0.0414 + 0.5/scE() + 0.201*Rho()/scE()) ) return false;
+    if(! (RelIso() < 0.146) ) return false;
+    if(! (fabs(InvEminusInvP()) < 0.0875) ) return false;
+    if(! (NMissingHits() <= 1) ) return false;
+    //if(! (PassConversionVeto()) ) return false; //FIXME
+
+    return true;
+
+  }
+
+
+}
+
 
 #endif

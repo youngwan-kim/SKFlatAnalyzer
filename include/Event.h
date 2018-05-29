@@ -10,7 +10,10 @@ public:
   ~Event();
 
   void SetMCweight(double genw);
-  inline double MCweight() const {return j_MCweight;}
+  inline double MCweight() const { return j_MCweight; }
+
+  inline void SetnPV(double n){ j_nPV = n; }
+  inline int nPV() const { return j_nPV; }
 
   void SetTrigger(vector<string> HLT_TriggerName, vector<bool> HLT_TriggerFired);
   bool PassTrigger(std::string trig);
@@ -22,6 +25,7 @@ public:
 
 private:
   double j_MCweight;
+  int j_nPV;
   vector<string> j_HLT_TriggerName;
   vector<bool> j_HLT_TriggerFired;
   Particle j_METVector;
@@ -30,9 +34,9 @@ private:
 
 #include "Event.h"
 
-Event::Event() :
-  j_MCweight(1.)
-{
+Event::Event(){
+  j_MCweight = 1.;
+  j_nPV = -999;
 }
 
 Event::~Event(){

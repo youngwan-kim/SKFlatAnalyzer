@@ -22,6 +22,7 @@ Event AnalyzerCore::GetEvent(){
   if(!IsDATA) ev.SetMCweight(gen_weight);
   ev.SetTrigger(*HLT_TriggerName,*HLT_TriggerFired);
   ev.SetMET(pfMET_pt,pfMET_Px,pfMET_Py);
+  ev.SetnPV(nPV);
 
   return ev;
 
@@ -97,7 +98,8 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
 
     Electron el;
     el.SetPtEtaPhiE(electron_pt->at(i), electron_eta->at(i), electron_phi->at(i), electron_Energy->at(i));
-    el.SetSC(electron_scEta->at(i), electron_scPhi->at(i));
+    el.SetUncorrE(electron_EnergyUnCorr->at(i));
+    el.SetSC(electron_scEta->at(i), electron_scPhi->at(i), electron_scEnergy->at(i));
     el.SetCharge(electron_charge->at(i));
     el.SetdXY(electron_dxyVTX->at(i), electron_dxyerrVTX->at(i));
     el.SetdZ(electron_dzVTX->at(i), electron_dzerrVTX->at(i));
@@ -105,6 +107,15 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
     el.SetMVA(electron_MVAIso->at(i), electron_MVANoIso->at(i));
     //el.SetPassConversionVeto(electron_passConversionVeto->at(i)); //FIXME not filled in v946p1_2..
     el.SetNMissingHits(electron_mHits->at(i));
+    el.SetRho(Rho);
+
+    el.SetCutBasedIDVariables(
+      electron_Full5x5_SigmaIEtaIEta->at(i),
+      electron_dEtaInSeed->at(i),
+      electron_dPhiIn->at(i),
+      electron_HoverE->at(i),
+      electron_InvEminusInvP->at(i)
+    );
 
     std::vector<bool> ids = {
       electron_passVetoID->at(i),
@@ -387,7 +398,7 @@ Gen AnalyzerCore::GetGenMathcedPhoton(Lepton lep, std::vector<Gen> gens){
     //==== pt balance
     if( !(lep.Pt()/gen.Pt()>0.8 && lep.Pt()/gen.Pt()<1.2) ) continue;
 
-    //==== TODO
+    //==== TODO photonstatus23 from JH
     //==== if( TruthColl.at(i).GenStatus()==23 && !IsFinalPhotonSt23(TruthColl) ) continue;//4)
 
     //==== dR matching
@@ -717,7 +728,7 @@ int AnalyzerCore::GetGenPhotonType(Gen genph, std::vector<Gen> gens){
   if( genph_index<2 ) return 0;
   if( !(gens.at(genph_index).PID()==22 && (gens.at(genph_index).Status()==1 || gens.at(genph_index).Status()==23)) ) return 0;
 
-  //==== TODO
+  //==== TODO photonstatus23 from JH
   //==== if(gens.at(genph_index).Status()==23){
   //====   if(IsFinalPhotonSt23(gens)) return 1;
   //====   else                             return 0;
