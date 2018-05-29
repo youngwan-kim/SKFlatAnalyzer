@@ -302,20 +302,9 @@ void SKFlatNtuple::Init()
    electron_passMVAID_iso_WP80 = 0;
    electron_passMVAID_iso_WP90 = 0;
    electron_passHEEPID = 0;
-   electron_ptUnCorr = 0;
-   electron_etaUnCorr = 0;
-   electron_phiUnCorr = 0;
-   electron_PxUnCorr = 0;
-   electron_PyUnCorr = 0;
-   electron_PzUnCorr = 0;
    electron_EnergyUnCorr = 0;
-   electron_scEnergyUnCorr = 0;
-   electron_scEtaUnCorr = 0;
-   electron_scPhiUnCorr = 0;
-   electron_scEtUnCorr = 0;
    electron_mva = 0;
    electron_zzmva = 0;
-   electron_missinghits = 0;
    electron_chMiniIso = 0;
    electron_nhMiniIso = 0;
    electron_phMiniIso = 0;
@@ -485,8 +474,6 @@ void SKFlatNtuple::Init()
    photon_passMediumID = 0;
    photon_passTightID = 0;
    photon_ptUnCorr = 0;
-   photon_etaUnCorr = 0;
-   photon_phiUnCorr = 0;
   // Set branch addresses and branch pointers
 
   fChain->SetMakeClass(1);
@@ -498,7 +485,7 @@ void SKFlatNtuple::Init()
    fChain->SetBranchAddress("lumi", &lumi, &b_lumiBlock);
    fChain->SetBranchAddress("PUweight", &PUweight, &b_PUweight);
    fChain->SetBranchAddress("Rho", &Rho, &b_Rho);
-   fChain->SetBranchAddress("nPV", &nPV, &b_nVertices);
+   fChain->SetBranchAddress("nPV", &nPV, &b_nPV);
    fChain->SetBranchAddress("Flag_goodVertices", &Flag_goodVertices, &b_Flag_goodVertices);
    fChain->SetBranchAddress("Flag_globalTightHalo2016Filter", &Flag_globalTightHalo2016Filter, &b_Flag_globalTightHalo2016Filter);
    fChain->SetBranchAddress("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, &b_Flag_HBHENoiseFilter);
@@ -710,20 +697,9 @@ void SKFlatNtuple::Init()
    fChain->SetBranchAddress("electron_passMVAID_iso_WP80", &electron_passMVAID_iso_WP80, &b_electron_passMVAID_iso_WP80);
    fChain->SetBranchAddress("electron_passMVAID_iso_WP90", &electron_passMVAID_iso_WP90, &b_electron_passMVAID_iso_WP90);
    fChain->SetBranchAddress("electron_passHEEPID", &electron_passHEEPID, &b_electron_passHEEPID);
-   fChain->SetBranchAddress("electron_ptUnCorr", &electron_ptUnCorr, &b_electron_ptUnCorr);
-   fChain->SetBranchAddress("electron_etaUnCorr", &electron_etaUnCorr, &b_electron_etaUnCorr);
-   fChain->SetBranchAddress("electron_phiUnCorr", &electron_phiUnCorr, &b_electron_phiUnCorr);
-   fChain->SetBranchAddress("electron_PxUnCorr", &electron_PxUnCorr, &b_electron_PxUnCorr);
-   fChain->SetBranchAddress("electron_PyUnCorr", &electron_PyUnCorr, &b_electron_PyUnCorr);
-   fChain->SetBranchAddress("electron_PzUnCorr", &electron_PzUnCorr, &b_electron_PzUnCorr);
    fChain->SetBranchAddress("electron_EnergyUnCorr", &electron_EnergyUnCorr, &b_electron_EnergyUnCorr);
-   fChain->SetBranchAddress("electron_scEnergyUnCorr", &electron_scEnergyUnCorr, &b_electron_scEnergyUnCorr);
-   fChain->SetBranchAddress("electron_scEtaUnCorr", &electron_scEtaUnCorr, &b_electron_scEtaUnCorr);
-   fChain->SetBranchAddress("electron_scPhiUnCorr", &electron_scPhiUnCorr, &b_electron_scPhiUnCorr);
-   fChain->SetBranchAddress("electron_scEtUnCorr", &electron_scEtUnCorr, &b_electron_scEtUnCorr);
    fChain->SetBranchAddress("electron_mva", &electron_mva, &b_electron_mva);
    fChain->SetBranchAddress("electron_zzmva", &electron_zzmva, &b_electron_zzmva);
-   fChain->SetBranchAddress("electron_missinghits", &electron_missinghits, &b_electron_missinghits);
    fChain->SetBranchAddress("electron_chMiniIso", &electron_chMiniIso, &b_electron_chMiniIso);
    fChain->SetBranchAddress("electron_nhMiniIso", &electron_nhMiniIso, &b_electron_nhMiniIso);
    fChain->SetBranchAddress("electron_phMiniIso", &electron_phMiniIso, &b_electron_phMiniIso);
@@ -905,8 +881,6 @@ void SKFlatNtuple::Init()
    fChain->SetBranchAddress("photon_passMediumID", &photon_passMediumID, &b_photon_passMediumID);
    fChain->SetBranchAddress("photon_passTightID", &photon_passTightID, &b_photon_passTightID);
    fChain->SetBranchAddress("photon_ptUnCorr", &photon_ptUnCorr, &b_photon_ptUnCorr);
-   fChain->SetBranchAddress("photon_etaUnCorr", &photon_etaUnCorr, &b_photon_etaUnCorr);
-   fChain->SetBranchAddress("photon_phiUnCorr", &photon_phiUnCorr, &b_photon_phiUnCorr);
    fChain->SetBranchAddress("nPileUp", &nPileUp, &b_nPileUp);
    fChain->SetBranchAddress("pileUpReweightIn", &pileUpReweightIn, &b_pileUpReweightIn);
    fChain->SetBranchAddress("pileUpReweight", &pileUpReweight, &b_pileUpReweight);

@@ -284,20 +284,9 @@ public :
    vector<bool>    *electron_passMVAID_iso_WP80;
    vector<bool>    *electron_passMVAID_iso_WP90;
    vector<bool>    *electron_passHEEPID;
-   vector<double>  *electron_ptUnCorr;
-   vector<double>  *electron_etaUnCorr;
-   vector<double>  *electron_phiUnCorr;
-   vector<double>  *electron_PxUnCorr;
-   vector<double>  *electron_PyUnCorr;
-   vector<double>  *electron_PzUnCorr;
    vector<double>  *electron_EnergyUnCorr;
-   vector<double>  *electron_scEnergyUnCorr;
-   vector<double>  *electron_scEtaUnCorr;
-   vector<double>  *electron_scPhiUnCorr;
-   vector<double>  *electron_scEtUnCorr;
    vector<double>  *electron_mva;
    vector<double>  *electron_zzmva;
-   vector<int>     *electron_missinghits;
    vector<double>  *electron_chMiniIso;
    vector<double>  *electron_nhMiniIso;
    vector<double>  *electron_phMiniIso;
@@ -475,8 +464,6 @@ public :
    vector<bool>    *photon_passMediumID;
    vector<bool>    *photon_passTightID;
    vector<double>  *photon_ptUnCorr;
-   vector<double>  *photon_etaUnCorr;
-   vector<double>  *photon_phiUnCorr;
    Int_t           nPileUp;
    Double_t        pileUpReweightIn;
    Double_t        pileUpReweight;
@@ -510,7 +497,7 @@ public :
    TBranch        *b_lumiBlock;   //!
    TBranch        *b_PUweight;   //!
    TBranch        *b_Rho;   //!
-   TBranch        *b_nVertices;   //!
+   TBranch        *b_nPV;   //!
    TBranch        *b_Flag_goodVertices;   //!
    TBranch        *b_Flag_globalTightHalo2016Filter;   //!
    TBranch        *b_Flag_HBHENoiseFilter;   //!
@@ -722,20 +709,9 @@ public :
    TBranch        *b_electron_passMVAID_iso_WP80;   //!
    TBranch        *b_electron_passMVAID_iso_WP90;   //!
    TBranch        *b_electron_passHEEPID;   //!
-   TBranch        *b_electron_ptUnCorr;   //!
-   TBranch        *b_electron_etaUnCorr;   //!
-   TBranch        *b_electron_phiUnCorr;   //!
-   TBranch        *b_electron_PxUnCorr;   //!
-   TBranch        *b_electron_PyUnCorr;   //!
-   TBranch        *b_electron_PzUnCorr;   //!
    TBranch        *b_electron_EnergyUnCorr;   //!
-   TBranch        *b_electron_scEnergyUnCorr;   //!
-   TBranch        *b_electron_scEtaUnCorr;   //!
-   TBranch        *b_electron_scPhiUnCorr;   //!
-   TBranch        *b_electron_scEtUnCorr;   //!
    TBranch        *b_electron_mva;   //!
    TBranch        *b_electron_zzmva;   //!
-   TBranch        *b_electron_missinghits;   //!
    TBranch        *b_electron_chMiniIso;   //!
    TBranch        *b_electron_nhMiniIso;   //!
    TBranch        *b_electron_phMiniIso;   //!
@@ -913,8 +889,6 @@ public :
    TBranch        *b_photon_passMediumID;   //!
    TBranch        *b_photon_passTightID;   //!
    TBranch        *b_photon_ptUnCorr;   //!
-   TBranch        *b_photon_etaUnCorr;   //!
-   TBranch        *b_photon_phiUnCorr;   //!
    TBranch        *b_nPileUp;   //!
    TBranch        *b_pileUpReweightIn;   //!
    TBranch        *b_pileUpReweight;   //!

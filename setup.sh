@@ -35,3 +35,10 @@ else
 fi
 export MYBIN=$SKFlat_WD/bin/
 export PATH=${MYBIN}:${PATH}
+
+
+source $SKFlat_WD/bin/BashColorSets.sh
+python python/PrintToDoLists.py
+source $SKFlat_WD/tmp/ToDoLists.sh
+rm $SKFlat_WD/tmp/ToDoLists.sh
+

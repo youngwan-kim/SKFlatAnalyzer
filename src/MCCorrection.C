@@ -122,10 +122,10 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   eta = fabs(eta);
 
   if(trig=="IsoMu27"){
-    //==== MiniAODPt Pt
-    //==== 28.9918	29.0363
-    //==== This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
-    //==== So when I return 0., SF goes nan.. let's returning 1. for now..
+    //==== FIXME MiniAODPt Pt
+    //==== FIXME 28.9918	29.0363
+    //==== FIXME This event pass pt>29GeV cut, but MiniAOD pt < 29 GeV
+    //==== FIXME So when I return 0., SF goes nan.. let's returning 1. for now..
     if(pt<29.) return 1.; //FIXME
     if(pt>=1200.) return 1.;
     if(eta>=2.4) return 1.;

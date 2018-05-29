@@ -182,7 +182,7 @@ bool Jet::IsTagged(Tagger tg, WP wp){
     else if(wp==Tight) return (tr>0.8001);
     else return false;
   }
-/* FIXME
+/* FIXME DeepFlavour WPs not yet done in twiki
   else if(tg==DeepFlavour){
     if(wp==Loose) return (tr>0.0574);
     else if(wp==Medium) return (tr>0.4318);
