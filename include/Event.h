@@ -87,6 +87,63 @@ double Event::GetTriggerLumi(TString trig){
   if(trig=="Full"){
     return 41527.540;
   }
+  else if(trig=="HLT_Mu3_PFJet40_v"{
+    return 4.612;
+  }
+  else if(trig=="HLT_Mu8_v"{
+    return 2.605;
+  }
+  else if(trig=="HLT_Mu17_v"{
+    return 70.039;
+  }
+  else if(trig=="HLT_Mu19_v"{
+    return 46.205;
+  }
+  else if(trig=="HLT_Mu20_v"{
+    return 574.102;
+  }
+  else if(trig=="HLT_Mu27_v"{
+    return 184.945;
+  }
+  else if(trig=="HLT_Mu50_v"{
+    return 41527.540;
+  }
+  else if(trig=="HLT_Mu55_v"{
+    return 27122.162;
+  }
+  else if(trig=="HLT_DoublePhoton70_v"{
+    return 41527.540;
+  }
+  else if(trig=="HLT_DoublePhoton85_v"{
+    return 41527.540;
+  }
+  else if(trig=="HLT_Photon25_v"{
+    return 1.339;
+  }
+  else if(trig=="HLT_Photon33_v"{
+    return 14.264;
+  }
+  else if(trig=="HLT_Photon50_v"{
+    return 22.189;
+  }
+  else if(trig=="HLT_Photon75_v"{
+    return 101.436;
+  }
+  else if(trig=="HLT_Photon90_v"{
+    return 122.189;
+  }
+  else if(trig=="HLT_Photon120_v"{
+    return 490.296;
+  }
+  else if(trig=="HLT_Photon150_v"{
+    return 689.904;
+  }
+  else if(trig=="HLT_Photon175_v"{
+    return 1245.822;
+  }
+  else if(trig=="HLT_Photon200_v"{
+    return 41527.540;
+  }
 
   return 41527.540;
 
