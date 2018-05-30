@@ -229,6 +229,8 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetEnergyFractions(jet_chargedHadronEnergyFraction->at(i), jet_neutralHadronEnergyFraction->at(i), jet_neutralEmEnergyFraction->at(i), jet_chargedEmEnergyFraction->at(i));
     jet.SetMultiplicities(jet_chargedMultiplicity->at(i), jet_neutralMultiplicity->at(i));
     jet.SetPileupJetId(jet_PileupJetId->at(i));
+    jet.SetTightJetID(jet_tightJetID->at(i));
+    jet.SetTightLepVetoJetID(jet_tightLepVetoJetID->at(i));
 
     out.push_back(jet);
   }
@@ -264,6 +266,8 @@ std::vector<Jet> AnalyzerCore::GetJets(TString id, double ptmin, double fetamax)
 std::vector<Gen> AnalyzerCore::GetGens(){
 
   std::vector<Gen> out;
+  if(IsDATA) return out;
+
   for(unsigned int i=0; i<gen_pt->size(); i++){
 
     Gen gen;

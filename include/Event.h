@@ -2,6 +2,7 @@
 #define Event_h
 
 #include "Particle.h"
+#include "TString.h"
 
 class Event{
 public:
@@ -16,8 +17,8 @@ public:
   inline int nPV() const { return j_nPV; }
 
   void SetTrigger(vector<string> HLT_TriggerName, vector<bool> HLT_TriggerFired);
-  bool PassTrigger(std::string trig);
-  bool PassTrigger(std::vector<std::string> trigs);
+  bool PassTrigger(TString trig);
+  bool PassTrigger(std::vector<TString> trigs);
   double GetTriggerLumi(TString trig);
 
   void SetMET(double pt, double px, double py);
@@ -53,16 +54,16 @@ void Event::SetTrigger(vector<string> HLT_TriggerName, vector<bool> HLT_TriggerF
   j_HLT_TriggerFired = HLT_TriggerFired;
 }
 
-bool Event::PassTrigger(std::string trig){
-  std::vector<std::string> tmp_vec;
+bool Event::PassTrigger(TString trig){
+  std::vector<TString> tmp_vec;
   tmp_vec.push_back(trig);
   return PassTrigger(tmp_vec);
 }
 
-bool Event::PassTrigger(std::vector<std::string> trigs){
+bool Event::PassTrigger(std::vector<TString> trigs){
 
   for(unsigned int i=0; i<trigs.size(); i++){
-    std::string this_check_trig = trigs.at(i);
+    TString this_check_trig = trigs.at(i);
     bool this_pass=false;
 
     //cout << this_check_trig << endl;
@@ -87,61 +88,61 @@ double Event::GetTriggerLumi(TString trig){
   if(trig=="Full"){
     return 41527.540;
   }
-  else if(trig=="HLT_Mu3_PFJet40_v"{
+  else if(trig=="HLT_Mu3_PFJet40_v"){
     return 4.612;
   }
-  else if(trig=="HLT_Mu8_v"{
+  else if(trig=="HLT_Mu8_v"){
     return 2.605;
   }
-  else if(trig=="HLT_Mu17_v"{
+  else if(trig=="HLT_Mu17_v"){
     return 70.039;
   }
-  else if(trig=="HLT_Mu19_v"{
+  else if(trig=="HLT_Mu19_v"){
     return 46.205;
   }
-  else if(trig=="HLT_Mu20_v"{
+  else if(trig=="HLT_Mu20_v"){
     return 574.102;
   }
-  else if(trig=="HLT_Mu27_v"{
+  else if(trig=="HLT_Mu27_v"){
     return 184.945;
   }
-  else if(trig=="HLT_Mu50_v"{
+  else if(trig=="HLT_Mu50_v"){
     return 41527.540;
   }
-  else if(trig=="HLT_Mu55_v"{
+  else if(trig=="HLT_Mu55_v"){
     return 27122.162;
   }
-  else if(trig=="HLT_DoublePhoton70_v"{
+  else if(trig=="HLT_DoublePhoton70_v"){
     return 41527.540;
   }
-  else if(trig=="HLT_DoublePhoton85_v"{
+  else if(trig=="HLT_DoublePhoton85_v"){
     return 41527.540;
   }
-  else if(trig=="HLT_Photon25_v"{
+  else if(trig=="HLT_Photon25_v"){
     return 1.339;
   }
-  else if(trig=="HLT_Photon33_v"{
+  else if(trig=="HLT_Photon33_v"){
     return 14.264;
   }
-  else if(trig=="HLT_Photon50_v"{
+  else if(trig=="HLT_Photon50_v"){
     return 22.189;
   }
-  else if(trig=="HLT_Photon75_v"{
+  else if(trig=="HLT_Photon75_v"){
     return 101.436;
   }
-  else if(trig=="HLT_Photon90_v"{
+  else if(trig=="HLT_Photon90_v"){
     return 122.189;
   }
-  else if(trig=="HLT_Photon120_v"{
+  else if(trig=="HLT_Photon120_v"){
     return 490.296;
   }
-  else if(trig=="HLT_Photon150_v"{
+  else if(trig=="HLT_Photon150_v"){
     return 689.904;
   }
-  else if(trig=="HLT_Photon175_v"{
+  else if(trig=="HLT_Photon175_v"){
     return 1245.822;
   }
-  else if(trig=="HLT_Photon200_v"{
+  else if(trig=="HLT_Photon200_v"){
     return 41527.540;
   }
 
