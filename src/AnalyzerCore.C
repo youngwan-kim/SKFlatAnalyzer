@@ -263,6 +263,69 @@ std::vector<Jet> AnalyzerCore::GetJets(TString id, double ptmin, double fetamax)
 
 }
 
+std::vector<FatJet> AnalyzerCore::GetAllFatJets(){
+
+  std::vector<FatJet> out;
+  for(unsigned int i=0; i<fatjet_pt->size(); i++){
+    FatJet jet;
+    jet.SetPtEtaPhiM(fatjet_pt->at(i), fatjet_eta->at(i), fatjet_phi->at(i), fatjet_m->at(i));
+    jet.SetCharge(fatjet_charge->at(i));
+
+    jet.SetArea(fatjet_area->at(i));
+    jet.SetGenFlavours(fatjet_partonFlavour->at(i), fatjet_hadronFlavour->at(i));
+    std::vector<double> tvs = {
+      fatjet_CSVv2->at(i),
+      fatjet_DeepCSV->at(i),
+      fatjet_DeepCvsL->at(i),
+      fatjet_DeepCvsB->at(i),
+      fatjet_DeepFlavour_b->at(i),
+      fatjet_DeepFlavour_bb->at(i),
+      fatjet_DeepFlavour_lepb->at(i),
+      fatjet_DeepFlavour_c->at(i),
+      fatjet_DeepFlavour_uds->at(i),
+      fatjet_DeepFlavour_g->at(i),
+      fatjet_CvsL->at(i),
+      fatjet_CvsB->at(i),
+    };
+    jet.SetTaggerResults(tvs);
+    jet.SetEnergyFractions(fatjet_chargedHadronEnergyFraction->at(i), fatjet_neutralHadronEnergyFraction->at(i), fatjet_neutralEmEnergyFraction->at(i), fatjet_chargedEmEnergyFraction->at(i));
+    jet.SetMultiplicities(fatjet_chargedMultiplicity->at(i), fatjet_neutralMultiplicity->at(i));
+    jet.SetTightJetID(fatjet_tightJetID->at(i));
+    jet.SetTightLepVetoJetID(fatjet_tightLepVetoJetID->at(i));
+    jet.SetPuppiTaus(fatjet_puppi_tau1->at(i), fatjet_puppi_tau2->at(i), fatjet_puppi_tau3->at(i), fatjet_puppi_tau4->at(i));
+    jet.SetSDMass(fatjet_softdropmass->at(i));
+
+    out.push_back(jet);
+  }
+
+  return out;
+
+}
+
+std::vector<FatJet> AnalyzerCore::GetFatJets(TString id, double ptmin, double fetamax){
+
+  std::vector<FatJet> jets = GetAllFatJets();
+  std::vector<FatJet> out;
+  for(unsigned int i=0; i<jets.size(); i++){
+    FatJet this_jet= jets.at(i);
+    if(!( this_jet.Pt()>ptmin )){
+      //cout << "Fail Pt : pt = " << this_jet.Pt() << ", cut = " << ptmin << endl;
+      continue;
+    }
+    if(!( fabs(this_jet.Eta())<fetamax )){
+      //cout << "Fail Eta : eta = " << fabs(this_jet.Eta()) << ", cut = " << fetamax << endl;
+      continue;
+    }
+    if(!( this_jet.PassID(id) )){
+      //cout << "Fail ID" << endl;
+      continue;
+    }
+    out.push_back(this_jet);
+  }
+  return out;
+
+}
+
 std::vector<Gen> AnalyzerCore::GetGens(){
 
   std::vector<Gen> out;
@@ -324,6 +387,64 @@ bool AnalyzerCore::IsOnZ(double m, double width){
 double AnalyzerCore::MT(TLorentzVector a, TLorentzVector b){
   double dphi = a.DeltaPhi(b);
   return TMath::Sqrt( 2.*a.Pt()*b.Pt()*(1.- TMath::Cos(dphi) ) );
+}
+
+bool AnalyzerCore::HasFlag(TString flag){
+
+  return std::find(Userflags.begin(), Userflags.end(), flag) != Userflags.end();
+
+}
+
+std::vector<Jet> AnalyzerCore::JetsAwayFromFatJet(std::vector<Jet> jets, std::vector<FatJet> fatjets, double mindr){
+
+  std::vector<Jet> out;
+  for(unsigned int i=0; i<jets.size(); i++){
+
+    bool Overlap = false;
+    for(unsigned int j=0; j<fatjets.size(); j++){
+      if( ( jets.at(i) ).DeltaR( fatjets.at(j) ) < mindr ){
+        Overlap = true;
+        break;
+      }
+    }
+    if(!Overlap) out.push_back( jets.at(i) );
+
+  }
+
+  return out;
+
+}
+
+std::vector<Jet> AnalyzerCore::JetsVetoLeptonInside(std::vector<Jet> jets, std::vector<Electron> els, std::vector<Muon> mus){
+
+  std::vector<Jet> out;
+  for(unsigned int i=0; i<jets.size(); i++){
+    Jet this_jet = jets.at(i);
+
+    bool HasLeptonInside = false;
+
+    for(unsigned int j=0; j<els.size(); j++){
+      if( this_jet.DeltaR( els.at(j) ) < 0.4 ){
+        HasLeptonInside = true;
+        break;
+      }
+    }
+    if(HasLeptonInside) continue;
+
+    for(unsigned int j=0; j<mus.size(); j++){
+      if( this_jet.DeltaR( mus.at(j) ) < 0.4 ){
+        HasLeptonInside = true;
+        break;
+      }
+    }
+    if(HasLeptonInside) continue;
+
+    //==== if all fine,
+    out.push_back( this_jet );
+
+  }
+  return out;
+
 }
 
 //=========================================================

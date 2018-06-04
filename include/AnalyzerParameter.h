@@ -10,13 +10,13 @@ public:
 
   TString Electron_Tight_ID, Electron_Loose_ID, Electron_Veto_ID;
   TString Electron_ID_SF_Key;
-  double Electron_Tight_RelIso, Electron_Loose_RelIso;
+  double Electron_Tight_RelIso, Electron_Loose_RelIso, Electron_Veto_RelIso;
 
   TString Muon_Tight_ID, Muon_Loose_ID, Muon_Veto_ID;
   TString Muon_ID_SF_Key, Muon_ISO_SF_Key, Muon_Trigger_SF_Key;
-  double Muon_Tight_RelIso, Muon_Loose_RelIso;
+  double Muon_Tight_RelIso, Muon_Loose_RelIso, Muon_Veto_RelIso;
 
-  TString Jet_ID;
+  TString Jet_ID, FatJet_ID;
 
   void Clear();
 
@@ -37,8 +37,10 @@ void AnalyzerParameter::Clear(){
   Electron_ID_SF_Key = "";
   Electron_Tight_RelIso = 999.;
   Electron_Loose_RelIso = 999.;
+  Electron_Veto_RelIso = 999.;
 
   Muon_Tight_ID = "";
+
   Muon_Loose_ID = "";
   Muon_Veto_ID = "";
   Muon_ID_SF_Key = "";
@@ -46,8 +48,10 @@ void AnalyzerParameter::Clear(){
   Muon_Trigger_SF_Key = "";
   Muon_Tight_RelIso = 999.;
   Muon_Loose_RelIso = 999.;
+  Muon_Veto_RelIso = 999.;
 
   Jet_ID = "";
+  FatJet_ID = "";
 
 }
 
@@ -70,6 +74,7 @@ AnalyzerParameter::AnalyzerParameter(){
   Muon_Trigger_SF_Key = "POGTight";
 
   Jet_ID = "HN";
+  FatJet_ID = "HN";
 
 }
 

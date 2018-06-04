@@ -129,6 +129,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
   vector<Jet> jets = GetJets("HN", 20., 2.7);
   vector<double> AwayJetMinPts = {20, 30, 40, 60, 100, 500};
+  vector<TString> str_AwayJetMinPts = {"20", "30", "40", "60", "100", "500"};
 
   const int n_eta = 3;
   float etaarray[n_eta+1] = {0.0, 0.8, 1.479, 2.5};
@@ -224,11 +225,19 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
         if(OneLeptonEvent){
           double thisMT = MT( METv, Loose_electrons.at(0) );
+
           if( (METv.Pt() > 40.) && (Loose_electrons.at(0).Pt() > Electron_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_electrons.at(0).Pt() > 20.) ){
             JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"W_CR"+"_"+"MET", METv.Pt(), weight, 500, 0., 500.);
             JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"W_CR"+"_"+"MT", thisMT, weight, 500, 0., 500.);
             JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"W_CR"+"_"+"Lepton_0_Pt", Loose_electrons.at(0).Pt(), weight, 1000, 0., 1000.);
           }
+
+          if( (METv.Pt() > 40.) && (thisMT > 50) && (Loose_electrons.at(0).Pt() > Electron_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_electrons.at(0).Pt() > 20.) ){
+            JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"MTcut_W_CR"+"_"+"MET", METv.Pt(), weight, 500, 0., 500.);
+            JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"MTcut_W_CR"+"_"+"MT", thisMT, weight, 500, 0., 500.);
+            JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"MTcut_W_CR"+"_"+"Lepton_0_Pt", Loose_electrons.at(0).Pt(), weight, 1000, 0., 1000.);
+          }
+
         }
         if(TwoLeptonEvent){
           double dilepmass = (Loose_electrons.at(0)+Loose_electrons.at(1)).M();
@@ -264,11 +273,19 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
         if(OneLeptonEvent){
           double thisMT = MT( METv, Loose_muons.at(0) );
+
           if( (METv.Pt() > 40.) && (Loose_muons.at(0).Pt() > Muon_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_muons.at(0).Pt() > 20.) ){
             JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"W_CR"+"_"+"MET", METv.Pt(), weight, 500, 0., 500.);
             JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"W_CR"+"_"+"MT", thisMT, weight, 500, 0., 500.);
             JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"W_CR"+"_"+"Lepton_0_Pt", Loose_muons.at(0).Pt(), weight, 1000, 0., 1000.);
           }
+
+          if( (METv.Pt() > 40.) && (thisMT > 50) && (Loose_muons.at(0).Pt() > Muon_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_muons.at(0).Pt() > 20.) ){
+            JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"MTcut_W_CR"+"_"+"MET", METv.Pt(), weight, 500, 0., 500.);
+            JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"MTcut_W_CR"+"_"+"MT", thisMT, weight, 500, 0., 500.);
+            JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"MTcut_W_CR"+"_"+"Lepton_0_Pt", Loose_muons.at(0).Pt(), weight, 1000, 0., 1000.);
+          }
+
         }
         if(TwoLeptonEvent){
           double dilepmass = (Loose_muons.at(0)+Loose_muons.at(1)).M();
@@ -370,7 +387,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
           Jet jet = jets.at(it_jet);
           if(!( jet.Pt() > ThisMinJetPt )) continue;
-          double dPhi = lep.DeltaR(jet);
+          double dPhi = fabs( lep.DeltaPhi(jet) );
 
           bool UseEvent = (dPhi > 2.5) && (jet.Pt()/lep.Pt() > 1.0) && (METv.Pt() < 80.) && (thisMT < 25.);
 /*
@@ -381,7 +398,19 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
           cout << "--> UseEvent = " << UseEvent << endl;
 */
           if(UseEvent){
-            FillFakeRatePlots(str_lepflv+"_"+param.Name, "DATA", lepptr_prompt, IsTight_prompt.at(0), weight);
+            FillFakeRatePlots(str_lepflv+"_"+param.Name, "DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt), lepptr_prompt, IsTight_prompt.at(0), weight);
+
+            JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Den_"+"dPhi", dPhi, weight, 40, 0., 4.);
+            JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Den_"+"JetPtOverLeptonPt", jet.Pt()/lep.Pt(), weight, 20, 0., 2.);
+            JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Den_"+"MET", METv.Pt(), weight, 100, 0., 100.);
+            JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Den_"+"MT", thisMT, weight, 50, 0., 50.);
+            if(IsTight_prompt.at(0)){
+              JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Num_"+"dPhi", dPhi, weight, 40, 0., 4.);
+              JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Num_"+"JetPtOverLeptonPt", jet.Pt()/lep.Pt(), weight, 20, 0., 2.);
+              JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Num_"+"MET", METv.Pt(), weight, 100, 0., 100.);
+              JSFillHist(str_lepflv+"_"+param.Name, str_lepflv+"_"+param.Name+"_"+"DATA_AwayJetPt"+str_AwayJetMinPts.at(it_jpt)+"_"+"Num_"+"MT", thisMT, weight, 50, 0., 50.);
+            }
+
             break;
           }
 

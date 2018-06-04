@@ -20,8 +20,8 @@ void SKFlatValidation::executeEvent(){
 
   executeEventFromParameter(param);
 
-  //=== Same but pt>65 GeV
-  param.Name = "POG_pt65";
+  //=== Same but pt>75 GeV
+  param.Name = "POG_pt75";
   executeEventFromParameter(param);
 
   //==== SUSY without ID
@@ -32,15 +32,21 @@ void SKFlatValidation::executeEvent(){
   param.MCCorrrectionIgnoreNoHist = true;
 
   param.Electron_Tight_ID = "passLooseID";
+  param.Electron_Tight_RelIso = 0.1;
+  param.Electron_Loose_ID = "passVetoID";
+  param.Electron_Loose_RelIso = 0.4;
 
   param.Muon_Tight_ID = "SUSYTight";
+  param.Muon_Tight_RelIso = 0.2;
+  param.Muon_Loose_ID = "TEST";
+  param.Muon_Loose_RelIso = 0.6;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
-  //=== Same but pt>65 GeV
-  param.Name = "SUSY_pt65";
+  //=== Same but pt>75 GeV
+  param.Name = "SUSY_pt75";
   executeEventFromParameter(param);
 
 }
@@ -58,7 +64,7 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
   bool PassSingleElectron = ev.PassTrigger("HLT_Ele35_WPTight_Gsf_v");
 
   double MinLeptonPt = 10.;
-  if(param.Name.Contains("pt65")) MinLeptonPt = 65.;
+  if(param.Name.Contains("pt75")) MinLeptonPt = 75.;
 
   std::vector<Muon> muons = GetMuons(param.Muon_Tight_ID, MinLeptonPt, 2.4);
   std::vector<Electron> electrons = GetElectrons(param.Electron_Tight_ID, MinLeptonPt, 2.5);

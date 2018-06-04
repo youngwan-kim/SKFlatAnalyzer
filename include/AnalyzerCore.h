@@ -14,6 +14,7 @@
 #include "Muon.h"
 #include "Electron.h"
 #include "Jet.h"
+#include "FatJet.h"
 
 #include "AnalyzerParameter.h"
 
@@ -46,6 +47,9 @@ public:
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin=-999, double fetamax=999.);
 
+  std::vector<FatJet> GetAllFatJets();
+  std::vector<FatJet> GetFatJets(TString id, double ptmin=-999, double fetamax=999.);
+
   std::vector<Gen> GetGens();
 
   //==== Event Filters
@@ -57,9 +61,12 @@ public:
   MCCorrection mccor;
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
-  void PrintGen(std::vector<Gen> gens);
+  bool HasFlag(TString flag);
+  std::vector<Jet> JetsAwayFromFatJet(std::vector<Jet> jets, std::vector<FatJet> fatjets, double mindr=1.0);
+  std::vector<Jet> JetsVetoLeptonInside(std::vector<Jet> jets, std::vector<Electron> els, std::vector<Muon> mus);
 
   //==== GenMatching
+  void PrintGen(std::vector<Gen> gens);
   Gen GetGenMatchedLepton(Lepton lep, std::vector<Gen> gens);
   Gen GetGenMathcedPhoton(Lepton lep, std::vector<Gen> gens);
   vector<int> TrackGenSelfHistory(Gen me, std::vector<Gen> gens);
