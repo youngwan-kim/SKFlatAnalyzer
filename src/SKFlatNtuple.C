@@ -50,6 +50,7 @@ SKFlatNtuple::SKFlatNtuple(){
   DataStream = "";
   MCSample = "";
   weight_norm_1invfb = 1.;
+  Userflags.clear();
 }
 
 SKFlatNtuple::~SKFlatNtuple()

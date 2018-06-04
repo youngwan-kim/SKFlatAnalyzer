@@ -14,7 +14,11 @@ parser.add_argument('-n', dest='NJobs', default=1, type=int)
 parser.add_argument('-o', dest='Outputdir', default="")
 parser.add_argument('-q', dest='Queue', default="fastq")
 parser.add_argument('--no_exec', action='store_true')
+parser.add_argument('--userflags', dest='Userflags', default="")
 args = parser.parse_args()
+
+## make flags
+Userflags = (args.Userflags).split(',')
 
 ## TimeStamp
 
@@ -302,14 +306,16 @@ queue {2}
 
     runfunctionname = "run"
     libdir = (base_rundir+'/lib').replace('///','/').replace('//','/')
+    runCfileFullPath = ""
     if IsKISTI:
-      libdir = 'lib'
+      libdir = './lib'
       runfunctionname = "run_"+str(it_job).zfill(3)
-      out = open(base_rundir+'/run_'+str(it_job).zfill(3)+'.C','w')
+      runCfileFullPath = base_rundir+'/run_'+str(it_job).zfill(3)+'.C'
     else:
       os.system('mkdir -p '+thisjob_dir)
-      out = open(thisjob_dir+'run.C','w')
-    
+      runCfileFullPath = thisjob_dir+'run.C'
+
+    out = open(runCfileFullPath, 'w')
     print>>out,'''R__LOAD_LIBRARY({1}/{0}_C.so)
 
 void {2}(){{
@@ -327,6 +333,12 @@ void {2}(){{
     else:
       out.write('  m.MCSample = "'+InputSample+'";\n');
       out.write('  m.IsDATA = false;\n')
+
+    if len(Userflags)>0:
+      out.write('  m.Userflags = {\n')
+      for flag in Userflags:
+        out.write('    "'+flag+'",\n')
+      out.write('  };\n')
 
     if IsKISTI:
       out.write('  m.SetOutfilePath("hists.root");\n')
@@ -379,7 +391,8 @@ echo "[SKFlat.py] JOB FINISHED!!"
     cwd = os.getcwd()
     os.chdir(base_rundir)
     os.system('tar -czf runFile.tar.gz run_*.C')
-    os.system('condor_submit submit.jds')
+    if not args.no_exec:
+      os.system('condor_submit submit.jds')
     os.chdir(cwd)
 
   else:

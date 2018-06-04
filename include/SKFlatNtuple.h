@@ -36,6 +36,7 @@ public :
    TString DataStream;
    TString MCSample;
    double weight_norm_1invfb;
+   vector<TString> Userflags;
 
    virtual void Init();
    virtual void Loop();
