@@ -233,7 +233,7 @@ bool Electron::Pass_SUSYTight(){
   if(! Pass_SUSYMVAWP("Tight") ) return false;
   if(! (MiniRelIso()<0.1) ) return false;	
   if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
-  //if(! PassConversionVeto() ) return false; //FIXME 
+  if(! PassConversionVeto() ) return false;
   if(! (NMissingHits()==0) ) return false;
 
   return true;
@@ -243,7 +243,7 @@ bool Electron::Pass_SUSYLoose(){
   if(! Pass_SUSYMVAWP("Loose") ) return false;
   if(! (MiniRelIso()<0.4) ) return false;
   if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
-  //if(! PassConversionVeto() ) return false; //FIXME 
+  if(! PassConversionVeto() ) return false;
   if(! (NMissingHits()==0) ) return false;
 
   return true;
@@ -269,7 +269,7 @@ bool Electron::Pass_CustCBID(){
     if(! (RelIso() < 0.133) ) return false;
     if(! (fabs(InvEminusInvP()) < 0.129) ) return false;
     if(! (NMissingHits() <= 1) ) return false;
-    //if(! (PassConversionVeto()) ) return false; //FIXME
+    if(! (PassConversionVeto()) ) return false;
 
     return true;
 
@@ -283,7 +283,7 @@ bool Electron::Pass_CustCBID(){
     if(! (RelIso() < 0.146) ) return false;
     if(! (fabs(InvEminusInvP()) < 0.0875) ) return false;
     if(! (NMissingHits() <= 1) ) return false;
-    //if(! (PassConversionVeto()) ) return false; //FIXME
+    if(! (PassConversionVeto()) ) return false;
 
     return true;
 
