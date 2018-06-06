@@ -71,6 +71,8 @@ public:
   bool Pass_SUSYTight();
   bool Pass_SUSYLoose();
   bool Pass_HNTight();
+  bool Pass_HNLoose();
+  bool Pass_HNVeto();
 
   void SetRelPFIso_Rho(double r);
   double EA();
@@ -179,8 +181,7 @@ bool Electron::PassID(TString ID){
   //==== XXX veto Gap Always
   if(etaRegion()==GAP) return false;
 
-  if(ID=="TEST") return Pass_TESTID();
-  if(ID=="CustCB") return Pass_CustCBID(); //TODO
+  //==== POG
   if(ID=="passVetoID") return passVetoID();
   if(ID=="passLooseID") return passLooseID();
   if(ID=="passMediumID") return passMediumID();
@@ -190,10 +191,15 @@ bool Electron::PassID(TString ID){
   if(ID=="passMVAID_iso_WP80") return passMVAID_iso_WP80();
   if(ID=="passMVAID_iso_WP90") return passMVAID_iso_WP90();
   if(ID=="passHEEPID") return passHEEPID();
+  //==== Customized
   if(ID=="SUSYTight") return Pass_SUSYTight();
   if(ID=="SUSYLoose") return Pass_SUSYLoose();
   if(ID=="HNTight") return Pass_HNTight();
+  if(ID=="HNLoose") return Pass_HNLoose();
+  if(ID=="HNVeto") return Pass_HNVeto();
   if(ID=="NOCUT") return true;
+  if(ID=="TEST") return Pass_TESTID();
+  if(ID=="CustCB") return Pass_CustCBID(); //TODO
 
   cout << "[Electron::PassID] No id : " << ID << endl;
   exit(EXIT_FAILURE);
@@ -250,6 +256,31 @@ bool Electron::Pass_SUSYLoose(){
 }
 
 bool Electron::Pass_HNTight(){
+
+  if(! Pass_SUSYMVAWP("Tight") ) return false;
+  if(! (MiniRelIso()<0.1) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  if(! PassConversionVeto() ) return false;
+  if(! (NMissingHits()<2) ) return false;
+
+  return true;
+}
+
+bool Electron::Pass_HNLoose(){
+
+  if(! Pass_SUSYMVAWP("Loose") ) return false;
+  if(! (MiniRelIso()<0.4) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  if(! PassConversionVeto() ) return false;
+  if(! (NMissingHits()<2) ) return false;
+
+  return true;
+}
+
+bool Electron::Pass_HNVeto(){
+
+  if(! Pass_SUSYMVAWP("Loose") ) return false;
+  if(! (MiniRelIso()<0.4) ) return false;
 
   return true;
 }

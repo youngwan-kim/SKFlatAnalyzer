@@ -36,8 +36,9 @@ public:
   bool PassID(TString ID);
   bool Pass_POGTight();
   bool Pass_POGTightWithTightIso();
-  bool Pass_SUSYTight();
-  bool Pass_SUSYLoose();
+  bool Pass_HNTight();
+  bool Pass_HNLoose();
+  bool Pass_HNVeto();
   bool Pass_TESTID();
 
 private:
@@ -107,36 +108,45 @@ void Muon::SetMomentumUpDown(double up, double down){
 }
 
 bool Muon::PassID(TString ID){
+  //==== POG
   if(ID=="POGTight") return isPOGTight();
   if(ID=="POGMedium") return isPOGMedium();
   if(ID=="POGLoose") return isPOGLoose();
   if(ID=="POGTightWithTightIso") return Pass_POGTightWithTightIso();
-  if(ID=="SUSYTight") return Pass_SUSYTight();
-  if(ID=="SUSYLoose") return Pass_SUSYLoose();
+  //==== Customized
+  if(ID=="HNTight") return Pass_HNTight();
+  if(ID=="HNLoose") return Pass_HNLoose();
+  if(ID=="HNVeto") return Pass_HNVeto();
   if(ID=="TEST") return Pass_TESTID();
+
+  cout << "[Electron::PassID] No id : " << ID << endl;
+  exit(EXIT_FAILURE);
+
   return false;
+
 }
 bool Muon::Pass_POGTightWithTightIso(){
   if(!( isPOGTight() )) return false;
   if(!( RelIso()<0.15 ))  return false;
   return true;
 }
-bool Muon::Pass_SUSYTight(){
+bool Muon::Pass_HNTight(){
   if(! isPOGMedium() ) return false;
   if(! (MiniRelIso()<0.2) ) return false;
   if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
   return true;
 }
-bool Muon::Pass_SUSYLoose(){
+bool Muon::Pass_HNLoose(){
   if(! isPOGMedium() ) return false;
-  if(! (MiniRelIso()<0.4) ) return false;
-  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  if(! (MiniRelIso()<0.6) ) return false;
+  return true;
+}
+bool Muon::Pass_HNVeto(){
+  if(! isPOGLoose() ) return false;
+  if(! (MiniRelIso()<0.6) ) return false;
   return true;
 }
 bool Muon::Pass_TESTID(){
-  if(! isPOGMedium() ) return false;
-  if(! (MiniRelIso()<0.6) ) return false;
-  //if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
   return true;
 }
 
