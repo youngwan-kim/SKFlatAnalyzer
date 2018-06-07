@@ -5,6 +5,7 @@ IgnoreNoHist(false)
 {
 
   TString datapath = getenv("DATA_DIR");
+  datapath = datapath+"/ID/";
 
   string elline;
   ifstream in(datapath+"/Electron/histmap.txt");
@@ -19,6 +20,10 @@ IgnoreNoHist(false)
     TFile *file = new TFile(datapath+"/Electron/"+d);
     map_hist_Electron[a+"_"+b+"_"+c] = (TH2F *)file->Get(e);
   }
+  cout << "[MCCorrection::MCCorrection] map_hist_Electron :" << endl;
+  for(std::map< TString, TH2F* >::iterator it=map_hist_Electron.begin(); it!=map_hist_Electron.end(); it++){
+    cout << it->first << endl;
+  }
 
   string elline2;
   ifstream in2(datapath+"/Muon/histmap.txt");
@@ -32,6 +37,10 @@ IgnoreNoHist(false)
     is >> e; // <histname>
     TFile *file = new TFile(datapath+"/Muon/"+d);
     map_hist_Muon[a+"_"+b+"_"+c] = (TH2F *)file->Get(e);
+  }
+  cout << "[MCCorrection::MCCorrection] map_hist_Muon :" << endl;
+  for(std::map< TString, TH2F* >::iterator it=map_hist_Muon.begin(); it!=map_hist_Muon.end(); it++){
+    cout << it->first << endl;
   }
 
 }

@@ -72,6 +72,7 @@ public:
 
   TriggerWithPtRange Muon_TrigWithPtRange, Electron_TrigWithPtRange;
 
+  vector<double> Electron_FakeRatePtBinnings, Muon_FakeRatePtBinnings;
 
 };
 

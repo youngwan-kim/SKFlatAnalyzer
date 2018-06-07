@@ -62,8 +62,10 @@ public:
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
   bool HasFlag(TString flag);
+  std::vector<Muon> MuonWithoutGap(std::vector<Muon> muons);
   std::vector<Jet> JetsAwayFromFatJet(std::vector<Jet> jets, std::vector<FatJet> fatjets, double mindr=1.0);
   std::vector<Jet> JetsVetoLeptonInside(std::vector<Jet> jets, std::vector<Electron> els, std::vector<Muon> mus);
+  Particle AddFatJetAndLepton(FatJet fatjet, Lepton lep);
 
   //==== GenMatching
   void PrintGen(std::vector<Gen> gens);
@@ -77,12 +79,40 @@ public:
   //==== Plotting
 
   std::map< TString, TH1D* > maphist_TH1D;
-  TH1D* GetHist1D(TString histname);
-  void FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max);
+  std::map< TString, TH2D* > maphist_TH2D;
 
+  TH1D* GetHist1D(TString histname);
+  TH2D* GetHist2D(TString histname);
+
+  void FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max);
+  void FillHist(TString histname,
+                double value_x, double value_y,
+                double weight,
+                int n_binx, double x_min, double x_max,
+                int n_biny, double y_min, double y_max);
+  void FillHist(TString histname,
+                double value_x, double value_y,
+                double weight,
+                int n_binx, double *xbins,
+                int n_biny, double *ybins);
+
+  //==== JSFillHist : 1D
   std::map< TString, std::map<TString, TH1D*> > JSmaphist_TH1D;
   TH1D* JSGetHist1D(TString suffix, TString histname);
   void JSFillHist(TString suffix, TString histname, double value, double weight, int n_bin, double x_min, double x_max);
+  //==== JSFillHist : 2D
+  std::map< TString, std::map<TString, TH2D*> > JSmaphist_TH2D;
+  TH2D* JSGetHist2D(TString suffix, TString histname);
+  void JSFillHist(TString suffix, TString histname,
+                  double value_x, double value_y,
+                  double weight,
+                  int n_binx, double x_min, double x_max,
+                  int n_biny, double y_min, double y_max);
+  void JSFillHist(TString suffix, TString histname,
+                  double value_x, double value_y,
+                  double weight,
+                  int n_binx, double *xbins,
+                  int n_biny, double *ybins);
 
   void WriteHist();
 

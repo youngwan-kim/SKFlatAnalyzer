@@ -6,17 +6,19 @@ void CalcFakeRate::executeEvent(){
   //==== Trigger Pt(cone) ranges
   //==============================
 
-  //Muon_TrigWithPtRange.PtValues = {10,              15,           30,           35,           45,           80,        999999};
-  //Muon_TrigWithPtRange.Triggers = {"HLT_Mu3_PFJet40_v","HLT_Mu8_v", "HLT_Mu17_v", "HLT_Mu20_v", "HLT_Mu27_v","HLT_Mu50_v"};
+  Electron_TrigWithPtRange.PtValues          = {40,                50,            75,              110,              150,              200,               250,                300,              350,               999999};
+  Electron_TrigWithPtRange.Triggers          = {"HLT_Photon25_v", "HLT_Photon33_v", "HLT_Photon50_v", "HLT_Photon75_v", "HLT_Photon90_v", "HLT_Photon120_v", "HLT_Photon150_v", "HLT_Photon175_v", "HLT_Photon200_v"};
+  Electron_TrigWithPtRange.TriggerSafePtCuts = {28,                35,            55,               80,              100,              140,               170,                200,              250};
+  Electron_TrigWithPtRange.Validate();
+
   Muon_TrigWithPtRange.PtValues          = {35,           45,           80,        999999};
   Muon_TrigWithPtRange.Triggers          = {"HLT_Mu20_v", "HLT_Mu27_v","HLT_Mu50_v"};
-  Muon_TrigWithPtRange.TriggerSafePtCuts = {23,            30,          55};
+  Muon_TrigWithPtRange.TriggerSafePtCuts = {23,           30,           55};
   Muon_TrigWithPtRange.Validate();
 
-  Electron_TrigWithPtRange.PtValues          = {45,            55,               85,              150,              200,              250,               300,                350,              400,               999999};
-  Electron_TrigWithPtRange.Triggers          = {"HLT_Photon25_v", "HLT_Photon33_v", "HLT_Photon50_v", "HLT_Photon75_v", "HLT_Photon90_v", "HLT_Photon120_v", "HLT_Photon150_v", "HLT_Photon175_v", "HLT_Photon200_v"};
-  Electron_TrigWithPtRange.TriggerSafePtCuts = {28,                35,               55,               80,               100,              140,               170,               200,               250};
-  Electron_TrigWithPtRange.Validate();
+  //==== 2D Plot Pt Binnings
+  Electron_FakeRatePtBinnings = {40, 50, 75,     110, 150, 200, 250, 300, 350, 500, 1000, 1500, 2000};
+  Muon_FakeRatePtBinnings     = {35, 45, 75, 80, 110, 150, 200, 250, 300, 350, 500, 1000, 1500, 2000};
 
   //======================
   //==== AnalyzerParamer
@@ -26,79 +28,71 @@ void CalcFakeRate::executeEvent(){
 
   //==== To Check Denominator distribution, remove all selections for loose lepton
 
-  param.Name = "SUSYTight_VeryLoose";
+  param.Name = "HNVeryLoose";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "SUSYTight";
+  param.Electron_Tight_ID = "HNTight";
   param.Electron_Tight_RelIso = 0.1;
   param.Electron_Loose_ID = "NOCUT";
   param.Electron_Loose_RelIso = 999.;
+  param.Electron_Veto_ID = "NOCUT";
+  param.Electron_Veto_RelIso = 999.;
 
-  param.Muon_Tight_ID = "SUSYTight";
+  param.Muon_Tight_ID = "HNTight";
   param.Muon_Tight_RelIso = 0.2;
   param.Muon_Loose_ID = "POGLoose";
   param.Muon_Loose_RelIso = 999.;
+  param.Muon_Veto_ID = "POGLoose";
+  param.Muon_Veto_RelIso = 999.;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
-  //==== SUS-17-009 ID
+  //==== HN ID
 
-  param.Name = "SUSY";
-
-  param.MCCorrrectionIgnoreNoHist = true;
-
-  param.Electron_Tight_ID = "SUSYTight";
-  param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "SUSYLoose";
-  param.Electron_Loose_RelIso = 0.4;
-
-  param.Muon_Tight_ID = "SUSYTight";
-  param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "SUSYLoose";
-  param.Muon_Loose_RelIso = 0.4;
-
-  param.Jet_ID = "HN";
-
-  executeEventFromParameter(param);
-
-  //==== Test Loose Muon (0.6)
-
-  param.Name = "SUSYTight_SUDYLooseNoIPMiniIso0p6";
+  param.Name = "HN";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "SUSYTight";
+  param.Electron_Tight_ID = "HNTight";
   param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "SUSYLoose";
-  param.Electron_Loose_RelIso = 0.4;
+  param.Electron_Loose_ID = "HNLoose";
+  param.Electron_Loose_RelIso = 0.6;
+  param.Electron_Veto_ID = "HNVeto";
+  param.Electron_Veto_RelIso = 0.6;
 
-  param.Muon_Tight_ID = "SUSYTight";
+  param.Muon_Tight_ID = "HNTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "TEST";
+  param.Muon_Loose_ID = "HNLoose";
   param.Muon_Loose_RelIso = 0.6;
+  param.Muon_Veto_ID = "HNVeto";
+  param.Muon_Veto_RelIso = 0.6;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
-  //==== Test Loose Muon (0.4)
+  //==== HN ID
 
-  param.Name = "SUSYTight_SUDYLooseNoIPMiniIso0p4";
+  param.Name = "HN_ElectronLooseNoIP";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "SUSYTight";
+  param.Electron_Tight_ID = "HNTight";
   param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "SUSYLoose";
-  param.Electron_Loose_RelIso = 0.4;
+  param.Electron_Loose_ID = "HNLooseNoIP";
+  param.Electron_Loose_RelIso = 0.6;
+  param.Electron_Veto_ID = "HNVeto";
+  param.Electron_Veto_RelIso = 0.6;
 
-  param.Muon_Tight_ID = "SUSYTight";
+  param.Muon_Tight_ID = "HNTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "TEST";
-  param.Muon_Loose_RelIso = 0.4;
+  param.Muon_Loose_ID = "HNLoose";
+  param.Muon_Loose_RelIso = 0.6;
+  param.Muon_Veto_ID = "HNVeto";
+  param.Muon_Veto_RelIso = 0.6;
 
   param.Jet_ID = "HN";
 
@@ -113,8 +107,13 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
   Event ev = GetEvent();
   Particle METv = ev.GetMETVector();
 
+  std::vector<Electron> Veto_electrons = GetElectrons(param.Electron_Veto_ID, 10., 2.5);
+  std::vector<Muon> Veto_muons = GetMuons(param.Muon_Veto_ID, 10., 2.4);
+  int n_Veto_Leptons = Veto_electrons.size()+Veto_muons.size();
+
   std::vector<Electron> Loose_electrons = GetElectrons(param.Electron_Loose_ID, 10., 2.5);
   std::vector<Muon> Loose_muons = GetMuons(param.Muon_Loose_ID, 10., 2.4);
+
   vector<Gen> gens = GetGens();
 
   vector<Lepton *> lepptrs_electron = MakeLeptonPointerVector(Loose_electrons);
@@ -130,13 +129,6 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
   vector<Jet> jets = GetJets("HN", 20., 2.7);
   vector<double> AwayJetMinPts = {20, 30, 40, 60, 100, 500};
   vector<TString> str_AwayJetMinPts = {"20", "30", "40", "60", "100", "500"};
-
-  const int n_eta = 3;
-  float etaarray[n_eta+1] = {0.0, 0.8, 1.479, 2.5};
-  const int n_pt = 8;
-  float ptarray[n_pt+1] = {5., 10., 15., 20., 30., 40., 50., 60., 70.};
-
-  bool LooseMuonRelIso0p4 = param.Name.Contains("MiniIso0p4");
 
   //==== Find prompt and fake leptons
   //==== Also save IsTight
@@ -157,7 +149,6 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
     }
     else{
       this_Tight_RelIso = param.Muon_Tight_RelIso;
-      if(LooseMuonRelIso0p4 && lep.MiniRelIso()>=0.4) continue;
     }
 
     double ptcone = lep.CalcPtCone(lep.MiniRelIso(), this_Tight_RelIso);
@@ -194,7 +185,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
   }
 
-  //==== TODO Add SingleLepton Trigger Norm Plots at Z-peak
+  //==== SingleLepton Trigger Norm Plots at Z-peak
 
   bool RunElectronSingleLeptonNormPlots = false;
   bool RunMuonSingleLeptonNormPlots = false;
@@ -209,8 +200,8 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
   if(RunElectronSingleLeptonNormPlots){
 
-    bool OneLeptonEvent = (n_TightElectron==1) && (Loose_electrons.size()==1);
-    bool TwoLeptonEvent = (n_TightElectron==2) && (Loose_electrons.size()==2);
+    bool OneLeptonEvent = (n_TightElectron==1) && (Loose_electrons.size()==1) && (n_Veto_Leptons==1);
+    bool TwoLeptonEvent = (n_TightElectron==2) && (Loose_electrons.size()==2) && (n_Veto_Leptons==2);
 
     for(unsigned int i=0; i<Electron_TrigWithPtRange.Triggers.size(); i++){
       TString this_trigger = Electron_TrigWithPtRange.Triggers.at(i);
@@ -257,8 +248,8 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
   }
   if(RunMuonSingleLeptonNormPlots){
 
-    bool OneLeptonEvent = (n_TightMuon==1) && (Loose_muons.size()==1);
-    bool TwoLeptonEvent = (n_TightMuon==2) && (Loose_muons.size()==2);
+    bool OneLeptonEvent = (n_TightMuon==1) && (Loose_muons.size()==1) && (n_Veto_Leptons==1);
+    bool TwoLeptonEvent = (n_TightMuon==2) && (Loose_muons.size()==2) && (n_Veto_Leptons==2);
 
     for(unsigned int i=0; i<Muon_TrigWithPtRange.Triggers.size(); i++){
       TString this_trigger = Muon_TrigWithPtRange.Triggers.at(i);
@@ -335,7 +326,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
   double weight = 1.;
 
-  if(lepptrs_prompt.size()==1){ //TODO add veto
+  if(lepptrs_prompt.size()==1 && n_Veto_Leptons==1){ //TODO add veto
 
     Lepton *lepptr_prompt = lepptrs_prompt.at(0);
     Lepton lep = *lepptr_prompt;
@@ -427,9 +418,48 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
 void CalcFakeRate::FillFakeRatePlots(TString name, TString frtype, Lepton *lep, bool IsTight, double weight){
 
+  bool IsElectron = true;
+  vector<double> vec_ptbins = Electron_FakeRatePtBinnings;
+  double ThisEta = -999;
+  if(lep->LeptonFlavour()==Lepton::ELECTRON){
+
+    //==== Electron-only plots
+    Electron *el = (Electron *)lep;
+    JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"MVANoIso", el->MVANoIso(), weight, 200, -1., 1.);
+    if(IsTight){
+      JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"MVANoIso", el->MVANoIso(), weight, 200, -1., 1.);
+    }
+
+    ThisEta = el->scEta();
+
+  }
+  else{
+    IsElectron = false;
+    vec_ptbins = Muon_FakeRatePtBinnings;
+
+    //==== Muon-only plots
+    Muon *mu = (Muon *)lep;
+    JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"Chi2", mu->Chi2(), weight, 500, 0., 50.);
+    if(IsTight){
+      JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"Chi2", mu->Chi2(), weight, 500, 0., 50.);
+    }
+
+    ThisEta = mu->Eta();
+
+  }
+
+  const int n_ptbins = vec_ptbins.size()-1;
+  double ptbins[n_ptbins+1];
+  for(int i=0;i<n_ptbins+1;i++){
+    ptbins[i] = vec_ptbins.at(i);
+  }
+  const int n_etabins = 3;
+  double etabins[n_etabins+1] = {0., 0.8, 1.479, 2.5};
+  if(!IsElectron) etabins[n_etabins] = 2.4;
+
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"Pt", lep->Pt(), weight, 2000, 0., 2000.);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"PtCone", lep->PtCone(), weight, 2000, 0., 2000.);
-  JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"Eta", lep->Eta(), weight, 60, -3, 3.);
+  JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"Eta", ThisEta, weight, 60, -3, 3.);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"RelIso", lep->RelIso(), weight, 100, 0., 1.0);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"MiniRelIso", lep->MiniRelIso(), weight, 100, 0., 1.0);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"dXY", fabs(lep->dXY()), weight, 500, 0., 0.5);
@@ -439,12 +469,13 @@ void CalcFakeRate::FillFakeRatePlots(TString name, TString frtype, Lepton *lep, 
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"NEvent", 0., weight, 1, 0., 1.);
+  JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"PtCone_vs_Eta", lep->PtCone(), ThisEta, weight, n_ptbins, ptbins, n_etabins, etabins);
 
   if(IsTight){
 
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"Pt", lep->Pt(), weight, 2000, 0., 2000.);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"PtCone", lep->PtCone(), weight, 2000, 0., 2000.);
-    JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"Eta", lep->Eta(), weight, 60, -3, 3.);
+    JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"Eta", ThisEta, weight, 60, -3, 3.);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"RelIso", lep->RelIso(), weight, 100, 0., 1.0);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"MiniRelIso", lep->MiniRelIso(), weight, 100, 0., 1.0);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"dXY", fabs(lep->dXY()), weight, 500, 0., 0.5);
@@ -454,27 +485,9 @@ void CalcFakeRate::FillFakeRatePlots(TString name, TString frtype, Lepton *lep, 
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"NEvent", 0., weight, 1, 0., 1.);
+    JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"PtCone_vs_Eta", lep->PtCone(), ThisEta, weight, n_ptbins, ptbins, n_etabins, etabins);
 
   }
-
-  if(lep->LeptonFlavour()==Lepton::ELECTRON){
-    Electron *el = (Electron *)lep;
-
-    JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"MVANoIso", el->MVANoIso(), weight, 200, -1., 1.);
-    if(IsTight){
-      JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"MVANoIso", el->MVANoIso(), weight, 200, -1., 1.);
-    }
-  }
-  else{
-    Muon *mu = (Muon *)lep;
-
-    JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"Chi2", mu->Chi2(), weight, 500, 0., 50.);
-    if(IsTight){
-      JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"Chi2", mu->Chi2(), weight, 500, 0., 50.);
-    }
-
-  }
-
 
 }
 

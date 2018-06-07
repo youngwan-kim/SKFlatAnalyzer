@@ -158,8 +158,8 @@ std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, doubl
       //cout << "Fail Pt : pt = " << this_electron.Pt() << ", cut = " << ptmin << endl;
       continue;
     }
-    if(!( fabs(this_electron.Eta())<fetamax )){
-      //cout << "Fail Eta : eta = " << fabs(this_electron.Eta()) << ", cut = " << fetamax << endl;
+    if(!( fabs(this_electron.scEta())<fetamax )){
+      //cout << "Fail Eta : eta = " << fabs(this_electron.scEta()) << ", cut = " << fetamax << endl;
       continue;
     }
     if(!( this_electron.PassID(id) )){
@@ -395,6 +395,21 @@ bool AnalyzerCore::HasFlag(TString flag){
 
 }
 
+std::vector<Muon> AnalyzerCore::MuonWithoutGap(std::vector<Muon> muons){
+
+  std::vector<Muon> out;
+  for(unsigned int i=0; i<muons.size(); i++){
+    Muon this_muon = muons.at(i);
+    double this_eta = fabs( this_muon.Eta() );
+    if( 1.444 <= this_eta && this_eta < 1.566 ) continue;
+
+    out.push_back(this_muon);
+  }
+
+  return out;
+
+}
+
 std::vector<Jet> AnalyzerCore::JetsAwayFromFatJet(std::vector<Jet> jets, std::vector<FatJet> fatjets, double mindr){
 
   std::vector<Jet> out;
@@ -444,6 +459,17 @@ std::vector<Jet> AnalyzerCore::JetsVetoLeptonInside(std::vector<Jet> jets, std::
 
   }
   return out;
+
+}
+
+Particle AnalyzerCore::AddFatJetAndLepton(FatJet fatjet, Lepton lep){
+
+  if(fatjet.DeltaR( lep )<0.8){
+    return fatjet;
+  }
+  else{
+    return fatjet+lep;
+  }
 
 }
 
@@ -902,6 +928,16 @@ TH1D* AnalyzerCore::GetHist1D(TString histname){
 
 }
 
+TH2D* AnalyzerCore::GetHist2D(TString histname){
+
+  TH2D *h = NULL;
+  std::map<TString, TH2D*>::iterator mapit = maphist_TH2D.find(histname);
+  if(mapit != maphist_TH2D.end()) return mapit->second;
+
+  return h;
+
+}
+
 void AnalyzerCore::FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max){
 
   TH1D *this_hist = GetHist1D(histname);
@@ -911,6 +947,38 @@ void AnalyzerCore::FillHist(TString histname, double value, double weight, int n
   }
 
   this_hist->Fill(value, weight);
+
+}
+
+void AnalyzerCore::FillHist(TString histname,
+                double value_x, double value_y,
+                double weight,
+                int n_binx, double x_min, double x_max,
+                int n_biny, double y_min, double y_max){
+
+  TH2D *this_hist = GetHist2D(histname);
+  if( !this_hist ){
+    this_hist = new TH2D(histname, "", n_binx, x_min, x_max, n_biny, y_min, y_max);
+    maphist_TH2D[histname] = this_hist;
+  }
+
+  this_hist->Fill(value_x, value_y, weight);
+
+}
+
+void AnalyzerCore::FillHist(TString histname,
+                double value_x, double value_y,
+                double weight,
+                int n_binx, double *xbins,
+                int n_biny, double *ybins){
+
+  TH2D *this_hist = GetHist2D(histname);
+  if( !this_hist ){
+    this_hist = new TH2D(histname, "", n_binx, xbins, n_biny, ybins);
+    maphist_TH2D[histname] = this_hist;
+  }
+
+  this_hist->Fill(value_x, value_y, weight);
 
 }
 
@@ -948,6 +1016,62 @@ void AnalyzerCore::JSFillHist(TString suffix, TString histname, double value, do
 
 }
 
+TH2D* AnalyzerCore::JSGetHist2D(TString suffix, TString histname){
+
+  TH2D *h = NULL;
+
+  std::map< TString, std::map<TString, TH2D*> >::iterator mapit = JSmaphist_TH2D.find(suffix);
+  if(mapit==JSmaphist_TH2D.end()){
+    return h;
+  }
+  else{
+
+    std::map<TString, TH2D*> this_maphist = mapit->second;
+    std::map<TString, TH2D*>::iterator mapitit = this_maphist.find(histname);
+    if(mapitit != this_maphist.end()) return mapitit->second;
+
+  }
+
+  return h;
+
+}
+
+void AnalyzerCore::JSFillHist(TString suffix, TString histname,
+                  double value_x, double value_y,
+                  double weight,
+                  int n_binx, double x_min, double x_max,
+                  int n_biny, double y_min, double y_max){
+
+  TH2D *this_hist = JSGetHist2D(suffix, histname);
+  if( !this_hist ){
+
+    this_hist = new TH2D(histname, "", n_binx, x_min, x_max, n_biny, y_min, y_max);
+    (JSmaphist_TH2D[suffix])[histname] = this_hist;
+
+  }
+
+  this_hist->Fill(value_x, value_y, weight);
+
+}
+
+void AnalyzerCore::JSFillHist(TString suffix, TString histname,
+                  double value_x, double value_y,
+                  double weight,
+                  int n_binx, double *xbins,
+                  int n_biny, double *ybins){
+
+  TH2D *this_hist = JSGetHist2D(suffix, histname);
+  if( !this_hist ){
+
+    this_hist = new TH2D(histname, "", n_binx, xbins, n_biny, ybins);
+    (JSmaphist_TH2D[suffix])[histname] = this_hist;
+
+  }
+
+  this_hist->Fill(value_x, value_y, weight);
+
+}
+
 void AnalyzerCore::WriteHist(){
 
   outfile->cd();
@@ -961,10 +1085,33 @@ void AnalyzerCore::WriteHist(){
     TString this_suffix = mapit->first;
     std::map< TString, TH1D* > this_maphist = mapit->second;
 
-    outfile->mkdir(this_suffix);
+
+    TDirectory *dir = outfile->GetDirectory(this_suffix);
+    if(!dir){
+      outfile->mkdir(this_suffix);
+    }
     outfile->cd(this_suffix);
 
     for(std::map< TString, TH1D* >::iterator mapit = this_maphist.begin(); mapit!=this_maphist.end(); mapit++){
+      mapit->second->Write();
+    }
+
+    outfile->cd();
+
+  }
+
+  for(std::map< TString, std::map<TString, TH2D*> >::iterator mapit=JSmaphist_TH2D.begin(); mapit!=JSmaphist_TH2D.end(); mapit++){
+
+    TString this_suffix = mapit->first;
+    std::map< TString, TH2D* > this_maphist = mapit->second;
+
+    TDirectory *dir = outfile->GetDirectory(this_suffix);
+    if(!dir){
+      outfile->mkdir(this_suffix);
+    }
+    outfile->cd(this_suffix);
+
+    for(std::map< TString, TH2D* >::iterator mapit = this_maphist.begin(); mapit!=this_maphist.end(); mapit++){
       mapit->second->Write();
     }
 

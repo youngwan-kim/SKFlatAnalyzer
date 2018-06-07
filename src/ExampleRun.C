@@ -23,10 +23,19 @@ void ExampleRun::executeEvent(){
     if(fabs(el.scEta())>2.5) continue;
 
     bool POGLoose = el.passLooseID();
-    bool MyPOGLoose = el.Pass_CustCBID();
+    bool MyPOGLoose = el.Pass_CutBasedLoose();
+
+    bool POGVeto = el.passVetoID();
+    bool MyPOGVeto = el.Pass_CutBasedVeto();
+
+    if(POGLoose)   FillHist("POGLoose", 0., 1., 2, 0., 2.);
+    if(MyPOGLoose) FillHist("POGLoose", 1., 1., 2, 0., 2.);
+    if(POGVeto)   FillHist("POGVeto", 0., 1., 2, 0., 2.);
+    if(MyPOGVeto) FillHist("POGVeto", 1., 1., 2, 0., 2.);
+
 
     if( POGLoose && !MyPOGLoose ){
-      FillHist("PassPOG__NotMine", 0., 1., 1, 0., 1.);
+      FillHist("PassPOGLoose__NotMyPOGLoose", 0., 1., 1, 0., 1.);
 
 /*
       cout << "----------------------------------------------------" << endl;
@@ -56,8 +65,8 @@ void ExampleRun::executeEvent(){
     }
 
     if( !POGLoose && MyPOGLoose ){
-      FillHist("PassMyPOG__NotPOG", 0., 1., 1, 0., 1.);
-
+      FillHist("PassMyPOGLoose__NotPOGLoose", 0., 1., 1, 0., 1.);
+/*
       cout << "### |scEta| = " << el.scEta() << " ###" << endl;
       cout << "full5x5 = " << el.full5x5_sigmaIetaIeta() << endl;
       cout << "|dEtaSeed| = " << fabs(el.dEtaSeed()) << endl;
@@ -68,10 +77,18 @@ void ExampleRun::executeEvent(){
       cout << "|1/E-1/p| = " << fabs(el.InvEminusInvP()) << endl;
       cout << "NMissHist = " << el.NMissingHits() << endl;
       cout << "PassConv = " << el.PassConversionVeto() << endl;
-
+*/
     }
 
-  }
+
+    if( POGVeto && !MyPOGVeto ){
+      FillHist("PassPOGVeto__NotMyPOGVeto", 0., 1., 1, 0., 1.);
+    }
+    if( !POGVeto && MyPOGVeto ){
+      FillHist("PassMyPOGVeto__NotPOGVeto", 0., 1., 1, 0., 1.);
+    }
+
+  } // END Electron Loop
 
 }
 

@@ -24,29 +24,33 @@ void SKFlatValidation::executeEvent(){
   param.Name = "POG_pt75";
   executeEventFromParameter(param);
 
-  //==== SUSY without ID
+  //==== HN ID
 
   param.Clear();
   param.Name = "HN";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "passLooseID";
+  param.Electron_Tight_ID = "HNTight";
   param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "passVetoID";
-  param.Electron_Loose_RelIso = 0.4;
+  param.Electron_Loose_ID = "HNLoose";
+  param.Electron_Loose_RelIso = 0.6;
+  param.Electron_Veto_ID = "HNVeto";
+  param.Electron_Veto_RelIso = 0.6;
 
-  param.Muon_Tight_ID = "SUSYTight";
+  param.Muon_Tight_ID = "HNTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "TEST";
+  param.Muon_Loose_ID = "HNLoose";
   param.Muon_Loose_RelIso = 0.6;
+  param.Muon_Veto_ID = "HNVeto";
+  param.Muon_Veto_RelIso = 0.6;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
   //=== Same but pt>75 GeV
-  param.Name = "SUSY_pt75";
+  param.Name = "HN_pt75";
   executeEventFromParameter(param);
 
 }
@@ -86,14 +90,14 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
   std::vector< TString > Suffixs = {
     "SingleMuon",
     "DiElectron",
-    "SingleElectron",
     "DiPhoton",
+    //"SingleElectron",
   };
   std::vector< bool > PassTriggers = {
     PassSingleMuon && (muons.size()>=1) && (electrons.size()==0),
     PassDiElectron && (electrons.size()==2) && (muons.size()==0),
-    PassSingleElectron && (electrons.size()>=1) && (muons.size()==0),
     PassDiPhoton && (electrons.size()==2) && (muons.size()==0),
+    //PassSingleElectron && (electrons.size()>=1) && (muons.size()==0),
   };
 
   for(unsigned int i=0; i<Suffixs.size(); i++){
