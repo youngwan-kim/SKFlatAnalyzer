@@ -28,18 +28,18 @@ void CalcFakeRate::executeEvent(){
 
   //==== To Check Denominator distribution, remove all selections for loose lepton
 
-  param.Name = "HNVeryLoose";
+  param.Name = "HNPairVeryLoose";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "HNTight";
+  param.Electron_Tight_ID = "HNPairTight";
   param.Electron_Tight_RelIso = 0.1;
   param.Electron_Loose_ID = "NOCUT";
   param.Electron_Loose_RelIso = 999.;
   param.Electron_Veto_ID = "NOCUT";
   param.Electron_Veto_RelIso = 999.;
 
-  param.Muon_Tight_ID = "HNTight";
+  param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
   param.Muon_Loose_ID = "POGLoose";
   param.Muon_Loose_RelIso = 999.;
@@ -50,48 +50,48 @@ void CalcFakeRate::executeEvent(){
 
   executeEventFromParameter(param);
 
-  //==== HN ID
+  //==== HNPair ID
 
-  param.Name = "HN";
+  param.Name = "HNPair";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "HNTight";
+  param.Electron_Tight_ID = "HNPairTight";
   param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "HNLoose";
+  param.Electron_Loose_ID = "HNPairLoose";
   param.Electron_Loose_RelIso = 0.6;
-  param.Electron_Veto_ID = "HNVeto";
+  param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
 
-  param.Muon_Tight_ID = "HNTight";
+  param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "HNLoose";
+  param.Muon_Loose_ID = "HNPairLoose";
   param.Muon_Loose_RelIso = 0.6;
-  param.Muon_Veto_ID = "HNVeto";
+  param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
-  //==== HN ID
+  //==== HNPair ID
 
-  param.Name = "HN_ElectronLooseNoIP";
+  param.Name = "HNPair_ElectronLooseNoIP";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "HNTight";
+  param.Electron_Tight_ID = "HNPairTight";
   param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "HNLooseNoIP";
+  param.Electron_Loose_ID = "HNPairLooseNoIP";
   param.Electron_Loose_RelIso = 0.6;
-  param.Electron_Veto_ID = "HNVeto";
+  param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
 
-  param.Muon_Tight_ID = "HNTight";
+  param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "HNLoose";
+  param.Muon_Loose_ID = "HNPairLoose";
   param.Muon_Loose_RelIso = 0.6;
-  param.Muon_Veto_ID = "HNVeto";
+  param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
 
   param.Jet_ID = "HN";
@@ -469,7 +469,7 @@ void CalcFakeRate::FillFakeRatePlots(TString name, TString frtype, Lepton *lep, 
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
   JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"NEvent", 0., weight, 1, 0., 1.);
-  JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"PtCone_vs_Eta", lep->PtCone(), ThisEta, weight, n_ptbins, ptbins, n_etabins, etabins);
+  JSFillHist(name, name+"_"+frtype+"_"+"Den_"+"PtCone_vs_Eta", lep->PtCone(), fabs(ThisEta), weight, n_ptbins, ptbins, n_etabins, etabins);
 
   if(IsTight){
 
@@ -485,7 +485,7 @@ void CalcFakeRate::FillFakeRatePlots(TString name, TString frtype, Lepton *lep, 
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
     JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"NEvent", 0., weight, 1, 0., 1.);
-    JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"PtCone_vs_Eta", lep->PtCone(), ThisEta, weight, n_ptbins, ptbins, n_etabins, etabins);
+    JSFillHist(name, name+"_"+frtype+"_"+"Num_"+"PtCone_vs_Eta", lep->PtCone(), fabs(ThisEta), weight, n_ptbins, ptbins, n_etabins, etabins);
 
   }
 
