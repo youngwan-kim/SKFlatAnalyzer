@@ -19,7 +19,7 @@ void SKFlatNtuple::Loop(){
   for(Long64_t jentry=0; jentry<nentries;jentry++){
 
     if(jentry<NSkipEvent){
-      cout << "[SKFlatNtuple::Loop] Skipping " << jentry << "'th event" << endl;
+      //cout << "[SKFlatNtuple::Loop] Skipping " << jentry << "'th event" << endl;
       //exit(EXIT_FAILURE);
       continue;
     }

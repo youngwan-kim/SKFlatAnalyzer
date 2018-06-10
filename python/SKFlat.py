@@ -18,7 +18,9 @@ parser.add_argument('--userflags', dest='Userflags', default="")
 args = parser.parse_args()
 
 ## make flags
-Userflags = (args.Userflags).split(',')
+Userflags = []
+if args.Userflags != "":
+  Userflags = (args.Userflags).split(',')
 
 ## TimeStamp
 
@@ -107,7 +109,10 @@ for InputSample in InputSamples:
 
   base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+InputSample
   if IsDATA:
-    base_rundir = base_rundir+'__period'+DataPeriod+'/'
+    base_rundir = base_rundir+'_period'+DataPeriod
+  for flag in Userflags:
+    base_rundir += '__'+flag
+  base_rundir = base_rundir+"/"
 
   os.system('mkdir -p '+base_rundir)
   os.system('mkdir -p '+base_rundir+'/output/')
@@ -228,6 +233,8 @@ for InputSample in InputSamples:
     commandsfilename = args.Analyzer+'_'+InputSample
     if IsDATA:
       commandsfilename += '_'+DataPeriod
+    for flag in Userflags:
+      commandsfilename += '__'+flag
     run_commands = open(base_rundir+'/'+commandsfilename+'.sh','w')
     print>>run_commands,'''#!/bin/bash
 SECTION=`printf %03d $1`
@@ -351,6 +358,7 @@ void {2}(){{
 
     print>>out,'''  m.Init();
 
+  m.initializeAnalyzer();
   m.Loop();
 
   m.WriteHist();
@@ -406,6 +414,10 @@ echo "[SKFlat.py] JOB FINISHED!!"
       KillCommand.write('qdel '+jobid+' ## job_'+str(it_job)+' ##\n')
     KillCommand.close()
 
+print '##################################'
+print '#### Submittion is FINISHED!! ####'
+print '##################################\n'
+
 ##########################
 ## Submittion all done. ##
 ## Now monitor job      ##
@@ -447,10 +459,15 @@ try:
         DataPeriod = tmp.split(":")[1]
 
       ## Prepare output
+      ## This should be copied from above
 
       base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+InputSample
       if IsDATA:
-        base_rundir = base_rundir+'__period'+DataPeriod+'/'
+        base_rundir = base_rundir+'_period'+DataPeriod
+      for flag in Userflags:
+        base_rundir += '__'+flag
+      base_rundir = base_rundir+"/"
+
       this_webdir = webdirpathbase+'/'+base_rundir.replace(SKFlatRunlogDir,'')
 
       if not SampleFinished:
@@ -639,8 +656,11 @@ try:
             ## Final Outputpath
 
             FinalOutputPath = args.Outputdir
+            ## if args.Outputdir is not set, go to default setting
             if args.Outputdir=="":
               FinalOutputPath = SKFlatOutputDir+'/'+args.Analyzer+'/'
+              for flag in Userflags:
+                FinalOutputPath += flag+"__"
               if IsDATA:
                 FinalOutputPath += '/DATA/'
 

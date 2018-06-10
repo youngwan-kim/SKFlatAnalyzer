@@ -70,10 +70,10 @@ public:
   bool Pass_SUSYMVAWP(TString wp);
   bool Pass_SUSYTight();
   bool Pass_SUSYLoose();
-  bool Pass_HNTight();
-  bool Pass_HNLoose();
-  bool Pass_HNLooseNoIP();
-  bool Pass_HNVeto();
+  bool Pass_HNPairTight();
+  bool Pass_HNPairLoose();
+  bool Pass_HNPairLooseNoIP();
+  bool Pass_HNPairVeto();
 
   void SetRelPFIso_Rho(double r);
   double EA();
@@ -198,10 +198,10 @@ bool Electron::PassID(TString ID){
   //==== Customized
   if(ID=="SUSYTight") return Pass_SUSYTight();
   if(ID=="SUSYLoose") return Pass_SUSYLoose();
-  if(ID=="HNTight") return Pass_HNTight();
-  if(ID=="HNLoose") return Pass_HNLoose();
-  if(ID=="HNLooseNoIP") return Pass_HNLooseNoIP();
-  if(ID=="HNVeto") return Pass_HNVeto();
+  if(ID=="HNPairTight") return Pass_HNPairTight();
+  if(ID=="HNPairLoose") return Pass_HNPairLoose();
+  if(ID=="HNPairLooseNoIP") return Pass_HNPairLooseNoIP();
+  if(ID=="HNPairVeto") return Pass_HNPairVeto();
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
 
@@ -259,7 +259,7 @@ bool Electron::Pass_SUSYLoose(){
   return true;
 }
 
-bool Electron::Pass_HNTight(){
+bool Electron::Pass_HNPairTight(){
 /*
   if(! Pass_SUSYMVAWP("Tight") ) return false;
   if(! (MiniRelIso()<0.1) ) return false;
@@ -283,7 +283,7 @@ bool Electron::Pass_HNTight(){
   return true;
 }
 
-bool Electron::Pass_HNLoose(){
+bool Electron::Pass_HNPairLoose(){
 /*
   if(! Pass_SUSYMVAWP("Loose") ) return false;
   if(! (MiniRelIso()<0.4) ) return false;
@@ -308,7 +308,7 @@ bool Electron::Pass_HNLoose(){
 
 }
 
-bool Electron::Pass_HNLooseNoIP(){
+bool Electron::Pass_HNPairLooseNoIP(){
 /*
   if(! Pass_SUSYMVAWP("Loose") ) return false;
   if(! (MiniRelIso()<0.4) ) return false;
@@ -324,7 +324,7 @@ bool Electron::Pass_HNLooseNoIP(){
 
 }
 
-bool Electron::Pass_HNVeto(){
+bool Electron::Pass_HNPairVeto(){
 /*
   if(! Pass_SUSYMVAWP("Loose") ) return false;
   if(! (MiniRelIso()<0.4) ) return false;

@@ -65,6 +65,7 @@ void run_{0}(){{
 
   m.Init();
 
+  m.initializeAnalyzer();
   m.Loop();
 
   m.WriteHist();

@@ -1,3 +1,6 @@
+#ifndef AnalyzerParameter_h
+#define AnalyzerParameter_h
+
 #include "TString.h"
 
 class AnalyzerParameter{
@@ -10,11 +13,15 @@ public:
 
   TString Electron_Tight_ID, Electron_Loose_ID, Electron_Veto_ID;
   TString Electron_ID_SF_Key;
+  TString Electron_FR_ID, Electron_FR_Key;
   double Electron_Tight_RelIso, Electron_Loose_RelIso, Electron_Veto_RelIso;
+  bool Electron_UseMini;
 
   TString Muon_Tight_ID, Muon_Loose_ID, Muon_Veto_ID;
   TString Muon_ID_SF_Key, Muon_ISO_SF_Key, Muon_Trigger_SF_Key;
+  TString Muon_FR_ID, Muon_FR_Key;
   double Muon_Tight_RelIso, Muon_Loose_RelIso, Muon_Veto_RelIso;
+  bool Muon_UseMini;
 
   TString Jet_ID, FatJet_ID;
 
@@ -35,9 +42,12 @@ void AnalyzerParameter::Clear(){
   Electron_Loose_ID = "";
   Electron_Veto_ID = "";
   Electron_ID_SF_Key = "";
+  Electron_FR_ID = "";
+  Electron_FR_Key = "";
   Electron_Tight_RelIso = 999.;
   Electron_Loose_RelIso = 999.;
   Electron_Veto_RelIso = 999.;
+  Electron_UseMini = false;
 
   Muon_Tight_ID = "";
 
@@ -46,9 +56,12 @@ void AnalyzerParameter::Clear(){
   Muon_ID_SF_Key = "";
   Muon_ISO_SF_Key = "";
   Muon_Trigger_SF_Key = "";
+  Muon_FR_ID = "";
+  Muon_FR_Key = "";
   Muon_Tight_RelIso = 999.;
   Muon_Loose_RelIso = 999.;
   Muon_Veto_RelIso = 999.;
+  Muon_UseMini = false;
 
   Jet_ID = "";
   FatJet_ID = "";
@@ -80,3 +93,5 @@ AnalyzerParameter::AnalyzerParameter(){
 
 AnalyzerParameter::~AnalyzerParameter(){
 }
+
+#endif

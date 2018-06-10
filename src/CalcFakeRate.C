@@ -38,6 +38,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Loose_RelIso = 999.;
   param.Electron_Veto_ID = "NOCUT";
   param.Electron_Veto_RelIso = 999.;
+  param.Electron_UseMini = true;
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
@@ -45,6 +46,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Loose_RelIso = 999.;
   param.Muon_Veto_ID = "POGLoose";
   param.Muon_Veto_RelIso = 999.;
+  param.Muon_UseMini = true;
 
   param.Jet_ID = "HN";
 
@@ -62,6 +64,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Loose_RelIso = 0.6;
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
+  param.Electron_UseMini = true;
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
@@ -69,6 +72,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Loose_RelIso = 0.6;
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
+  param.Muon_UseMini = true;
 
   param.Jet_ID = "HN";
 
@@ -86,6 +90,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Loose_RelIso = 0.6;
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
+  param.Electron_UseMini = true;
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
@@ -93,6 +98,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Loose_RelIso = 0.6;
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
+  param.Muon_UseMini = true;
 
   param.Jet_ID = "HN";
 
@@ -143,15 +149,20 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
     Lepton lep = *lepptr;
     bool IsElectron = (lep.LeptonFlavour()==Lepton::ELECTRON);
     double this_Tight_RelIso = param.Electron_Tight_RelIso;
+    bool this_UseMini = param.Electron_UseMini;
 
     if(IsElectron){
 
     }
     else{
       this_Tight_RelIso = param.Muon_Tight_RelIso;
+      this_UseMini = param.Muon_UseMini;
     }
 
-    double ptcone = lep.CalcPtCone(lep.MiniRelIso(), this_Tight_RelIso);
+    double ThisRelIso = lep.RelIso();
+    if(this_UseMini) ThisRelIso = lep.MiniRelIso();
+
+    double ptcone = lep.CalcPtCone(ThisRelIso, this_Tight_RelIso);
     lepptr->SetPtCone( ptcone );
 
     int lep_tyep=0;

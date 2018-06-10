@@ -7,10 +7,17 @@ class HNPairAnalyzer : public AnalyzerCore {
 
 public:
 
+  void initializeAnalyzer();
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
 
   vector<Particle> RecoPairN(vector<Lepton *> lepptrs, vector<FatJet> fatjets, vector<Jet> jets);
+
+  HNPairAnalyzer();
+  ~HNPairAnalyzer();
+
+  bool RunFake;
+  bool RunEMu;
 
 };
 

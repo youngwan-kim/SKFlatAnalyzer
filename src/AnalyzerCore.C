@@ -172,7 +172,7 @@ std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, doubl
 
 }
 
-std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& muons){
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& muons, double TightIso, bool UseMini){
 
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<muons.size(); i++){
@@ -181,12 +181,20 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& m
       cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& muons)] Not muon.." << endl;
       exit(EXIT_FAILURE);
     }
+    if(TightIso>0){
+
+      double this_RelIso = l->RelIso();
+      if(UseMini) this_RelIso = l->MiniRelIso();
+      double ptcone = l->CalcPtCone(this_RelIso, TightIso);
+      l->SetPtCone( ptcone );
+
+    }
     out.push_back(l);
   }
   return out;
 
 }
-std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron>& electrons){
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron>& electrons, double TightIso, bool UseMini){
 
   std::vector<Lepton *> out;
   for(unsigned int i=0; i<electrons.size(); i++){
@@ -194,6 +202,14 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(std::vector<Electron
     if( !(l->LeptonFlavour() == Lepton::ELECTRON) ){
       cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<ELECTRON>& electrons)] Not electron.." << endl;
       exit(EXIT_FAILURE);
+    }
+    if(TightIso>0){
+
+      double this_RelIso = l->RelIso();
+      if(UseMini) this_RelIso = l->MiniRelIso();
+      double ptcone = l->CalcPtCone(this_RelIso, TightIso);
+      l->SetPtCone( ptcone );
+
     }
     out.push_back(l);
   }
@@ -391,6 +407,11 @@ double AnalyzerCore::MT(TLorentzVector a, TLorentzVector b){
 
 bool AnalyzerCore::HasFlag(TString flag){
 
+  //cout << "[AnalyzerCore::HasFlag] Userflags.size() = " << Userflags.size() << endl;
+  //for(unsigned int i=0; i<Userflags.size(); i++){
+  //  cout << "[AnalyzerCore::HasFlag] " << Userflags.at(i) << endl;
+  //}
+  
   return std::find(Userflags.begin(), Userflags.end(), flag) != Userflags.end();
 
 }
@@ -404,6 +425,36 @@ std::vector<Muon> AnalyzerCore::MuonWithoutGap(std::vector<Muon> muons){
     if( 1.444 <= this_eta && this_eta < 1.566 ) continue;
 
     out.push_back(this_muon);
+  }
+
+  return out;
+
+}
+
+std::vector<Muon> AnalyzerCore::MuonPromptOnly(std::vector<Muon> muons, std::vector<Gen> gens){
+
+  if(IsDATA) return muons;
+
+  std::vector<Muon> out;
+
+  for(unsigned int i=0; i<muons.size(); i++){
+    if(GetLeptonType(muons.at(i), gens)<=0) continue;
+    out.push_back( muons.at(i) );
+  }
+
+  return out;
+
+}
+
+std::vector<Electron> AnalyzerCore::ElectronPromptOnly(std::vector<Electron> electrons, std::vector<Gen> gens){
+
+  if(IsDATA) return electrons;
+
+  std::vector<Electron> out;
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    if(GetLeptonType(electrons.at(i), gens)<=0) continue;
+    out.push_back( electrons.at(i) );
   }
 
   return out;

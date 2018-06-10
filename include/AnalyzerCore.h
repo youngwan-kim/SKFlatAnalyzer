@@ -6,7 +6,6 @@
 #include "TMath.h"
 
 #include "SKFlatNtuple.C"
-#include "MCCorrection.C"
 #include "Event.h"
 #include "Particle.h"
 #include "Gen.h"
@@ -17,6 +16,8 @@
 #include "FatJet.h"
 
 #include "AnalyzerParameter.h"
+#include "MCCorrection.C"
+#include "FakeBackgroundEstimator.C"
 
 #define M_Z 91.1876
 
@@ -26,6 +27,10 @@ public:
 
   AnalyzerCore();
   ~AnalyzerCore();
+
+  virtual void initializeAnalyzer(){
+
+  };
 
   virtual void executeEvent(){
 
@@ -41,8 +46,8 @@ public:
   std::vector<Electron> GetAllElectrons();
   std::vector<Electron> GetElectrons(TString id, double ptmin=-999., double fetamax=999.);
 
-  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Muon>& muons);
-  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Electron>& electrons);
+  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Muon>& muons, double TightIso=-999, bool UseMini=false);
+  std::vector<Lepton *> MakeLeptonPointerVector(std::vector<Electron>& electrons, double TightIso=-999, bool UseMini=false);
 
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin=-999, double fetamax=999.);
@@ -58,11 +63,14 @@ public:
 
   //==== Tools
 
-  MCCorrection mccor;
+  MCCorrection mcCorr;
+  FakeBackgroundEstimator fakeEst;
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
   bool HasFlag(TString flag);
   std::vector<Muon> MuonWithoutGap(std::vector<Muon> muons);
+  std::vector<Muon> MuonPromptOnly(std::vector<Muon> muons, std::vector<Gen> gens);
+  std::vector<Electron> ElectronPromptOnly(std::vector<Electron> electrons, std::vector<Gen> gens);
   std::vector<Jet> JetsAwayFromFatJet(std::vector<Jet> jets, std::vector<FatJet> fatjets, double mindr=1.0);
   std::vector<Jet> JetsVetoLeptonInside(std::vector<Jet> jets, std::vector<Electron> els, std::vector<Muon> mus);
   Particle AddFatJetAndLepton(FatJet fatjet, Lepton lep);

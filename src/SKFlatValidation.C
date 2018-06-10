@@ -24,33 +24,35 @@ void SKFlatValidation::executeEvent(){
   param.Name = "POG_pt75";
   executeEventFromParameter(param);
 
-  //==== HN ID
+  //==== HNPair ID
 
   param.Clear();
-  param.Name = "HN";
+  param.Name = "HNPair";
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "HNTight";
+  param.Electron_Tight_ID = "HNPairTight";
   param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "HNLoose";
+  param.Electron_Loose_ID = "HNPairLoose";
   param.Electron_Loose_RelIso = 0.6;
-  param.Electron_Veto_ID = "HNVeto";
+  param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
+  param.Electron_UseMini = true;
 
-  param.Muon_Tight_ID = "HNTight";
+  param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "HNLoose";
+  param.Muon_Loose_ID = "HNPairLoose";
   param.Muon_Loose_RelIso = 0.6;
-  param.Muon_Veto_ID = "HNVeto";
+  param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
+  param.Muon_UseMini = true;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
   //=== Same but pt>75 GeV
-  param.Name = "HN_pt75";
+  param.Name = "HNPair_pt75";
   executeEventFromParameter(param);
 
 }
@@ -172,14 +174,14 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
       //cout << "GetTriggerLumi = " << ev.GetTriggerLumi("Full") << endl;
       weight *= weight_norm_1invfb*ev.GetTriggerLumi("Full")*ev.MCweight();
 
-      mccor.IgnoreNoHist = param.MCCorrrectionIgnoreNoHist;
+      mcCorr.IgnoreNoHist = param.MCCorrrectionIgnoreNoHist;
 
       //==== FIXME add third lepton veto later
       if(Suffix.Contains("SingleMuon")){
         for(unsigned int i=0; i<muons.size(); i++){
-          double this_idsf  = mccor.MuonID_SF (param.Muon_ID_SF_Key,  muons.at(i).Eta(), muons.at(i).MiniAODPt());
-          double this_isosf = mccor.MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt());
-          double this_trigsf = mccor.MuonTrigger_SF(param.Muon_Trigger_SF_Key, "IsoMu27", muons);
+          double this_idsf  = mcCorr.MuonID_SF (param.Muon_ID_SF_Key,  muons.at(i).Eta(), muons.at(i).MiniAODPt());
+          double this_isosf = mcCorr.MuonISO_SF(param.Muon_ISO_SF_Key, muons.at(i).Eta(), muons.at(i).MiniAODPt());
+          double this_trigsf = mcCorr.MuonTrigger_SF(param.Muon_Trigger_SF_Key, "IsoMu27", muons);
 
           weight *= this_idsf*this_isosf*this_trigsf;
 
@@ -187,8 +189,8 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
       }
       if( Suffix.Contains("DiElectron") || Suffix.Contains("SingleElectron") || Suffix.Contains("DiPhoton") ){
         for(unsigned int i=0; i<electrons.size(); i++){
-          double this_recosf = mccor.ElectronReco_SF(electrons.at(i).scEta(),electrons.at(i).Pt());
-          double this_idsf = mccor.ElectronID_SF(param.Electron_ID_SF_Key, electrons.at(i).scEta(), electrons.at(i).Pt());
+          double this_recosf = mcCorr.ElectronReco_SF(electrons.at(i).scEta(),electrons.at(i).Pt());
+          double this_idsf = mcCorr.ElectronID_SF(param.Electron_ID_SF_Key, electrons.at(i).scEta(), electrons.at(i).Pt());
           weight *= this_recosf*this_idsf;
         }
       }
