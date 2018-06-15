@@ -446,6 +446,39 @@ std::vector<Muon> AnalyzerCore::MuonPromptOnly(std::vector<Muon> muons, std::vec
 
 }
 
+std::vector<Muon> AnalyzerCore::MuonUsePtCone(std::vector<Muon> muons){
+
+  std::vector<Muon> out;
+
+  for(unsigned int i=0; i<muons.size(); i++){
+    muons.at(i).SetPtEtaPhiM( muons.at(i).PtCone(), muons.at(i).Eta(), muons.at(i).Phi(), muons.at(i).M() );
+    out.push_back( muons.at(i) );
+  }
+
+  return out;
+
+}
+
+Muon AnalyzerCore::MuonUsePtCone(Muon muon){
+
+  muon.SetPtEtaPhiM( muon.PtCone(), muon.Eta(), muon.Phi(), muon.M() );
+  return muon;
+
+}
+
+std::vector<Muon> AnalyzerCore::MuonApplyPtCut(std::vector<Muon> muons, double ptcut){
+
+  std::vector<Muon> out;
+
+  for(unsigned int i=0; i<muons.size(); i++){
+    if(!( muons.at(i).Pt() > ptcut )) continue;
+    out.push_back( muons.at(i) );
+  }
+
+  return out;
+
+}
+
 std::vector<Electron> AnalyzerCore::ElectronPromptOnly(std::vector<Electron> electrons, std::vector<Gen> gens){
 
   if(IsDATA) return electrons;
@@ -454,6 +487,39 @@ std::vector<Electron> AnalyzerCore::ElectronPromptOnly(std::vector<Electron> ele
 
   for(unsigned int i=0; i<electrons.size(); i++){
     if(GetLeptonType(electrons.at(i), gens)<=0) continue;
+    out.push_back( electrons.at(i) );
+  }
+
+  return out;
+
+}
+
+std::vector<Electron> AnalyzerCore::ElectronUsePtCone(std::vector<Electron> electrons){
+
+  std::vector<Electron> out;
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    electrons.at(i).SetPtEtaPhiM( electrons.at(i).PtCone(), electrons.at(i).Eta(), electrons.at(i).Phi(), electrons.at(i).M() );
+    out.push_back( electrons.at(i) );
+  }
+
+  return out;
+
+}
+
+Electron AnalyzerCore::ElectronUsePtCone(Electron electron){
+
+  electron.SetPtEtaPhiM( electron.PtCone(), electron.Eta(), electron.Phi(), electron.M() );
+  return electron;
+
+}
+
+std::vector<Electron> AnalyzerCore::ElectronApplyPtCut(std::vector<Electron> electrons, double ptcut){
+
+  std::vector<Electron> out;
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    if(!( electrons.at(i).Pt() > ptcut )) continue;
     out.push_back( electrons.at(i) );
   }
 

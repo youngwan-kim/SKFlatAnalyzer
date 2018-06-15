@@ -70,7 +70,13 @@ public:
   bool HasFlag(TString flag);
   std::vector<Muon> MuonWithoutGap(std::vector<Muon> muons);
   std::vector<Muon> MuonPromptOnly(std::vector<Muon> muons, std::vector<Gen> gens);
+  std::vector<Muon> MuonUsePtCone(std::vector<Muon> muons);
+  Muon MuonUsePtCone(Muon muon);
+  std::vector<Muon> MuonApplyPtCut(std::vector<Muon> muons, double ptcut);
   std::vector<Electron> ElectronPromptOnly(std::vector<Electron> electrons, std::vector<Gen> gens);
+  std::vector<Electron> ElectronUsePtCone(std::vector<Electron> electrons);
+  Electron ElectronUsePtCone(Electron electron);
+  std::vector<Electron> ElectronApplyPtCut(std::vector<Electron> electrons, double ptcut);
   std::vector<Jet> JetsAwayFromFatJet(std::vector<Jet> jets, std::vector<FatJet> fatjets, double mindr=1.0);
   std::vector<Jet> JetsVetoLeptonInside(std::vector<Jet> jets, std::vector<Electron> els, std::vector<Muon> mus);
   Particle AddFatJetAndLepton(FatJet fatjet, Lepton lep);

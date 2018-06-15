@@ -39,6 +39,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Veto_ID = "NOCUT";
   param.Electron_Veto_RelIso = 999.;
   param.Electron_UseMini = true;
+  param.Electron_MinPt = 10.;
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
@@ -47,6 +48,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Veto_ID = "POGLoose";
   param.Muon_Veto_RelIso = 999.;
   param.Muon_UseMini = true;
+  param.Muon_MinPt = 10.;
 
   param.Jet_ID = "HN";
 
@@ -65,6 +67,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
   param.Electron_UseMini = true;
+  param.Electron_MinPt = 10.;
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
@@ -73,12 +76,23 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
   param.Muon_UseMini = true;
+  param.Muon_MinPt = 10.;
 
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
 
-  //==== HNPair ID
+  //==== HNPair ID with pt cut
+
+  param.Name = "HNPair_PtCut";
+  param.Electron_MinPt = 75.; // HLT_DoublePhoton70_v
+  param.Muon_MinPt = 55.; // HLT_Mu50_v
+
+  executeEventFromParameter(param);
+
+  //==== HNPair ID, but change IP cut
+  //==== Electron Loose : WIHTOUT IP cut
+  //==== Muon Loose : WITH IP cut
 
   param.Name = "HNPair_ElectronLooseNoIP";
 
@@ -91,16 +105,26 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
   param.Electron_UseMini = true;
+  param.Electron_MinPt = 10.;
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "HNPairLoose";
+  param.Muon_Loose_ID = "TEST";
   param.Muon_Loose_RelIso = 0.6;
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
   param.Muon_UseMini = true;
+  param.Muon_MinPt = 10.;
 
   param.Jet_ID = "HN";
+
+  executeEventFromParameter(param);
+
+  //==== HNPair ID with pt cut
+
+  param.Name = "HNPair_ElectronLooseNoIP_PtCut";
+  param.Electron_MinPt = 75.; // HLT_DoublePhoton70_v
+  param.Muon_MinPt = 55.; // HLT_Mu50_v
 
   executeEventFromParameter(param);
 
@@ -117,8 +141,8 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
   std::vector<Muon> Veto_muons = GetMuons(param.Muon_Veto_ID, 10., 2.4);
   int n_Veto_Leptons = Veto_electrons.size()+Veto_muons.size();
 
-  std::vector<Electron> Loose_electrons = GetElectrons(param.Electron_Loose_ID, 10., 2.5);
-  std::vector<Muon> Loose_muons = GetMuons(param.Muon_Loose_ID, 10., 2.4);
+  std::vector<Electron> Loose_electrons = GetElectrons(param.Electron_Loose_ID, param.Electron_MinPt, 2.5);
+  std::vector<Muon> Loose_muons = GetMuons(param.Muon_Loose_ID, param.Muon_MinPt, 2.4);
 
   vector<Gen> gens = GetGens();
 

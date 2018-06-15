@@ -58,7 +58,7 @@ void run_{0}(){{
 /*
   m.MCSample = "DYJets";
   m.IsDATA = false;
-  m.AddFile("root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jskim/SKFlat/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/SKFlat_v946p1_2/180511_144610/0000/SKFlatNtuple_1.root");
+  m.AddFile("root://cms-xrdr.sdfarm.kr:1094///xrd/store/user/jskim/SKFlat/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/SKFlat_v946p1_3/180528_224136/0000/SKFlatNtuple_1.root");
 */
 
   m.SetOutfilePath("hists.root");

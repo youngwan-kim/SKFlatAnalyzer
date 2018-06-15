@@ -24,9 +24,10 @@ void HNPairAnalyzer::executeEvent(){
   param.Electron_Loose_RelIso = 0.6;
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
-  param.Electron_FR_ID = "HNPair";
+  param.Electron_FR_ID = "HNPair_PtCut";
   param.Electron_FR_Key = "AwayJetPt40";
   param.Electron_UseMini = true;
+  param.Electron_MinPt = 75.; // HLT_DoublePhoton70_v
 
   param.Muon_Tight_ID = "HNPairTight";
   param.Muon_Tight_RelIso = 0.2;
@@ -34,9 +35,10 @@ void HNPairAnalyzer::executeEvent(){
   param.Muon_Loose_RelIso = 0.6;
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
-  param.Muon_FR_ID = "HNPair";
+  param.Muon_FR_ID = "HNPair_PtCut";
   param.Muon_FR_Key = "AwayJetPt40";
   param.Muon_UseMini = true;
+  param.Muon_MinPt = 55.; // HLT_Mu50_v
 
   param.Jet_ID = "HN";
   param.FatJet_ID = "HN";
@@ -72,31 +74,53 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
   std::vector<Muon>     Veto_muons      = MuonWithoutGap(GetMuons(param.Muon_Veto_ID, MinPt, 2.4));
   int n_Veto_leptons = Veto_electrons.size()+Veto_muons.size();
 
-  std::vector<Electron> Loose_electrons = ElectronPromptOnly(GetElectrons(param.Electron_Loose_ID, MinPt, 2.4), gens);
-  std::vector<Muon>     Loose_muons     = MuonPromptOnly(MuonWithoutGap(GetMuons(param.Muon_Loose_ID, MinPt, 2.4)), gens);
-
+  //==== X_MinPt should be same as the pt cut used in the FR calculation
+  std::vector<Electron> Loose_electrons = ElectronPromptOnly(GetElectrons(param.Electron_Loose_ID, param.Electron_MinPt, 2.4), gens);
+  std::vector<Muon>     Loose_muons     = MuonPromptOnly(MuonWithoutGap(GetMuons(param.Muon_Loose_ID, param.Muon_MinPt, 2.4)), gens);
   std::vector<Electron> Tight_electrons;
   std::vector<Muon>     Tight_muons;
-  for(unsigned int i=0; i<Loose_electrons.size(); i++){
-    if(Loose_electrons.at(i).PassID(param.Electron_Tight_ID)) Tight_electrons.push_back( Loose_electrons.at(i) );
 
+  for(unsigned int i=0; i<Loose_electrons.size(); i++){
+
+    //==== Calculate pt-cone
     double ThisRelIso = Loose_electrons.at(i).RelIso();
     if(param.Electron_UseMini) ThisRelIso = Loose_electrons.at(i).MiniRelIso();
-
     double ptcone = Loose_electrons.at(i).CalcPtCone(ThisRelIso, param.Electron_Tight_RelIso);
     Loose_electrons.at(i).SetPtCone( ptcone );
 
+    //==== Is Tight?
+    if(Loose_electrons.at(i).PassID(param.Electron_Tight_ID)) Tight_electrons.push_back( Loose_electrons.at(i) );
+
   }
   for(unsigned int i=0; i<Loose_muons.size(); i++){
-    if(Loose_muons.at(i).PassID(param.Muon_Tight_ID)) Tight_muons.push_back( Loose_muons.at(i) );
 
+    //==== Calculate pt-cone
     double ThisRelIso = Loose_muons.at(i).RelIso();
     if(param.Muon_UseMini) ThisRelIso = Loose_muons.at(i).MiniRelIso();
-
     double ptcone = Loose_muons.at(i).CalcPtCone(ThisRelIso, param.Muon_Tight_RelIso);
     Loose_muons.at(i).SetPtCone( ptcone );
 
+    //==== Is Tight?
+    if(Loose_muons.at(i).PassID(param.Muon_Tight_ID)) Tight_muons.push_back( Loose_muons.at(i) );
+
   }
+
+  //==== If fake, Replace pt by pt-cone
+  if(RunFake){
+    Loose_electrons = ElectronUsePtCone(Loose_electrons);
+    Loose_muons     = MuonUsePtCone(Loose_muons);
+    Tight_electrons = ElectronUsePtCone(Tight_electrons);
+    Tight_muons     = MuonUsePtCone(Tight_muons);
+  }
+
+  //==== Now Apply pt cut
+  Loose_electrons = ElectronApplyPtCut(Loose_electrons, MinPt);
+  Loose_muons     = MuonApplyPtCut(Loose_muons, MinPt);
+  Tight_electrons = ElectronApplyPtCut(Tight_electrons, MinPt);
+  Tight_muons     = MuonApplyPtCut(Tight_muons, MinPt);
+
+
+
 
   //==== Jets
 
