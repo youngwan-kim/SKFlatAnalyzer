@@ -133,7 +133,7 @@ bool Muon::Pass_POGTightWithTightIso(){
 bool Muon::Pass_HNPairTight(){
   if(! isPOGMedium() ) return false;
   if(! (MiniRelIso()<0.2) ) return false;
-  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<4.) ) return false;
   return true;
 }
 bool Muon::Pass_HNPairLoose(){
@@ -149,7 +149,7 @@ bool Muon::Pass_HNPairVeto(){
 bool Muon::Pass_TESTID(){
   if(! isPOGLoose() ) return false;
   if(! (MiniRelIso()<0.6) ) return false;
-  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<8.) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1 && fabs(IP3D()/IP3Derr())<4.) ) return false;
   return true;
 }
 
