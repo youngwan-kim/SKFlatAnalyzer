@@ -10,7 +10,9 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
 
-  void FillCFRatePlots(TString name, Lepton *lep, Gen genlep, bool IsCF, double weight);
+  void FillCFRatePlots(TString name, Lepton *lep, bool IsCF, double weight);
+
+  vector<double> Electron_FakeRatePtBinnings, Muon_FakeRatePtBinnings;
 
 };
 
