@@ -35,7 +35,7 @@ public :
    bool IsDATA;
    TString DataStream;
    TString MCSample;
-   double weight_norm_1invfb;
+   double xsec, sumW, weight_norm_1invfb;
    vector<TString> Userflags;
 
    virtual void Init();

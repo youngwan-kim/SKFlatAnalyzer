@@ -49,6 +49,8 @@ SKFlatNtuple::SKFlatNtuple(){
   IsDATA = false;
   DataStream = "";
   MCSample = "";
+  xsec = 1.;
+  sumW = 1.;
   weight_norm_1invfb = 1.;
   Userflags.clear();
 }
@@ -74,7 +76,7 @@ void SKFlatNtuple::Init()
   if(!IsDATA){
 
     //std::cout << "[SKFlatNtuple::Init] MCSample = " << MCSample << std::endl;
-
+/*
     TString datadir = getenv("DATA_DIR");
     TString lumitxtpath = datadir+"/Sample/SamplePath.txt";
     //std::cout << "[SKFlatNtuple::Init] lumitxtpath = " << lumitxtpath << endl;
@@ -105,7 +107,12 @@ void SKFlatNtuple::Init()
 
       }
     }
+*/
+
+    weight_norm_1invfb = xsec/sumW;
+
   }
+
 
   // Set object pointer
    HLT_TriggerName = 0;

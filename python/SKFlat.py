@@ -36,7 +36,6 @@ string_ThisTime = ""
 
 SKFlat_WD = os.environ['SKFlat_WD']
 SKFlatV = os.environ['SKFlatV']
-SKFlatAnV = os.environ['SKFlatAnV']
 DATA_DIR = os.environ['SAMPLE_DATA_DIR']
 SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
 SKFlatOutputDir = os.environ['SKFlatOutputDir']
@@ -123,7 +122,8 @@ for InputSample in InputSamples:
   os.system('cp '+SKFlat_LIB_PATH+'/* '+base_rundir+'/lib')
   if IsKISTI:
     os.chdir(SKFlat_WD)
-    os.system('tar -czf data.tar.gz data/'+SKFlatV+/)
+
+    os.system('tar --exclude=data/'+SKFlatV+'/Sample -czf data.tar.gz data/'+SKFlatV+'/')
     os.system('mv data.tar.gz '+base_rundir)
     cwd = os.getcwd()
     os.chdir(base_rundir)
@@ -225,6 +225,20 @@ for InputSample in InputSamples:
   SubmitOutput.write('nfile_checksum = '+str(nfile_checksum)+'\n')
   SubmitOutput.write('NTotalFiles = '+str(NTotalFiles)+'\n')
   FileRangesForEachSample.append(FileRanges)
+
+  ## Get xsec and SumW
+  this_xsec = 1.;
+  this_sumw = 1.;
+  if not IsDATA:
+    lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
+    for line in lines_SamplePath:
+      words = line.split()
+      if len(words)<5:
+        continue
+      if InputSample==words[0]:
+        this_xsec = words[2]
+        this_sumw = words[4]
+        break
 
   ## Write run script
 
@@ -340,6 +354,8 @@ void {2}(){{
     else:
       out.write('  m.MCSample = "'+InputSample+'";\n');
       out.write('  m.IsDATA = false;\n')
+      out.write('  m.xsec = '+str(this_xsec)+';\n')
+      out.write('  m.sumW = '+str(this_sumw)+';\n')
 
     if len(Userflags)>0:
       out.write('  m.Userflags = {\n')
