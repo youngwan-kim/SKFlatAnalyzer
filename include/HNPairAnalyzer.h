@@ -17,7 +17,6 @@ public:
   ~HNPairAnalyzer();
 
   bool RunFake;
-  bool RunEMu;
 
 };
 

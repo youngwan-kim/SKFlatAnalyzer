@@ -123,7 +123,7 @@ for InputSample in InputSamples:
   os.system('cp '+SKFlat_LIB_PATH+'/* '+base_rundir+'/lib')
   if IsKISTI:
     os.chdir(SKFlat_WD)
-    os.system('tar -czf data.tar.gz data')
+    os.system('tar -czf data.tar.gz data/'+SKFlatV+/)
     os.system('mv data.tar.gz '+base_rundir)
     cwd = os.getcwd()
     os.chdir(base_rundir)

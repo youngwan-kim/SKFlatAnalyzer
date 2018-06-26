@@ -7,8 +7,7 @@ export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/include/:$SKFlat_WD/src/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH
 
 export SKFlatV="v946p1_3"
-export SKFlatAnV="v946p1_3__Default"
-export SAMPLE_DATA_DIR=$SKFlat_WD/data/$SKFlatAnV
+export SAMPLE_DATA_DIR=$SKFlat_WD/data/$SKFlatV
 mkdir -p $SAMPLE_DATA_DIR
 
 export SKFlatSEDir="/xrootd/store/user/jskim/SKFlatOutput/"
@@ -17,7 +16,7 @@ if [[ $HOSTNAME == *"ui10.sdfarm.kr"* ]]; then
   echo "Working on KISTI"
   export SKFlatRunlogDir="/cms/scratch/jskim/SKFlatRunlog/"
   export SKFlatOutputDir="/cms/scratch/jskim/SKFlatOutput/"
-  export DATA_DIR=data/$SKFlatAnV
+  export DATA_DIR=data/$SKFlatV
 
   export CMS_PATH=/cvmfs/cms.cern.ch
   source $CMS_PATH/cmsset_default.sh
@@ -31,7 +30,7 @@ else
   echo "Working on 42cluster"
   export SKFlatRunlogDir="/data7/Users/jskim/SKFlatRunlog/"
   export SKFlatOutputDir="/data7/Users/jskim/SKFlatOutput/"
-  export DATA_DIR=$SKFlat_WD/data/$SKFlatAnV
+  export DATA_DIR=$SKFlat_WD/data/$SKFlatV
 fi
 export MYBIN=$SKFlat_WD/bin/
 export PATH=${MYBIN}:${PATH}
