@@ -3,8 +3,10 @@
 void HNPairAnalyzer::initializeAnalyzer(){
 
   RunFake = HasFlag("RunFake");
+  RunCF = HasFlag("RunCF");
 
   cout << "[HNPairAnalyzer::initializeAnalyzer] RunFake = " << RunFake << endl;
+  cout << "[HNPairAnalyzer::initializeAnalyzer] RunCF = " << RunCF << endl;
 
 }
 
@@ -24,6 +26,8 @@ void HNPairAnalyzer::executeEvent(){
   param.Electron_Veto_RelIso = 0.6;
   param.Electron_FR_ID = "HNPair_PtCut";
   param.Electron_FR_Key = "AwayJetPt40";
+  param.Electron_CF_ID = "HNPairTight";
+  param.Electron_CF_Key = "ZToLL";
   param.Electron_UseMini = true;
   param.Electron_MinPt = 75.; // HLT_DoublePhoton70_v
 
@@ -35,6 +39,8 @@ void HNPairAnalyzer::executeEvent(){
   param.Muon_Veto_RelIso = 0.6;
   param.Muon_FR_ID = "HNPair_PtCut";
   param.Muon_FR_Key = "AwayJetPt40";
+  param.Muon_CF_ID = "HNPairTight";
+  param.Muon_CF_Key = "ZToLL";
   param.Muon_UseMini = true;
   param.Muon_MinPt = 55.; // HLT_Mu50_v
 
@@ -46,6 +52,12 @@ void HNPairAnalyzer::executeEvent(){
 }
 
 void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
+
+  //=============
+  //==== No Cut
+  //=============
+
+  FillHist("NoCut_"+param.Name, 0., 1., 1, 0., 1.);
 
   //========================
   //==== Event selecitions
@@ -122,6 +134,17 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
   int n_Veto_leptons = Veto_electrons.size()+Veto_muons.size();
   int n_Loose_leptons = Loose_electrons.size()+Loose_muons.size();
   int n_Tight_leptons = Tight_electrons.size()+Tight_muons.size();
+
+  bool HasCFElectron = false;
+  if(!IsDATA){
+    for(unsigned int i=0; i<Loose_electrons.size(); i++){
+      Gen genlep = GetGenMatchedLepton(Loose_electrons.at(i) , gens);
+      if(genlep.Charge()!=Loose_electrons.at(i).Charge()){
+        HasCFElectron = true;
+        break;
+      }
+    }
+  }
 
   bool NoExtraLepton = (n_Veto_leptons==n_Loose_leptons);
   bool IsAllTight = (n_Loose_leptons==n_Tight_leptons);
@@ -244,12 +267,20 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
     if(FatJetConfig>=2) FatJetConfig = 2;
     TString this_regionFATJET = "FatJetConfig"+TString::Itoa(FatJetConfig,10);
 
-    if(IsDATA && RunFake){
-      weight = fakeEst.GetWeight(leps, param);
-      if(! (fakeEst.HasLooseLepton) ){
-        cout << "--> WTF" << endl;
-        exit(EXIT_FAILURE);
+    if(IsDATA){
+
+      if(RunFake){
+				weight = fakeEst.GetWeight(leps, param);
+				if(! (fakeEst.HasLooseLepton) ){
+					cout << "--> WTF" << endl;
+					exit(EXIT_FAILURE);
+				}
       }
+
+      if(RunCF){
+        weight = cfEst.GetWeight(leps, param);
+      }
+
     }
 
     std::map<TString, bool> TMP_map_bool_To_Region; // For SS/OS
@@ -259,7 +290,7 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
 
     bool IsTwoLeptonEvent = false;
     if(Suffix.Contains("DiPhoton")){
-      IsTwoLeptonEvent = (Loose_electrons.size()==2) && (Loose_muons.size()==0);
+      IsTwoLeptonEvent = (Loose_electrons.size()==2) && (Loose_muons.size()==0) && (!HasCFElectron);
     }
     else if(Suffix.Contains("SingleMuon")){
       IsTwoLeptonEvent = (Loose_electrons.size()==0) && (Loose_muons.size()==2);
@@ -267,8 +298,14 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
     if(RunEMu) IsTwoLeptonEvent = true;
 
     bool IsOS = false;
+
     Particle ZCand_IsTwoLeptonEvent = (*leps[0])+(*leps[1]); // Only works for two lepton case
     IsOS = (leps[0]->Charge() != leps[1]->Charge()); // Only works for two lepton case
+    if(RunCF){
+      if(!IsOS) continue;
+      IsOS = !IsOS;
+    }
+
     if(IsTwoLeptonEvent){
       TMP_map_bool_To_Region["SR"] = (ZCand_IsTwoLeptonEvent.M() > 150.) && ( Ns.size()==2 ) && ( (Ns.at(0)+Ns.at(1)).M() > 300. );
       TMP_map_bool_To_Region["CR1"] = (ZCand_IsTwoLeptonEvent.M() < 150.);

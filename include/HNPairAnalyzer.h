@@ -16,7 +16,7 @@ public:
   HNPairAnalyzer();
   ~HNPairAnalyzer();
 
-  bool RunFake;
+  bool RunFake, RunCF;
 
 };
 

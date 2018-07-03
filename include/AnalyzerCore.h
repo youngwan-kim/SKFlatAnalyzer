@@ -18,6 +18,7 @@
 #include "AnalyzerParameter.h"
 #include "MCCorrection.C"
 #include "FakeBackgroundEstimator.C"
+#include "CFBackgroundEstimator.C"
 
 #define M_Z 91.1876
 
@@ -65,6 +66,7 @@ public:
 
   MCCorrection mcCorr;
   FakeBackgroundEstimator fakeEst;
+  CFBackgroundEstimator cfEst;
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
   bool HasFlag(TString flag);

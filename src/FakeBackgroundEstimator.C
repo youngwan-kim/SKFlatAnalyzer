@@ -61,8 +61,10 @@ double FakeBackgroundEstimator::GetElectronFakeRate(TString ID, TString key, dou
   //==== HOTFIX FIXME
   if(eta>=1.479 && pt>=150) pt = 149.;
 
-  TH2D *this_hist = map_hist_Electron[ID+"_"+key];
-  if(!this_hist){
+  std::map< TString, TH2D* >::const_iterator mapit;
+  mapit = map_hist_Electron.find(ID+"_"+key);
+
+  if(mapit==map_hist_Electron.end()){
     if(IgnoreNoHist) return 1.;
     else{
       cout << "[FakeBackgroundEstimator::GetElectronFakeRate] No"<< ID+"_"+key <<endl;
@@ -70,9 +72,9 @@ double FakeBackgroundEstimator::GetElectronFakeRate(TString ID, TString key, dou
     }
   }
 
-  int this_bin = this_hist->FindBin(pt,eta);
-  value = this_hist->GetBinContent(this_bin);
-  error = this_hist->GetBinError(this_bin);
+  int this_bin = (mapit->second)->FindBin(pt,eta);
+  value = (mapit->second)->GetBinContent(this_bin);
+  error = (mapit->second)->GetBinError(this_bin);
 
   //cout << "[FakeBackgroundEstimator::FakeBackgroundEstimator] value = " << value << endl;
 
@@ -95,8 +97,10 @@ double FakeBackgroundEstimator::GetMuonFakeRate(TString ID, TString key, double 
   //==== HOTFIX FIXME
   if(eta<0.8 && pt>=150) pt = 149.;
 
-  TH2D *this_hist = map_hist_Muon[ID+"_"+key];
-  if(!this_hist){
+  std::map< TString, TH2D* >::const_iterator mapit;
+  mapit = map_hist_Muon.find(ID+"_"+key);
+
+  if(mapit==map_hist_Muon.end()){
     if(IgnoreNoHist) return 1.;
     else{
       cout << "[FakeBackgroundEstimator::GetMuonFakeRate] No"<< ID+"_"+key <<endl;
@@ -104,9 +108,9 @@ double FakeBackgroundEstimator::GetMuonFakeRate(TString ID, TString key, double 
     }
   }
 
-  int this_bin = this_hist->FindBin(pt,eta);
-  value = this_hist->GetBinContent(this_bin);
-  error = this_hist->GetBinError(this_bin);
+  int this_bin = (mapit->second)->FindBin(pt,eta);
+  value = (mapit->second)->GetBinContent(this_bin);
+  error = (mapit->second)->GetBinError(this_bin);
 
   //cout << "[FakeBackgroundEstimator::FakeBackgroundEstimator] value = " << value << endl;
 
