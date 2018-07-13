@@ -306,11 +306,33 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
       IsOS = !IsOS;
     }
 
+    double this_MT_el=-999., this_MT_mu = -999., this_MT_close=-999.;
+    double MT_el = -999., MT_mu = -999., MT_close = -999.;
     if(IsTwoLeptonEvent){
       TMP_map_bool_To_Region["SR"] = (ZCand_IsTwoLeptonEvent.M() > 150.) && ( Ns.size()==2 ) && ( (Ns.at(0)+Ns.at(1)).M() > 300. );
       TMP_map_bool_To_Region["CR1"] = (ZCand_IsTwoLeptonEvent.M() < 150.);
+      TMP_map_bool_To_Region["CR1_mll55"] = (ZCand_IsTwoLeptonEvent.M() < 150.) && (ZCand_IsTwoLeptonEvent.M() > 55.); // FIXME No DY10-50 yet
       TMP_map_bool_To_Region["CR2"] = IsOnZ(ZCand_IsTwoLeptonEvent.M(), 10.);
       TMP_map_bool_To_Region["CR3"] = (jets.size()>1) && (NBJets>=1) && (METv.Pt() > 40.);
+
+      if(Suffix=="EMuMethod_SingleMuon" && jets.size()>=2){
+        TMP_map_bool_To_Region["CR4"] = true;
+
+        MT_el = MT(Loose_electrons.at(0) ,METv);
+        MT_mu = MT(Loose_muons.at(0) ,METv);
+
+        TString whichlepfake = "ElFake";
+        MT_close = MT_el;
+        if( fabs(MT_el-M_W) < fabs(MT_mu-M_W) ){
+          whichlepfake = "MuFake";
+          MT_close = MT_mu;
+        }
+        if( fabs(MT_close-M_W) < 20. ){
+          TMP_map_bool_To_Region["CR4_"+whichlepfake] = true;
+        }
+
+      }
+
     }
 
     for(std::map<TString, bool>::iterator it_map = TMP_map_bool_To_Region.begin(); it_map != TMP_map_bool_To_Region.end(); it_map++){
@@ -360,6 +382,7 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
       if(it_map->second){
 
         FillLeptonPlots(leps, this_region, weight);
+        FillJetPlots(jets, fatjets, this_region, weight);
 
         JSFillHist(this_region, "NEvent_"+this_region, 0., weight, 1, 0., 1.);
         JSFillHist(this_region, "MET_"+this_region, METv.Pt(), weight, 500, 0., 500.);
@@ -371,13 +394,18 @@ void HNPairAnalyzer::executeEventFromParameter(AnalyzerParameter param){
         JSFillHist(this_region, "Jet_Size_"+this_region, jets.size(), weight, 10, 0., 10.);
 
         if(IsTwoLeptonEvent){
-          JSFillHist(this_region, "ZCand_Mass_"+this_region, ZCand_IsTwoLeptonEvent.M(), weight, 300, 0., 300.);
+          JSFillHist(this_region, "ZCand_Mass_"+this_region, ZCand_IsTwoLeptonEvent.M(), weight, 1000, 0., 1000.);
           JSFillHist(this_region, "dR_ll_"+this_region, (*leps[0]).DeltaR( (*leps[1]) ), weight, 100, 0., 10.);
         }
         if(IsZPairPlusOneDifferentLepton){
-          JSFillHist(this_region, "ZCand_Mass_"+this_region, ZCand_IsZPairPlusOneDifferentLepton.M(), weight, 300, 0., 300.);
+          JSFillHist(this_region, "ZCand_Mass_"+this_region, ZCand_IsZPairPlusOneDifferentLepton.M(), weight, 1000, 0., 1000.);
         }
 
+        if(this_region.Contains("CR4")){
+          JSFillHist(this_region, "MT_el_"+this_region, MT_el, weight, 500, 0., 500.);
+          JSFillHist(this_region, "MT_mu_"+this_region, MT_mu, weight, 500, 0., 500.);
+          JSFillHist(this_region, "MT_close_"+this_region, MT_close, weight, 500, 0., 500.);
+        }
 
 
         if(Ns.size()==2){

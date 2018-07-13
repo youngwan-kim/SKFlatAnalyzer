@@ -21,6 +21,7 @@
 #include "CFBackgroundEstimator.C"
 
 #define M_Z 91.1876
+#define M_W 80.379
 
 class AnalyzerCore: public SKFlatNtuple {
 
@@ -134,6 +135,7 @@ public:
 
   //==== Quick Plotters
   void FillLeptonPlots(std::vector<Lepton *> leps, TString this_region, double weight);
+  void FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatjets, TString this_region, double weight);
 
   //==== Output rootfile
 
