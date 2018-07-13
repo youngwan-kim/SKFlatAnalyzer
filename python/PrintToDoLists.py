@@ -5,6 +5,7 @@ def PutColor(a,color):
 
 SKFlat_WD=os.environ['SKFlat_WD']
 TMPDIR = SKFlat_WD+'/tmp/'
+os.system('mkdir -p '+TMPDIR)
 out = open(TMPDIR+'/ToDoLists.sh','w')
 
 tags = [
