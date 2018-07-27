@@ -39,6 +39,9 @@ public:
   bool Pass_HNPairTight();
   bool Pass_HNPairLoose();
   bool Pass_HNPairVeto();
+  bool Pass_HNWRTight();
+  bool Pass_HNWRLoose();
+  bool Pass_HNWRVeto();
   bool Pass_TESTID();
 
 private:
@@ -117,6 +120,9 @@ bool Muon::PassID(TString ID){
   if(ID=="HNPairTight") return Pass_HNPairTight();
   if(ID=="HNPairLoose") return Pass_HNPairLoose();
   if(ID=="HNPairVeto") return Pass_HNPairVeto();
+  if(ID=="HNWRTight") return Pass_HNWRTight();
+  if(ID=="HNWRLoose") return Pass_HNWRLoose();
+  if(ID=="HNWRVeto") return Pass_HNWRVeto();
   if(ID=="TEST") return Pass_TESTID();
 
   cout << "[Electron::PassID] No id : " << ID << endl;
@@ -130,6 +136,9 @@ bool Muon::Pass_POGTightWithTightIso(){
   if(!( RelIso()<0.15 ))  return false;
   return true;
 }
+
+//==== HN Pair
+
 bool Muon::Pass_HNPairTight(){
   if(! isPOGMedium() ) return false;
   if(! (MiniRelIso()<0.2) ) return false;
@@ -146,6 +155,29 @@ bool Muon::Pass_HNPairVeto(){
   if(! (MiniRelIso()<0.6) ) return false;
   return true;
 }
+
+//==== HN WR
+
+bool Muon::Pass_HNWRTight(){
+  if(! isPOGMedium() ) return false;
+  if(! (RelIso()<0.15) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1) ) return false;
+  return true;
+}
+bool Muon::Pass_HNWRLoose(){
+  if(! isPOGMedium() ) return false;
+  if(! (RelIso()<0.6) ) return false;
+  if(! (fabs(dXY())<0.05 && fabs(dZ())<0.1) ) return false;
+  return true;
+}
+bool Muon::Pass_HNWRVeto(){
+  if(! isPOGLoose() ) return false;
+  if(! (RelIso()<0.6) ) return false;
+  return true;
+}
+
+//==== TEST ID
+
 bool Muon::Pass_TESTID(){
   if(! isPOGLoose() ) return false;
   if(! (MiniRelIso()<0.6) ) return false;

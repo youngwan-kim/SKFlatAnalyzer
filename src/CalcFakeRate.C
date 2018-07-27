@@ -3,6 +3,71 @@
 void CalcFakeRate::executeEvent(){
 
   //==============================
+  //==== THIS IS FOR WR Analysis
+  //==============================
+
+  Electron_TrigWithPtRange.PtValues          = {10,                                        15,                                             25,                                     999999};
+  Electron_TrigWithPtRange.Triggers          = {"HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v", "HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v", "HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v"};
+  Electron_TrigWithPtRange.IsDATA = IsDATA;
+  Electron_TrigWithPtRange.DataStream = DataStream;
+  Electron_TrigWithPtRange.TriggerSafePtCuts = {10,                                        15,                                             25};
+  Electron_TrigWithPtRange.Validate();
+
+  Muon_TrigWithPtRange.PtValues          = {10,        20,          25,            30,           55,      999999};
+  Muon_TrigWithPtRange.Triggers          = {"HLT_Mu8_v", "HLT_Mu17_v", "HLT_Mu20_v", "HLT_Mu27_v", "HLT_Mu50_v"};
+  Muon_TrigWithPtRange.IsDATA = IsDATA;
+  Muon_TrigWithPtRange.DataStream = DataStream;
+                                          // Double        Double        Single       Single         Single
+  Muon_TrigWithPtRange.TriggerSafePtCuts = {10,        20,          25,            30,           55};
+  Muon_TrigWithPtRange.Validate();
+
+  //==== 2D Plot Pt Binnings
+  Electron_FakeRatePtBinnings = {10,15,20,25,30,40,50,60,100,200,500,1000};
+  Muon_FakeRatePtBinnings     = {10,15,20,25,30,40,55,60,100,200,500,1000};
+
+  //======================
+  //==== AnalyzerParamer
+  //======================
+
+  AnalyzerParameter param;
+
+  //==== To Check Denominator distribution, remove all selections for loose lepton
+
+  param.Name = "HNWR";
+
+  param.MCCorrrectionIgnoreNoHist = true;
+
+  param.Electron_Tight_ID = "HNWRTight";
+  param.Electron_Tight_RelIso = 0.15;
+  param.Electron_Loose_ID = "HNWRLoose";
+  param.Electron_Loose_RelIso = 0.6;
+  param.Electron_Veto_ID = "HNWRVeto";
+  param.Electron_Veto_RelIso = 0.6;
+  param.Electron_UseMini = false;
+  param.Electron_UsePtCone = false;
+  param.Electron_MinPt = 10.;
+
+  param.Muon_Tight_ID = "HNWRTight";
+  param.Muon_Tight_RelIso = 0.15;
+  param.Muon_Loose_ID = "HNWRLoose";
+  param.Muon_Loose_RelIso = 0.6;
+  param.Muon_Veto_ID = "HNWRVeto";
+  param.Muon_Veto_RelIso = 0.6;
+  param.Muon_UseMini = false;
+  param.Muon_UsePtCone = false;
+  param.Muon_MinPt = 10.;
+
+  param.Jet_ID = "HN";
+
+  executeEventFromParameter(param);
+
+/*
+
+  //=============================================
+  //===== THIS IS FOR PairN Production Analysis
+  //=============================================
+
+  //==============================
   //==== Trigger Pt(cone) ranges
   //==============================
 
@@ -39,6 +104,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Veto_ID = "NOCUT";
   param.Electron_Veto_RelIso = 999.;
   param.Electron_UseMini = true;
+  param.Electron_UsePtCone = true;
   param.Electron_MinPt = 10.;
 
   param.Muon_Tight_ID = "HNPairTight";
@@ -48,6 +114,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Veto_ID = "POGLoose";
   param.Muon_Veto_RelIso = 999.;
   param.Muon_UseMini = true;
+  param.Muon_UsePtCone = true;
   param.Muon_MinPt = 10.;
 
   param.Jet_ID = "HN";
@@ -67,6 +134,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
   param.Electron_UseMini = true;
+  param.Electron_UsePtCone = true;
   param.Electron_MinPt = 10.;
 
   param.Muon_Tight_ID = "HNPairTight";
@@ -76,6 +144,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
   param.Muon_UseMini = true;
+  param.Muon_UsePtCone = true;
   param.Muon_MinPt = 10.;
 
   param.Jet_ID = "HN";
@@ -105,6 +174,7 @@ void CalcFakeRate::executeEvent(){
   param.Electron_Veto_ID = "HNPairVeto";
   param.Electron_Veto_RelIso = 0.6;
   param.Electron_UseMini = true;
+  param.Electron_UsePtCone = true;
   param.Electron_MinPt = 10.;
 
   param.Muon_Tight_ID = "HNPairTight";
@@ -114,6 +184,7 @@ void CalcFakeRate::executeEvent(){
   param.Muon_Veto_ID = "HNPairVeto";
   param.Muon_Veto_RelIso = 0.6;
   param.Muon_UseMini = true;
+  param.Muon_UsePtCone = true;
   param.Muon_MinPt = 10.;
 
   param.Jet_ID = "HN";
@@ -127,6 +198,8 @@ void CalcFakeRate::executeEvent(){
   param.Muon_MinPt = 55.; // HLT_Mu50_v
 
   executeEventFromParameter(param);
+
+*/
 
 }
 
@@ -367,8 +440,6 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
     Lepton lep = *lepptr_prompt;
     TString str_lepflv = "Electron";
 
-    double ptcone = lepptr_prompt->PtCone();
-
     bool IsElectron = (lep.LeptonFlavour()==Lepton::ELECTRON);
     if(!IsElectron) str_lepflv = "Muon";
 
@@ -381,13 +452,21 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
     bool PassTriggerByPt = false;
     TString ThisPtTrigger = "";
     if(IsElectron){
-      ThisPtTrigger = Electron_TrigWithPtRange.GetTriggerFromPt(ptcone);
+
+      double this_pt = lepptr_prompt->Pt();
+      if(param.Electron_UsePtCone) this_pt = lepptr_prompt->PtCone();
+
+      ThisPtTrigger = Electron_TrigWithPtRange.GetTriggerFromPt(this_pt);
       if(ThisPtTrigger!="PTFAIL"){
         PassTriggerByPt = ev.PassTrigger(ThisPtTrigger);
       }
     }
     else{
-      ThisPtTrigger = Muon_TrigWithPtRange.GetTriggerFromPt(ptcone);
+
+      double this_pt = lepptr_prompt->Pt();
+      if(param.Muon_UsePtCone) this_pt = lepptr_prompt->PtCone();
+
+      ThisPtTrigger = Muon_TrigWithPtRange.GetTriggerFromPt(this_pt);
       if(ThisPtTrigger!="PTFAIL"){
         PassTriggerByPt = ev.PassTrigger(ThisPtTrigger);
       }

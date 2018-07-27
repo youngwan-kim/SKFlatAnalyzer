@@ -18,25 +18,8 @@ void ExampleRun::executeEvent(){
 
   param.MCCorrrectionIgnoreNoHist = true;
 
-  param.Electron_Tight_ID = "HNPairTight";
-  param.Electron_Tight_RelIso = 0.1;
-  param.Electron_Loose_ID = "HNPairLoose";
-  param.Electron_Loose_RelIso = 0.6;
-  param.Electron_Veto_ID = "HNPairVeto";
-  param.Electron_Veto_RelIso = 0.6;
-  param.Electron_FR_ID = "HNPair";
-  param.Electron_FR_Key = "AwayJetPt40";
-  param.Electron_UseMini = true;
-
-  param.Muon_Tight_ID = "HNPairTight";
-  param.Muon_Tight_RelIso = 0.2;
-  param.Muon_Loose_ID = "HNPairLoose";
-  param.Muon_Loose_RelIso = 0.6;
-  param.Muon_Veto_ID = "HNPairVeto";
-  param.Muon_Veto_RelIso = 0.6;
-  param.Muon_FR_ID = "HNPair";
-  param.Muon_FR_Key = "AwayJetPt40";
-  param.Muon_UseMini = true;
+  param.Muon_Tight_ID = "POGTight";
+  param.Muon_Tight_RelIso = 0.15;
 
   param.Jet_ID = "HN";
   param.FatJet_ID = "HN";
@@ -50,6 +33,9 @@ void ExampleRun::executeEventFromParameter(AnalyzerParameter param){
   Event ev = GetEvent();
 
 /*
+
+  //==== Electron Custom-CutBased test
+
   FillHist("nPV", ev.nPV(), 1., 50, 0., 50.);
 
   std::vector<Electron> electrons_all = GetAllElectrons();
@@ -132,6 +118,7 @@ void ExampleRun::executeEventFromParameter(AnalyzerParameter param){
   } // END Electron Loop
 */
 
+/*
   //==== Fake Rate
 
   double MinPt = 40;
@@ -173,6 +160,57 @@ void ExampleRun::executeEventFromParameter(AnalyzerParameter param){
       else                       FillHist("hist_obs", 0., 1., 1, 0., 1.);
     }
   }
+*/
+
+/*
+  //==== Collineaer DiMuon
+
+  bool PassTrigger = ev.PassTrigger("HLT_IsoMu27_v");
+  if(!PassTrigger) return;
+  std::vector<Muon>     Tight_muons     = GetMuons(param.Muon_Tight_ID, 10., 2.4);
+  std::vector<Lepton *> leps;
+  leps = MakeLeptonPointerVector(Tight_muons);
+
+  if(Tight_muons.size()==0) return;
+  for(unsigned int i=0; i<Tight_muons.size()-1; i++){
+    Muon mu1 = Tight_muons.at(i);
+    
+    for(unsigned int j=i+1; j<Tight_muons.size(); j++){
+
+      Muon mu2 = Tight_muons.at(j);
+
+      TString chageconf = "OS";
+      if(mu1.Charge()==mu2.Charge()) chageconf = "SS";
+
+      double dRmuons = mu1.DeltaR(mu2);
+      if(dRmuons < 0.1){
+
+        JSFillHist(chageconf, "DeltaR_"+chageconf, dRmuons, 1, 100, 0., 0.1);
+
+        double m_ll = (mu1+mu2).M();
+        JSFillHist(chageconf, "m_ll_Wide_"+chageconf, m_ll, 1, 200, 0., 200.);
+        JSFillHist(chageconf, "m_ll_Fine_"+chageconf, m_ll, 1, 200, 0., 20.);
+
+      }
+
+
+    }
+
+  }
+*/
+
+  vector<Electron> electrons = GetElectrons("HNWRLoose", 10., 2.5);
+  for(unsigned int i=0; i<electrons.size(); i++){
+
+    Electron el = electrons.at(i);
+
+    FillHist("RelIso", el.RelIso(), 1, 100, 0., 1.);
+
+  }
+
+
+
+
 
 }
 

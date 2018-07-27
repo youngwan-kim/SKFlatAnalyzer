@@ -16,7 +16,7 @@ public:
   TString Electron_FR_ID, Electron_FR_Key;
   TString Electron_CF_ID, Electron_CF_Key;
   double Electron_Tight_RelIso, Electron_Loose_RelIso, Electron_Veto_RelIso;
-  bool Electron_UseMini;
+  bool Electron_UseMini, Electron_UsePtCone;
   double Electron_MinPt;
 
   TString Muon_Tight_ID, Muon_Loose_ID, Muon_Veto_ID;
@@ -24,7 +24,7 @@ public:
   TString Muon_FR_ID, Muon_FR_Key;
   TString Muon_CF_ID, Muon_CF_Key;
   double Muon_Tight_RelIso, Muon_Loose_RelIso, Muon_Veto_RelIso;
-  bool Muon_UseMini;
+  bool Muon_UseMini, Muon_UsePtCone;
   double Muon_MinPt;
 
   TString Jet_ID, FatJet_ID;
@@ -54,6 +54,7 @@ void AnalyzerParameter::Clear(){
   Electron_Loose_RelIso = 999.;
   Electron_Veto_RelIso = 999.;
   Electron_UseMini = false;
+  Electron_UsePtCone = false;
   Electron_MinPt = 10.;
 
   Muon_Tight_ID = "";
@@ -71,6 +72,7 @@ void AnalyzerParameter::Clear(){
   Muon_Loose_RelIso = 999.;
   Muon_Veto_RelIso = 999.;
   Muon_UseMini = false;
+  Muon_UsePtCone = false;
   Muon_MinPt = 10.;
 
   Jet_ID = "";

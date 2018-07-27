@@ -17,3 +17,7 @@ HLT_Photon120_v	490.296
 HLT_Photon150_v	689.904
 HLT_Photon175_v	1245.822
 HLT_Photon200_v	41527.540
+HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v	3.973
+HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v	27.699
+HLT_Ele15_CaloIdL_TrackIdL_IsoVL_PFJet30_v	0.001
+HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v	43.468

@@ -74,6 +74,9 @@ public:
   bool Pass_HNPairLoose();
   bool Pass_HNPairLooseNoIP();
   bool Pass_HNPairVeto();
+  bool Pass_HNWRTight();
+  bool Pass_HNWRLoose();
+  bool Pass_HNWRVeto();
 
   void SetRelPFIso_Rho(double r);
   double EA();
@@ -202,6 +205,9 @@ bool Electron::PassID(TString ID){
   if(ID=="HNPairLoose") return Pass_HNPairLoose();
   if(ID=="HNPairLooseNoIP") return Pass_HNPairLooseNoIP();
   if(ID=="HNPairVeto") return Pass_HNPairVeto();
+  if(ID=="HNWRTight") return Pass_HNWRTight();
+  if(ID=="HNWRLoose") return Pass_HNWRLoose();
+  if(ID=="HNWRVeto") return Pass_HNWRVeto();
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
 
@@ -258,6 +264,8 @@ bool Electron::Pass_SUSYLoose(){
 
   return true;
 }
+
+//==== HN Pair
 
 bool Electron::Pass_HNPairTight(){
 /*
@@ -336,9 +344,58 @@ bool Electron::Pass_HNPairVeto(){
   return true;
 }
 
+//==== HN WR
+
+bool Electron::Pass_HNWRTight(){
+
+  if(!Pass_CutBasedLooseNoIso()) return false;
+  if(! (RelIso()<0.15) ) return false;
+
+  if( fabs(scEta()) <= 1.479 ){
+    if(!( fabs(dXY())<0.05 )) return false;
+    if(!( fabs(dZ()) <0.10 )) return false;
+  }
+  else{
+    if(!( fabs(dXY())<0.10 )) return false;
+    if(!( fabs(dZ()) <0.20 )) return false;
+  }
+
+  return true;
+}
+
+bool Electron::Pass_HNWRLoose(){
+
+  if(!Pass_CutBasedVetoNoIso()) return false;
+  if(! (RelIso()<0.6) ) return false;
+
+  if( fabs(scEta()) <= 1.479 ){
+    if(!( fabs(dXY())<0.05 )) return false;
+    if(!( fabs(dZ()) <0.10 )) return false;
+  }
+  else{
+    if(!( fabs(dXY())<0.10 )) return false;
+    if(!( fabs(dZ()) <0.20 )) return false;
+  }
+
+  return true;
+
+}
+
+bool Electron::Pass_HNWRVeto(){
+
+  if(!Pass_CutBasedVetoNoIso()) return false;
+  if(! (RelIso()<0.6) ) return false;
+
+  return true;
+}
+
+//==== TEST ID
+
 bool Electron::Pass_TESTID(){
   return true;
 }
+
+
 
 bool Electron::Pass_CutBasedLooseNoIso(){
 

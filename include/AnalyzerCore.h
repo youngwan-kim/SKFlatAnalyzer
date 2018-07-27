@@ -63,11 +63,18 @@ public:
 
   bool PassMETFilter();
 
+  //============
   //==== Tools
+  //============
+
+  //===== Estimators
 
   MCCorrection mcCorr;
   FakeBackgroundEstimator fakeEst;
   CFBackgroundEstimator cfEst;
+
+  //==== Functions
+
   bool IsOnZ(double m, double width);
   double MT(TLorentzVector a, TLorentzVector b);
   bool HasFlag(TString flag);

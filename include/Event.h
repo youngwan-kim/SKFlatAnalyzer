@@ -145,6 +145,18 @@ double Event::GetTriggerLumi(TString trig){
   else if(trig=="HLT_Photon200_v"){
     return 41527.540;
   }
+  else if(trig=="HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    return 3.973;
+  }
+  else if(trig=="HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    return 27.699;
+  }
+  else if(trig=="HLT_Ele15_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    return 0.001;
+  }
+  else if(trig=="HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    return 43.468;
+  }
 
   return 41527.540;
 
