@@ -394,7 +394,6 @@ cmsenv
 cd {0}
 echo "[SKFlat.py] Okay, let's run the analysis"
 root -l -b -q run.C
-echo "[SKFlat.py] JOB FINISHED!!"
 '''.format(thisjob_dir)
       run_commands.close()
 
