@@ -31,8 +31,6 @@ void CalcFakeRate::executeEvent(){
 
   AnalyzerParameter param;
 
-  //==== To Check Denominator distribution, remove all selections for loose lepton
-
   param.Name = "HNWR";
 
   param.MCCorrrectionIgnoreNoHist = true;
@@ -298,8 +296,8 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
   bool RunElectronSingleLeptonNormPlots = false;
   bool RunMuonSingleLeptonNormPlots = false;
   if(IsDATA){
-    if(DataStream=="SingleMuon")   RunMuonSingleLeptonNormPlots = true;
-    if(DataStream=="SinglePhoton") RunElectronSingleLeptonNormPlots = true;
+    if(DataStream=="SingleMuon"||DataStream=="DoubleMuon")   RunMuonSingleLeptonNormPlots = true;
+    if(DataStream=="SinglePhoton"||DataStream=="SingleElectron"||DataStream=="DoubleEG") RunElectronSingleLeptonNormPlots = true;
   }
   else{
     RunElectronSingleLeptonNormPlots = true;
@@ -471,6 +469,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
         PassTriggerByPt = ev.PassTrigger(ThisPtTrigger);
       }
     }
+    if(ThisPtTrigger=="NULL") PassTriggerByPt = false;
 
     if(PassTriggerByPt){
 

@@ -2,6 +2,63 @@
 
 void CalcCFRate::executeEvent(){
 
+
+  //==============================
+  //==== THIS IS FOR WR Analysis
+  //==============================
+
+  //======================
+  //==== AnalyzerParamer
+  //======================
+
+  AnalyzerParameter param;
+
+  param.Name = "HNWRTight";
+
+  param.MCCorrrectionIgnoreNoHist = true;
+
+  param.Electron_Tight_ID = "HNWRTight";
+  param.Electron_Tight_RelIso = 0.15;
+  param.Electron_UseMini = false;
+  param.Electron_UsePtCone = false;
+  param.Electron_MinPt = 10.;
+
+  param.Muon_Tight_ID = "HNWRTight";
+  param.Muon_Tight_RelIso = 0.15;
+  param.Muon_UseMini = false;
+  param.Muon_UsePtCone = false;
+  param.Muon_MinPt = 10.;
+
+  param.Jet_ID = "HN";
+
+  executeEventFromParameter(param);
+
+  param.Name = "HNWRLoose";
+
+  param.MCCorrrectionIgnoreNoHist = true;
+
+  param.Electron_Tight_ID = "HNWRLoose";
+  param.Electron_Tight_RelIso = 0.60;
+  param.Electron_UseMini = false;
+  param.Electron_UsePtCone = false;
+  param.Electron_MinPt = 10.;
+
+  param.Muon_Tight_ID = "HNWRLoose";
+  param.Muon_Tight_RelIso = 0.60;
+  param.Muon_UseMini = false;
+  param.Muon_UsePtCone = false;
+  param.Muon_MinPt = 10.;
+
+  param.Jet_ID = "HN";
+
+  executeEventFromParameter(param);
+
+/*
+
+  //=============================================
+  //===== THIS IS FOR PairN Production Analysis
+  //=============================================
+
   //==== 2D Plot Pt Binnings
   Electron_FakeRatePtBinnings = {40, 50, 75,     110, 150, 200, 250, 300, 350, 500, 1000, 1500, 2000};
   Muon_FakeRatePtBinnings     = {35, 45, 75, 80, 110, 150, 200, 250, 300, 350, 500, 1000, 1500, 2000};
@@ -93,6 +150,8 @@ void CalcCFRate::executeEvent(){
   param.Jet_ID = "HN";
 
   executeEventFromParameter(param);
+*/
+
 
 }
 

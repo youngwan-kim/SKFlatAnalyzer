@@ -2,9 +2,9 @@ import os
 
 SKFlatV = os.environ['SKFlatV']
 
-#txtfilename = 'sample_DATA.txt'
+txtfilename = 'sample_DATA.txt'
 #txtfilename = 'sample_MC.txt'
-txtfilename = 'sample_PrivateMC.txt'
+#txtfilename = 'sample_PrivateMC.txt'
 
 IsDATA = ("DATA" in txtfilename)
 periods = ["B","C","D","E","F"]

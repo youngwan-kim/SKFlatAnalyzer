@@ -1,3 +1,5 @@
-DoubleEG
-SingleMuon
-SinglePhoton
+#DoubleEG
+#SingleMuon
+#SinglePhoton
+#SingleElectron
+DoubleMuon
