@@ -131,7 +131,9 @@ double FakeBackgroundEstimator::GetWeight(vector<Lepton *> lepptrs, AnalyzerPara
       Electron *el = (Electron *)( lepptrs.at(i) );
       if( el->PassID(param.Electron_Tight_ID) ) continue;
 
-      this_fr = GetElectronFakeRate(param.Electron_FR_ID, param.Electron_FR_Key, fabs(el->scEta()), el->PtCone(), sys);
+      double this_pt = el->Pt();
+      if(param.Electron_UsePtCone) this_pt = el->PtCone();
+      this_fr = GetElectronFakeRate(param.Electron_FR_ID, param.Electron_FR_Key, fabs(el->scEta()), this_pt, sys);
 
       this_weight *= -1.*this_fr/(1.-this_fr);
 
@@ -142,7 +144,9 @@ double FakeBackgroundEstimator::GetWeight(vector<Lepton *> lepptrs, AnalyzerPara
       Muon *mu = (Muon *)( lepptrs.at(i) );
       if( mu->PassID(param.Muon_Tight_ID) ) continue;
 
-      this_fr = GetMuonFakeRate(param.Muon_FR_ID, param.Muon_FR_Key, fabs(mu->Eta()), mu->PtCone(), sys);
+      double this_pt = mu->Pt();
+      if(param.Muon_UsePtCone) this_pt = mu->PtCone();
+      this_fr = GetMuonFakeRate(param.Muon_FR_ID, param.Muon_FR_Key, fabs(mu->Eta()), this_pt, sys);
 
       this_weight *= -1.*this_fr/(1.-this_fr);
 

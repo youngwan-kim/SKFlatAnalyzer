@@ -59,8 +59,8 @@ void CalcFakeRate::executeEvent(){
 
   executeEventFromParameter(param);
 
-/*
 
+/*
   //=============================================
   //===== THIS IS FOR PairN Production Analysis
   //=============================================
@@ -72,10 +72,15 @@ void CalcFakeRate::executeEvent(){
   Electron_TrigWithPtRange.PtValues          = {40,                50,            75,              110,              150,              200,               250,                300,              350,               999999};
   Electron_TrigWithPtRange.Triggers          = {"HLT_Photon25_v", "HLT_Photon33_v", "HLT_Photon50_v", "HLT_Photon75_v", "HLT_Photon90_v", "HLT_Photon120_v", "HLT_Photon150_v", "HLT_Photon175_v", "HLT_Photon200_v"};
   Electron_TrigWithPtRange.TriggerSafePtCuts = {28,                35,            55,               80,              100,              140,               170,                200,              250};
+  Electron_TrigWithPtRange.IsDATA = IsDATA;
+  Electron_TrigWithPtRange.DataStream = DataStream;
   Electron_TrigWithPtRange.Validate();
+
 
   Muon_TrigWithPtRange.PtValues          = {35,           45,           80,        999999};
   Muon_TrigWithPtRange.Triggers          = {"HLT_Mu20_v", "HLT_Mu27_v","HLT_Mu50_v"};
+  Muon_TrigWithPtRange.IsDATA = IsDATA;
+  Muon_TrigWithPtRange.DataStream = DataStream;
   Muon_TrigWithPtRange.TriggerSafePtCuts = {23,           30,           55};
   Muon_TrigWithPtRange.Validate();
 
@@ -196,8 +201,8 @@ void CalcFakeRate::executeEvent(){
   param.Muon_MinPt = 55.; // HLT_Mu50_v
 
   executeEventFromParameter(param);
-
 */
+
 
 }
 
@@ -339,7 +344,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
         if(TwoLeptonEvent){
           double dilepmass = (Loose_electrons.at(0)+Loose_electrons.at(1)).M();
           bool OnZEvent = IsOnZ( dilepmass, 15. );
-          if( OnZEvent && (Loose_electrons.at(1).Pt() > Electron_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_electrons.at(1).Pt() > 20.) ){
+          if( OnZEvent && (Loose_electrons.at(0).Pt() > Electron_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_electrons.at(1).Pt() > 20.) ){
             JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"Z_CR"+"_"+"Z_Mass", dilepmass, weight, 40, 70., 110.);
             JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"Z_CR"+"_"+"Lepton_0_Pt", Loose_electrons.at(0).Pt(), weight, 1000, 0., 1000.);
             JSFillHist("Electron_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"Z_CR"+"_"+"Lepton_1_Pt", Loose_electrons.at(1).Pt(), weight, 1000, 0., 1000.);
@@ -359,6 +364,15 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
 
     for(unsigned int i=0; i<Muon_TrigWithPtRange.Triggers.size(); i++){
       TString this_trigger = Muon_TrigWithPtRange.Triggers.at(i);
+
+      if(IsDATA){
+        if(this_trigger=="HLT_Mu8_v" || this_trigger=="HLT_Mu17_v"){
+          if(DataStream!="DoubleMuon") continue;
+        }
+        else if(this_trigger=="HLT_Mu20_v" || this_trigger=="HLT_Mu27_v" || this_trigger=="HLT_Mu50_v"){
+          if(DataStream!="SingleMuon") continue;
+        }
+      }
 
       if(ev.PassTrigger(this_trigger)){
 
@@ -387,7 +401,7 @@ void CalcFakeRate::executeEventFromParameter(AnalyzerParameter param){
         if(TwoLeptonEvent){
           double dilepmass = (Loose_muons.at(0)+Loose_muons.at(1)).M();
           bool OnZEvent = IsOnZ( dilepmass, 15. );
-          if( OnZEvent && (Loose_muons.at(1).Pt() > Muon_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_muons.at(1).Pt() > 20.) ){
+          if( OnZEvent && (Loose_muons.at(0).Pt() > Muon_TrigWithPtRange.TriggerSafePtCuts.at(i) ) && (Loose_muons.at(1).Pt() > 20.) ){
             JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"Z_CR"+"_"+"Z_Mass", dilepmass, weight, 40, 70., 110.);
             JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"Z_CR"+"_"+"Lepton_0_Pt", Loose_muons.at(0).Pt(), weight, 1000, 0., 1000.);
             JSFillHist("Muon_"+param.Name, param.Name+"_TriggerNorm_"+this_trigger+"_"+"Z_CR"+"_"+"Lepton_1_Pt", Loose_muons.at(1).Pt(), weight, 1000, 0., 1000.);

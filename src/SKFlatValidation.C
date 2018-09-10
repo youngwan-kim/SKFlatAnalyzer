@@ -20,6 +20,7 @@ void SKFlatValidation::executeEvent(){
 
   executeEventFromParameter(param);
 
+/*
   //=== Same but pt>75 GeV
   param.Name = "POG_pt75";
   executeEventFromParameter(param);
@@ -53,6 +54,38 @@ void SKFlatValidation::executeEvent(){
 
   //=== Same but pt>75 GeV
   param.Name = "HNPair_pt75";
+  executeEventFromParameter(param);
+*/
+
+  //==== HNWR
+
+  param.Clear();
+  param.Name = "HNWR";
+
+  param.MCCorrrectionIgnoreNoHist = true;
+
+  param.Electron_Tight_ID = "HNWRTight";
+  param.Electron_Tight_RelIso = 0.15;
+  param.Electron_Loose_ID = "HNWRLoose";
+  param.Electron_Loose_RelIso = 0.6;
+  param.Electron_Veto_ID = "HNWRVeto";
+  param.Electron_Veto_RelIso = 0.6;
+  param.Electron_UseMini = false;
+  param.Electron_UsePtCone = false;
+  param.Electron_MinPt = 10.;
+
+  param.Muon_Tight_ID = "HNWRTight";
+  param.Muon_Tight_RelIso = 0.15;
+  param.Muon_Loose_ID = "HNWRLoose";
+  param.Muon_Loose_RelIso = 0.6;
+  param.Muon_Veto_ID = "HNWRVeto";
+  param.Muon_Veto_RelIso = 0.6;
+  param.Muon_UseMini = false;
+  param.Muon_UsePtCone = false;
+  param.Muon_MinPt = 10.;
+
+  param.Jet_ID = "HN";
+
   executeEventFromParameter(param);
 
 }
@@ -91,15 +124,15 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
   //==== Based on which trigger is fired
   std::vector< TString > Suffixs = {
     "SingleMuon",
-    "DiElectron",
-    "DiPhoton",
-    //"SingleElectron",
+    //"DiElectron",
+    //"DiPhoton",
+    "SingleElectron",
   };
   std::vector< bool > PassTriggers = {
     PassSingleMuon && (muons.size()>=1) && (electrons.size()==0),
-    PassDiElectron && (electrons.size()==2) && (muons.size()==0),
-    PassDiPhoton && (electrons.size()==2) && (muons.size()==0),
-    //PassSingleElectron && (electrons.size()>=1) && (muons.size()==0),
+    //PassDiElectron && (electrons.size()==2) && (muons.size()==0),
+    //PassDiPhoton && (electrons.size()==2) && (muons.size()==0),
+    PassSingleElectron && (electrons.size()>=1) && (muons.size()==0),
   };
 
   for(unsigned int i=0; i<Suffixs.size(); i++){
@@ -237,9 +270,9 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
 
         if(n_lepton>=2){
 
-          JSFillHist(this_region, "Z_Mass_"+this_region, Z.M(), weight, 7000, 0., 7000.);
-          JSFillHist(this_region, "Z_Pt_"+this_region, Z.Pt(), weight, 500, 0., 500.);
-          JSFillHist(this_region, "Z_Eta_"+this_region, Z.Eta(), weight, 60, -3., 3.);
+          JSFillHist(this_region, "ZCand_Mass_"+this_region, Z.M(), weight, 7000, 0., 7000.);
+          JSFillHist(this_region, "ZCand_Pt_"+this_region, Z.Pt(), weight, 500, 0., 500.);
+          JSFillHist(this_region, "ZCand_Eta_"+this_region, Z.Eta(), weight, 60, -3., 3.);
 
         }
 

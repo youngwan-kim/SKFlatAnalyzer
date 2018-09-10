@@ -54,6 +54,7 @@ public:
             if(DataStream=="DoubleMuon") return Triggers.at(i);
             else return "NULL";
           }
+
           else if(
             Triggers.at(i)=="HLT_Mu20_v" ||
             Triggers.at(i)=="HLT_Mu27_v" ||
@@ -62,6 +63,7 @@ public:
             if(DataStream=="SingleMuon") return Triggers.at(i);
             else return "NULL";
           }
+
           else if(
             Triggers.at(i)=="HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v" ||
             Triggers.at(i)=="HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v" ||
@@ -70,6 +72,22 @@ public:
             if(DataStream=="SingleElectron") return Triggers.at(i);
             else return "NULL";
           }
+
+          else if(
+            Triggers.at(i)=="HLT_Photon25_v" ||
+            Triggers.at(i)=="HLT_Photon33_v" ||
+            Triggers.at(i)=="HLT_Photon50_v" ||
+            Triggers.at(i)=="HLT_Photon75_v" ||
+            Triggers.at(i)=="HLT_Photon90_v" ||
+            Triggers.at(i)=="HLT_Photon120_v" ||
+            Triggers.at(i)=="HLT_Photon150_v" ||
+            Triggers.at(i)=="HLT_Photon175_v" ||
+            Triggers.at(i)=="HLT_Photon200_v"
+          ){
+            if(DataStream=="SinglePhoton") return Triggers.at(i);
+            else return "NULL";
+          }
+
           else{
 
             cout << "[TriggerWithPtRange::GetTriggerFromPt] DataStream = " << DataStream << endl;

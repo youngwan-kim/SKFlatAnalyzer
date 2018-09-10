@@ -20,6 +20,7 @@ public:
   bool PassTrigger(TString trig);
   bool PassTrigger(std::vector<TString> trigs);
   double GetTriggerLumi(TString trig);
+  bool IsPDForTrigger(TString trig, TString PD);
 
   void SetMET(double pt, double px, double py);
   inline Particle GetMETVector() const {return j_METVector;}
@@ -92,7 +93,8 @@ double Event::GetTriggerLumi(TString trig){
     return 4.612;
   }
   else if(trig=="HLT_Mu8_v"){
-    return 2.605;
+    //==== 180829 Norm Checked : sf = 1.41036
+    return 2.605*1.41036;
   }
   else if(trig=="HLT_Mu17_v"){
     return 70.039;
@@ -159,6 +161,105 @@ double Event::GetTriggerLumi(TString trig){
   }
 
   return 41527.540;
+
+}
+
+bool Event::IsPDForTrigger(TString trig, TString PD){
+
+  if(trig=="HLT_Mu3_PFJet40_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Mu8_v"){
+    if(PD=="DoubleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Mu17_v"){
+    if(PD=="DoubleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Mu20_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Mu27_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Mu50_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_IsoMu24_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_IsoMu27_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_IsoMu30_v"){
+    if(PD=="SingleMuon") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Ele8_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    if(PD=="SingleElectron") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Ele12_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    if(PD=="SingleElectron") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Ele15_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    if(PD=="SingleElectron") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
+    if(PD=="SingleElectron") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon25_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon33_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon50_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon75_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon90_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon120_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon150_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon175_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else if(trig=="HLT_Photon200_v"){
+    if(PD=="SinglePhoton") return true;
+    else return false;
+  }
+  else{
+    cout << "[Event::IsPDForTrigger] trig = " << trig << endl;
+    cout << "[Event::IsPDForTrigger] PD = " << PD << endl;
+    exit(EXIT_FAILURE);
+    return false;
+  }
 
 }
 
