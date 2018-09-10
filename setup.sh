@@ -1,7 +1,7 @@
-#!/bin/bash
 export SKFlat_WD=`pwd`
 export OUTPUTDIR=$SKFlat_WD/outputs/
 export SKFlat_LIB_PATH=$SKFlat_WD/lib/
+mkdir -p $SKFlat_LIB_PATH
 
 export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/include/:$SKFlat_WD/src/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH
@@ -10,12 +10,13 @@ export SKFlatV="v946p1_3"
 export SAMPLE_DATA_DIR=$SKFlat_WD/data/$SKFlatV
 mkdir -p $SAMPLE_DATA_DIR
 
-export SKFlatSEDir="/xrootd/store/user/jskim/SKFlatOutput/"
+export SKFlatSEDir="/xrootd/store/user/$USER/SKFlatOutput/"
+export SKFlatLogEmail=''
 
 if [[ $HOSTNAME == *"ui10.sdfarm.kr"* ]]; then
   echo "Working on KISTI"
-  export SKFlatRunlogDir="/cms/scratch/jskim/SKFlatRunlog/"
-  export SKFlatOutputDir="/cms/scratch/jskim/SKFlatOutput/"
+  export SKFlatRunlogDir="/cms/scratch/$USER/SKFlatRunlog/"
+  export SKFlatOutputDir="/cms/scratch/$USER/SKFlatOutput/"
   export DATA_DIR=data/$SKFlatV
 
   export CMS_PATH=/cvmfs/cms.cern.ch
@@ -28,8 +29,8 @@ if [[ $HOSTNAME == *"ui10.sdfarm.kr"* ]]; then
 
 else
   echo "Working on 42cluster"
-  export SKFlatRunlogDir="/data7/Users/jskim/SKFlatRunlog/"
-  export SKFlatOutputDir="/data7/Users/jskim/SKFlatOutput/"
+  export SKFlatRunlogDir="/data7/Users/$USER/SKFlatRunlog/"
+  export SKFlatOutputDir="/data7/Users/$USER/SKFlatOutput/"
   export DATA_DIR=$SKFlat_WD/data/$SKFlatV
 
   export CMS_PATH=/cvmfs/cms.cern.ch

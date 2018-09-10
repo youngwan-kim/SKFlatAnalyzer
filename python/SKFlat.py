@@ -34,6 +34,8 @@ string_ThisTime = ""
 
 ## Environment Variables
 
+USER = os.environ['USER']
+SKFlatLogEmail = os.environ['SKFlatLogEmail']
 SKFlat_WD = os.environ['SKFlat_WD']
 SKFlatV = os.environ['SKFlatV']
 DATA_DIR = os.environ['SAMPLE_DATA_DIR']
@@ -685,8 +687,9 @@ try:
 
           PostJobFinishedForEachSample[it_sample] = True
 
-    os.system('scp -r '+webdirpathbase+'/* jskim@147.47.242.71:/var/www/html/SKFlatAnalyzerJobLogs/')
-    os.system('ssh -Y jskim@147.47.242.71 chmod -R 777 /var/www/html/SKFlatAnalyzerJobLogs/'+args.Analyzer+"*")
+    if USER=="jskim":
+      os.system('scp -r '+webdirpathbase+'/* jskim@147.47.242.71:/var/www/html/SKFlatAnalyzerJobLogs/')
+      os.system('ssh -Y jskim@147.47.242.71 chmod -R 777 /var/www/html/SKFlatAnalyzerJobLogs/'+args.Analyzer+"*")
 
     time.sleep(20)
 
@@ -712,7 +715,7 @@ if GotError:
   JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
   EmailTitle = '[ERROR] Job Summary'
 
-SendEmail('jskim','jae.sung.kim@cern.ch',EmailTitle,JobFinishEmail)
+SendEmail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
 
 
 
