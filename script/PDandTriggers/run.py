@@ -7,7 +7,7 @@ PDs = ["SingleElectron", "SinglePhoton", "DoubleEG", "SingleMuon", "DoubleMuon"]
 for trigger in triggers:
   trigger = trigger.strip('\n')
 
-  print trigger+" : ",
+  #print trigger+" : ",
 
   out = []
   for PD in PDs:
@@ -17,4 +17,8 @@ for trigger in triggers:
         out.append(PD)
         break
 
-  print out
+  #print out
+  print '''  else if(trig=="{0}"){{
+    if(PD=="{1}") return true;
+    else return false;
+  }}'''.format(trigger, out[0])
