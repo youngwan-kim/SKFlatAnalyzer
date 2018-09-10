@@ -1,5 +1,9 @@
 # SKFlatAnalyzer
 
+## Manual
+
+https://jskim.web.cern.ch/jskim/SKFlat/Manual_SKFlat.pdf
+
 ## First time setup
 
 Edit setup.sh :
@@ -13,8 +17,6 @@ Everytime when using new shell,
 source setup.sh
 voms-proxy-init --voms cms -valid 24:00
 ```
-
-## Analyzer structure
 
 ## Test job
 ```bash
