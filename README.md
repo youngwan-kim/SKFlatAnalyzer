@@ -14,6 +14,8 @@ source setup.sh
 voms-proxy-init --voms cms -valid 24:00
 ```
 
+## Analyzer structure
+
 ## Test job
 ```bash
 python python/SKFlat.py -a ExampleRun -i ZToMuMu_M_50_120 -n 50 &
@@ -39,5 +41,7 @@ mv NewAnalyzer.C ../../src
 mv run_NewAnalyzer.C ../../
 ```
 First two lines will move the files to inclue/ and src/ directory
+
 Last line is to run a job with the machine, not batch.
+
 This is good for test your analyzer
