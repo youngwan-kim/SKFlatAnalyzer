@@ -381,8 +381,10 @@ std::vector<Gen> AnalyzerCore::GetGens(){
 
 bool AnalyzerCore::PassMETFilter(){
 
+  //=== https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#MET_Filter_Recommendations_for_R
+
   if(!Flag_goodVertices) return false;
-  if(!Flag_globalTightHalo2016Filter) return false;
+  if(!Flag_globalTightHalo2016Filter) return false;  //TODO change this to Flag_globalSuperTightHalo2016Filter
   if(!Flag_HBHENoiseFilter) return false;
   if(!Flag_HBHENoiseIsoFilter) return false;
   if(!Flag_EcalDeadCellTriggerPrimitiveFilter) return false;
