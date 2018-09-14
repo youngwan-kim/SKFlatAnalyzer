@@ -8,8 +8,8 @@ import random
 parser = argparse.ArgumentParser(description='SKFlat Command')
 parser.add_argument('-a', dest='Analyzer', default="")
 parser.add_argument('-i', dest='InputSample', default="")
-parser.add_argument('-l', dest='InputSampleList', default="")
 parser.add_argument('-p', dest='DataPeriod', default="ALL")
+parser.add_argument('-l', dest='InputSampleList', default="")
 parser.add_argument('-n', dest='NJobs', default=1, type=int)
 parser.add_argument('-o', dest='Outputdir', default="")
 parser.add_argument('-q', dest='Queue', default="fastq")
@@ -344,8 +344,6 @@ queue {2}
 void {2}(){{
 
   {0} m;
-
-  TString outputdir = getenv("OUTPUTDIR");
 
   m.SetTreeName("recoTree/SKFlat");
 '''.format(args.Analyzer, libdir, runfunctionname)

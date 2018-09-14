@@ -1,5 +1,4 @@
 export SKFlat_WD=`pwd`
-export OUTPUTDIR=$SKFlat_WD/outputs/
 export SKFlat_LIB_PATH=$SKFlat_WD/lib/
 mkdir -p $SKFlat_LIB_PATH
 
