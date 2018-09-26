@@ -13,6 +13,7 @@ parser.add_argument('-l', dest='InputSampleList', default="")
 parser.add_argument('-n', dest='NJobs', default=1, type=int)
 parser.add_argument('-o', dest='Outputdir', default="")
 parser.add_argument('-q', dest='Queue', default="fastq")
+parser.add_argument('-y', dest='Year', default="2016")
 parser.add_argument('--no_exec', action='store_true')
 parser.add_argument('--userflags', dest='Userflags', default="")
 args = parser.parse_args()
@@ -38,7 +39,7 @@ USER = os.environ['USER']
 SKFlatLogEmail = os.environ['SKFlatLogEmail']
 SKFlat_WD = os.environ['SKFlat_WD']
 SKFlatV = os.environ['SKFlatV']
-DATA_DIR = os.environ['DATA_DIR']
+SAMPLE_DATA_DIR = os.environ['SAMPLE_DATA_DIR']
 SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
 SKFlatOutputDir = os.environ['SKFlatOutputDir']
 SKFlatSEDir = os.environ['SKFlatSEDir']
@@ -49,7 +50,7 @@ IsKISTI = ("ui10.sdfarm.kr" in HOSTNAME)
 
 ## Make Sample List
 
-InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron"]
+InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron", "SinglePhoton"]
 AvailableDataPeriods = ["B","C","D","E","F"]
 InputSamples = []
 StringForHash = ""
@@ -143,14 +144,14 @@ for InputSample in InputSamples:
 
   lines_files = []
   if IsKISTI:
-    tmpfilepath = DATA_DIR+'/Sample/ForKISTI/'+InputSample+'.txt'
+    tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'.txt'
     if IsDATA:
-      tmpfilepath = DATA_DIR+'/Sample/ForKISTI/'+InputSample+'_'+DataPeriod+'.txt'
+      tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'_'+DataPeriod+'.txt'
     lines_files = open(tmpfilepath).readlines()
     os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
 
   else:
-    lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
+    lines_SamplePath = open(SAMPLE_DATA_DIR+'/'+args.Year+"/SamplePath.txt").readlines()
     Samplepath_Section="Alias"
     SampleBaseDirs = []
     NtupleFilePath = ""
@@ -232,7 +233,7 @@ for InputSample in InputSamples:
   this_xsec = 1.;
   this_sumw = 1.;
   if not IsDATA:
-    lines_SamplePath = open(DATA_DIR+"/Sample/SamplePath.txt").readlines()
+    lines_SamplePath = open(SAMPLE_DATA_DIR+"/"+args.Year+"/SamplePath.txt").readlines()
     for line in lines_SamplePath:
       words = line.split()
       if len(words)<5:
@@ -673,7 +674,7 @@ try:
             FinalOutputPath = args.Outputdir
             ## if args.Outputdir is not set, go to default setting
             if args.Outputdir=="":
-              FinalOutputPath = SKFlatOutputDir+'/'+args.Analyzer+'/'
+              FinalOutputPath = SKFlatOutputDir+'/'+SKFlatV+'/'+args.Analyzer+'/'+args.Year+'/'
               for flag in Userflags:
                 FinalOutputPath += flag+"__"
               if IsDATA:
