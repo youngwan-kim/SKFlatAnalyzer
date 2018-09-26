@@ -77,11 +77,29 @@ void ExampleRun::executeEventFromParameter(AnalyzerParameter param){
     }
     if( !POGVeto && MyPOGVeto ){
       FillHist("PassMyPOGVeto__NotPOGVeto", 0., 1., 1, 0., 1.);
+
+      cout << "==== DEBUG ====" << endl;
+      cout << "MyPOGVeto && !POGVeto" << endl;
+      cout << "===============" << endl;
+      cout << "fabs(el.scEta()) = " << fabs(el.scEta()) << endl;
+      cout << "el.full5x5_sigmaIetaIeta() = " << el.full5x5_sigmaIetaIeta() << endl;
+      cout << "fabs(el.dEtaSeed()) = " << fabs(el.dEtaSeed()) << endl;
+      cout << "fabs(el.dPhiIn()) = " << fabs(el.dPhiIn()) << endl;
+      cout << "el.HoverE() = " << el.HoverE() << endl;
+      cout << "  el.scE() = " << el.scE() << "\t" << "el.Rho() = " << el.Rho() << endl;
+      cout << "el.RelIso() = " << el.RelIso() << endl;
+      cout << "  el.Pt() = " << el.Pt() << endl;
+      cout << "  el.UncorrE() = " << el.UncorrE() << endl;
+      cout << "  el.E() = " << el.E() << endl;
+      cout << "fabs(el.InvEminusInvP()) = " << fabs(el.InvEminusInvP()) << endl;
+      cout << "el.NMissingHits() = " << el.NMissingHits() << endl;
+      cout << "el.PassConversionVeto() =  " << el.PassConversionVeto() << endl;
+
     }
 
   } // END Electron Loop
+  return;
 */
-
 /*
   //==== Fake Rate
 
