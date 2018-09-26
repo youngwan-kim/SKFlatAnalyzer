@@ -15,6 +15,16 @@ public:
   void SetEnergyFractions(double cH, double nH, double nEM, double cEM);
   void SetMultiplicities(double cM, double nM);
 
+  void SetResShift(double res_up, double res_down){
+    j_Res_up = res_up;
+    j_Res_down = res_down;
+  }
+  double ResShift(int s){
+    if(s==0) return 1.;
+    else if(s>0) return j_Res_up;
+    else return j_Res_down;
+  }
+
   inline void SetTightJetID(double b) { j_tightJetID = b; }
   inline void SetTightLepVetoJetID(double b) { j_tightLepVetoJetID = b; }
   inline bool Pass_tightJetID() const { return j_tightJetID; }
@@ -72,6 +82,8 @@ private:
   double  j_chargedEmEnergyFraction;
   int j_chargedMultiplicity;
   int j_neutralMultiplicity;
+  double j_Res_up;
+  double j_Res_down;
   bool j_tightJetID, j_tightLepVetoJetID;
   double j_puppi_tau1, j_puppi_tau2, j_puppi_tau3, j_puppi_tau4;
   double j_SDMass;
@@ -99,6 +111,8 @@ FatJet::FatJet() : Particle() {
   j_chargedEmEnergyFraction=-999.;
   j_chargedMultiplicity=-999;
   j_neutralMultiplicity=-999;
+  j_Res_up = 1.;
+  j_Res_down = 1.;
   j_tightJetID=false;
   j_tightLepVetoJetID=false;
   j_puppi_tau1 = -999.;
