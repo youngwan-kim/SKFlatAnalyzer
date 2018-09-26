@@ -5,7 +5,7 @@ mkdir -p $SKFlat_LIB_PATH
 export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/include/:$SKFlat_WD/src/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH
 
-export SKFlatV="v946p1_3"
+export SKFlatV="v949cand2_1"
 mkdir -p $SKFlat_WD/data/$SKFlatV
 
 export SKFlatSEDir="/xrootd/store/user/$USER/SKFlatOutput/"
