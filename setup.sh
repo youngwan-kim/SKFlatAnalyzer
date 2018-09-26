@@ -20,10 +20,10 @@ if [[ $HOSTNAME == *"ui10.sdfarm.kr"* ]]; then
   export CMS_PATH=/cvmfs/cms.cern.ch
   source $CMS_PATH/cmsset_default.sh
   export SCRAM_ARCH=slc6_amd64_gcc630
-  cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/src/
+  cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_9_cand2/src/
   eval `scramv1 runtime -sh`
   cd -
-  source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/external/slc6_amd64_gcc630/bin/thisroot.sh
+  source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_9_cand2/external/slc6_amd64_gcc630/bin/thisroot.sh
 
 else
   echo "Working on 42cluster"
@@ -34,10 +34,10 @@ else
   export CMS_PATH=/cvmfs/cms.cern.ch
   source $CMS_PATH/cmsset_default.sh
   export SCRAM_ARCH=slc6_amd64_gcc630
-  cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/src/
+  cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_9_cand2/src/
   eval `scramv1 runtime -sh`
   cd -
-  source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_4/external/slc6_amd64_gcc630/bin/thisroot.sh
+  source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_9_cand2/external/slc6_amd64_gcc630/bin/thisroot.sh
 
 fi
 export MYBIN=$SKFlat_WD/bin/
