@@ -170,16 +170,18 @@ void Electron::SetRelPFIso_Rho(double r){
 
 double Electron::EA(){
 
+  //==== RecoEgamma/ElectronIdentification/data/Fall17/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X.txt
+
   double eta = fabs(this->scEta());
 
-  if     (eta<1.0000) return 0.1566;
-  else if(eta<1.4790) return 0.1626;
-  else if(eta<2.0000) return 0.1073;
-  else if(eta<2.2000) return 0.0854;
-  else if(eta<2.3000) return 0.1051;
-  else if(eta<2.4000) return 0.1204;
-  else if(eta<5.0000) return 0.1524;
-  else return 0.1524;
+  if     (eta<1.000) return 0.1440;
+  else if(eta<1.479) return 0.1562;
+  else if(eta<2.000) return 0.1032;
+  else if(eta<2.200) return 0.0859;
+  else if(eta<2.300) return 0.1116;
+  else if(eta<2.400) return 0.1321;
+  else if(eta<2.500) return 0.1654;
+  else return 0.1654;
 
 }
 
