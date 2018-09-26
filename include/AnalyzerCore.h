@@ -82,6 +82,7 @@ public:
   std::vector<Muon> MuonPromptOnly(std::vector<Muon> muons, std::vector<Gen> gens);
   std::vector<Muon> MuonUsePtCone(std::vector<Muon> muons);
   Muon MuonUsePtCone(Muon muon);
+  Particle UpdateMET(Particle METv, std::vector<Muon> muons);
   std::vector<Muon> MuonApplyPtCut(std::vector<Muon> muons, double ptcut);
   std::vector<Electron> ElectronPromptOnly(std::vector<Electron> electrons, std::vector<Gen> gens);
   std::vector<Electron> ElectronUsePtCone(std::vector<Electron> electrons);
@@ -92,6 +93,7 @@ public:
   Particle AddFatJetAndLepton(FatJet fatjet, Lepton lep);
 
   //==== GenMatching
+
   void PrintGen(std::vector<Gen> gens);
   Gen GetGenMatchedLepton(Lepton lep, std::vector<Gen> gens);
   Gen GetGenMathcedPhoton(Lepton lep, std::vector<Gen> gens);

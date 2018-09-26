@@ -472,6 +472,31 @@ Muon AnalyzerCore::MuonUsePtCone(Muon muon){
 
 }
 
+Particle AnalyzerCore::UpdateMET(Particle METv, std::vector<Muon> muons){
+
+  float met_x = METv.Px();
+  float met_y = METv.Py();
+
+  double px_orig(0.), py_orig(0.),px_corrected(0.), py_corrected(0.);
+  for(unsigned int i=0; i<muons.size(); i++){
+
+    px_orig+= muons.at(i).MiniAODPt()*TMath::Cos(muons.at(i).Phi());
+    py_orig+= muons.at(i).MiniAODPt()*TMath::Sin(muons.at(i).Phi());
+
+    px_corrected += muons.at(i).Px();
+    py_corrected += muons.at(i).Py();
+
+  }
+
+  met_x = met_x + px_orig - px_corrected;
+  met_y = met_y + py_orig - py_corrected;
+
+  Particle METout;
+  METout.SetPxPyPzE(met_x,met_y,0,sqrt(met_x*met_x+met_y*met_y));
+  return METout;
+
+}
+
 std::vector<Muon> AnalyzerCore::MuonApplyPtCut(std::vector<Muon> muons, double ptcut){
 
   std::vector<Muon> out;
