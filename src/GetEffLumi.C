@@ -4,7 +4,9 @@ void GetEffLumi::executeEvent(){
 
   Event ev = GetEvent();
 
-  FillHist("sumW", 0.5, ev.MCweight(), 5, 0., 5.);
-  FillHist("sumW", 1.5, ev.MCweight()*PDFWeights_Scale->at(0), 5, 0., 5.);
+  FillHist("sumW", 0, ev.MCweight(), 1, 0., 1.);
+  if(PDFWeights_Scale->size()>0){
+    FillHist("sumW_Reweight", 0, ev.MCweight()*PDFWeights_Scale->at(0), 1, 0., 1.);
+  }
 
 }

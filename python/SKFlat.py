@@ -13,7 +13,7 @@ parser.add_argument('-l', dest='InputSampleList', default="")
 parser.add_argument('-n', dest='NJobs', default=1, type=int)
 parser.add_argument('-o', dest='Outputdir', default="")
 parser.add_argument('-q', dest='Queue', default="fastq")
-parser.add_argument('-y', dest='Year', default="2016")
+parser.add_argument('-y', dest='Year', default="2017")
 parser.add_argument('--no_exec', action='store_true')
 parser.add_argument('--userflags', dest='Userflags', default="")
 args = parser.parse_args()
@@ -357,6 +357,8 @@ void {2}(){{
       out.write('  m.IsDATA = false;\n')
       out.write('  m.xsec = '+str(this_xsec)+';\n')
       out.write('  m.sumW = '+str(this_sumw)+';\n')
+
+    out.write('  mDataYear = '+str(args.year)+';\n')
 
     if len(Userflags)>0:
       out.write('  m.Userflags = {\n')
