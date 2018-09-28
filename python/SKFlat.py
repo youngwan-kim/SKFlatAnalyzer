@@ -358,7 +358,7 @@ void {2}(){{
       out.write('  m.xsec = '+str(this_xsec)+';\n')
       out.write('  m.sumW = '+str(this_sumw)+';\n')
 
-    out.write('  mDataYear = '+str(args.year)+';\n')
+    out.write('  m.DataYear = '+str(args.Year)+';\n')
 
     if len(Userflags)>0:
       out.write('  m.Userflags = {\n')

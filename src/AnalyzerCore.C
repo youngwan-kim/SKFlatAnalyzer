@@ -23,6 +23,7 @@ Event AnalyzerCore::GetEvent(){
   ev.SetTrigger(*HLT_TriggerName,*HLT_TriggerFired);
   ev.SetMET(pfMET_pt,pfMET_Px,pfMET_Py);
   ev.SetnPV(nPV);
+  ev.SetDataYear(DataYear);
 
   return ev;
 

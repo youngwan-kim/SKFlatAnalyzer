@@ -49,6 +49,7 @@ SKFlatNtuple::SKFlatNtuple(){
   IsDATA = false;
   DataStream = "";
   MCSample = "";
+  DataYear = 2017;
   xsec = 1.;
   sumW = 1.;
   weight_norm_1invpb = 1.;
