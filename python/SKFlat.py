@@ -47,6 +47,7 @@ SKFlat_LIB_PATH = os.environ['SKFlat_LIB_PATH']
 HOSTNAME = os.environ['HOSTNAME']
 UID = str(os.getuid())
 IsKISTI = ("ui10.sdfarm.kr" in HOSTNAME)
+IsSNU = ("snu" in HOSTNAME)
 
 ## Make Sample List
 
@@ -147,6 +148,13 @@ for InputSample in InputSamples:
     tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'.txt'
     if IsDATA:
       tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'_'+DataPeriod+'.txt'
+    lines_files = open(tmpfilepath).readlines()
+    os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
+
+  elif IsSNU:
+    tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForSNU/'+InputSample+'.txt'
+    if IsDATA:
+      tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForSNU/'+InputSample+'_'+DataPeriod+'.txt'
     lines_files = open(tmpfilepath).readlines()
     os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
 
