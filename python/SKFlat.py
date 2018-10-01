@@ -157,6 +157,9 @@ for InputSample in InputSamples:
     NtupleFilePath = ""
     for line in lines_SamplePath:
 
+      if line[0]=="#":
+        continue
+
       if len(line.split())==0:
         continue
 
@@ -235,6 +238,8 @@ for InputSample in InputSamples:
   if not IsDATA:
     lines_SamplePath = open(SAMPLE_DATA_DIR+"/"+args.Year+"/SamplePath.txt").readlines()
     for line in lines_SamplePath:
+      if line[0]=="#":
+        continue
       words = line.split()
       if len(words)<5:
         continue
