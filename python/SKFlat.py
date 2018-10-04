@@ -44,11 +44,18 @@ SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
 SKFlatOutputDir = os.environ['SKFlatOutputDir']
 SKFlatSEDir = os.environ['SKFlatSEDir']
 SKFlat_LIB_PATH = os.environ['SKFlat_LIB_PATH']
-HOSTNAME = os.environ['HOSTNAME']
 UID = str(os.getuid())
+
+HOSTNAME = os.environ['HOSTNAME']
 IsKISTI = ("ui10.sdfarm.kr" in HOSTNAME)
 IsSNU = ("snu" in HOSTNAME)
 IsKNU = ("knu" in HOSTNAME)
+if IsKISTI:
+  HOSTNAME = "KISTI"
+if IsSNU:
+  HOSTNAME = "SNU"
+if IsKNU:
+  HOSTNAME = "KNU"
 
 ## Machine-dependent variables
 if IsKNU:

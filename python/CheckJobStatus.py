@@ -19,12 +19,9 @@ def GetJobID(logfiledir, cycle, jobnumber, hostname):
 
   jobid = ""
 
-  IsSNU = ("snu" in hostname)
-  IsKNU = ("knu" in hostname)
-
-  if IsSNU:
+  if hostname=="SNU":
     jobid = open(logfiledir+'/submitlog.log').readlines()[0].split()[2]
-  if IsKNU:
+  if hostname=="KNU":
     jobid = open(logfiledir+'/submitlog.log').readlines()[0].split('.')[0]
 
   return jobid
@@ -36,18 +33,14 @@ def CheckJobStatus(logfiledir, cycle, jobnumber, hostname):
   path_log_e = ""
   path_log_o = ""
 
-  IsKISTI = ("ui10.sdfarm.kr" in hostname)
-  IsSNU = ("snu" in hostname)
-  IsKNU = ("knu" in hostname)
-
-  if IsKISTI:
+  if hostname=="KISTI":
     path_log_e = logfiledir+"/job_"+str(jobnumber)+".err"
     path_log_o = logfiledir+"/job_"+str(jobnumber)+".log"
-  if IsSNU:
+  if hostname=="SNU":
     jobid = open(logfiledir+'/job_'+str(jobnumber)+'/submitlog.log').readlines()[0].split()[2]
     path_log_e = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.e'+jobid
     path_log_o = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.o'+jobid
-  if IsKNU:
+  if hostname=="KNU":
     path_log_e = logfiledir+'job_'+str(jobnumber)+'/stderr.log'
     path_log_o = logfiledir+'job_'+str(jobnumber)+'/stdout.log'
 
