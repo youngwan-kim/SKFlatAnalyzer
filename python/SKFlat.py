@@ -395,14 +395,7 @@ void {2}(){{
 
     if not IsKISTI:
       run_commands = open(thisjob_dir+'commands.sh','w')
-      print>>run_commands,'''echo "[SKFlat.py] cmsset_default.sh"
-source /cvmfs/cms.cern.ch/cmsset_default.sh
-echo "[SKFlat.py] Going to $CMSSW_BASE/src"
-cd /data7/Users/jskim/CMSSW_9_4_4/src/
-export SCRAM_ARCH=slc6_amd64_gcc630
-echo "[SKFlat.py] Trying cmsenv"
-cmsenv
-cd {0}
+      print>>run_commands,'''cd {0}
 echo "[SKFlat.py] Okay, let's run the analysis"
 root -l -b -q run.C
 '''.format(thisjob_dir)
