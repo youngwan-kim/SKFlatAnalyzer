@@ -232,14 +232,26 @@ void SKFlatValidation::executeEventFromParameter(AnalyzerParameter param){
 
     std::map<TString, bool> map_bool_To_Region;
     if(n_lepton==2){
-      //==== generic two OS lepton
-      map_bool_To_Region["OS"] = IsOS;
-      //==== OnZ event
-      map_bool_To_Region["OnZ_OS"] = IsOS && IsOnZ(Z.M(), 15.);
-      //==== OnZ event
-      map_bool_To_Region["ZMassgt50_OS"] = IsOS && (Z.M()>50.);
-      //==== With B-jet, MET > 30 for dilepton ttbar
-      map_bool_To_Region["WithBJet_METgt30_OS"] = IsOS && (NBJets>0) && (METv.Pt()>30.);
+      if(IsOS){
+        //==== generic two OS lepton
+        map_bool_To_Region["OS"] = true;
+        //==== OnZ event
+        map_bool_To_Region["OnZ_OS"] = IsOnZ(Z.M(), 15.);
+        //==== OnZ event
+        map_bool_To_Region["ZMassgt50_OS"] = (Z.M()>50.);
+        //==== With B-jet, MET > 30 for dilepton ttbar
+        map_bool_To_Region["WithBJet_METgt30_OS"] = (NBJets>0) && (METv.Pt()>30.);
+      }
+      else{
+        //==== generic two SS lepton
+        map_bool_To_Region["SS"] = true;
+        //==== OnZ event
+        map_bool_To_Region["OnZ_SS"] = IsOnZ(Z.M(), 15.);
+        //==== OnZ event
+        map_bool_To_Region["ZMassgt50_SS"] = (Z.M()>50.);
+        //==== With B-jet, MET > 30 for dilepton ttbar
+        map_bool_To_Region["WithBJet_METgt30_SS"] = (NBJets>0) && (METv.Pt()>30.);
+      }
     }
     if(n_lepton==1){
       map_bool_To_Region["W_CR"] = ( METv.Pt() > 30. ) && ( this_MT > 30. );
