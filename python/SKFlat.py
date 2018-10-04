@@ -48,6 +48,11 @@ HOSTNAME = os.environ['HOSTNAME']
 UID = str(os.getuid())
 IsKISTI = ("ui10.sdfarm.kr" in HOSTNAME)
 IsSNU = ("snu" in HOSTNAME)
+IsKNU = ("knu" in HOSTNAME)
+
+## Machine-dependent variables
+if IsKNU:
+  args.Queue = "cms"
 
 ## Make Sample List
 
@@ -110,7 +115,7 @@ for InputSample in InputSamples:
 
   ## Prepare output
 
-  base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+InputSample
+  base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+InputSample+'_'+HOSTNAME
   if IsDATA:
     base_rundir = base_rundir+'_period'+DataPeriod
   for flag in Userflags:
@@ -144,7 +149,7 @@ for InputSample in InputSamples:
   ## Get Sample Path
 
   lines_files = []
-  if IsKISTI:
+  if IsKISTI or IsKNU:
     tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'.txt'
     if IsDATA:
       tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'_'+DataPeriod+'.txt'
@@ -352,15 +357,19 @@ queue {2}
       os.system('mkdir -p '+thisjob_dir)
       runCfileFullPath = thisjob_dir+'run.C'
 
+    IncludeLine = 'R__LOAD_LIBRARY({1}/{0}_C.so)'.format(args.Analyzer, libdir)
+    if IsKNU:
+      IncludeLine = '#include "{0}.C"'.format(args.Analyzer)
+
     out = open(runCfileFullPath, 'w')
-    print>>out,'''R__LOAD_LIBRARY({1}/{0}_C.so)
+    print>>out,'''{3}
 
 void {2}(){{
 
   {0} m;
 
   m.SetTreeName("recoTree/SKFlat");
-'''.format(args.Analyzer, libdir, runfunctionname)
+'''.format(args.Analyzer, libdir, runfunctionname, IncludeLine)
 
     if IsDATA:
       out.write('  m.IsDATA = true;\n')
@@ -398,7 +407,7 @@ void {2}(){{
 }'''
     out.close()
 
-    if not IsKISTI:
+    if IsSNU:
       run_commands = open(thisjob_dir+'commands.sh','w')
       print>>run_commands,'''cd {0}
 echo "[SKFlat.py] Okay, let's run the analysis"
@@ -408,6 +417,26 @@ root -l -b -q run.C
 
       jobname = 'job_'+str(it_job)+'_'+args.Analyzer
       cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
+
+      if not args.no_exec:
+        cwd = os.getcwd()
+        os.chdir(thisjob_dir)
+        os.system(cmd+' > submitlog.log')
+        os.chdir(cwd)
+      sublog = open(thisjob_dir+'/submitlog.log','a')
+      sublog.write('\nSubmission command was : '+cmd+'\n')
+      sublog.close()
+
+    if IsKNU:
+      run_commands = open(thisjob_dir+'commands.sh','w')
+      print>>run_commands,'''cd {0}
+echo "[SKFlat.py] Okay, let's run the analysis"
+root -l -b -q run.C 1>stdout.log 2>stderr.log
+'''.format(thisjob_dir)
+      run_commands.close()
+
+      jobname = 'job_'+str(it_job)+'_'+args.Analyzer
+      cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' commands.sh'
 
       if not args.no_exec:
         cwd = os.getcwd()
@@ -434,7 +463,7 @@ root -l -b -q run.C
     KillCommand = open(base_rundir+'/Script_JobKill.sh','w')
     for it_job in range(0,len(FileRanges)):
       thisjob_dir = base_rundir+'/job_'+str(it_job)+'/'
-      jobid = GetJobID(thisjob_dir, args.Analyzer, it_job)
+      jobid = GetJobID(thisjob_dir, args.Analyzer, it_job, HOSTNAME)
       KillCommand.write('qdel '+jobid+' ## job_'+str(it_job)+' ##\n')
     KillCommand.close()
 
@@ -485,7 +514,7 @@ try:
       ## Prepare output
       ## This should be copied from above
 
-      base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+InputSample
+      base_rundir = SKFlatRunlogDir+'/'+args.Analyzer+'__'+timestamp+'__'+InputSample+'_'+HOSTNAME
       if IsDATA:
         base_rundir = base_rundir+'_period'+DataPeriod
       for flag in Userflags:
@@ -526,7 +555,7 @@ try:
             thisjob_dir = base_rundir
 
           this_status = ""
-          this_status = CheckJobStatus(thisjob_dir, args.Analyzer, it_job, IsKISTI)
+          this_status = CheckJobStatus(thisjob_dir, args.Analyzer, it_job, HOSTNAME)
 
           if "ERROR" in this_status:
             GotError = True
@@ -707,16 +736,18 @@ except KeyboardInterrupt:
 
 from SendEmail import SendEmail
 JobFinishEmail = '''#### Job Info ####
+HOST = {3}
 Analyzer = {0}
+# of Jobs = {4}
 InputSample = {1}
 OutputDir = {2}
-'''.format(args.Analyzer,InputSamples,args.Outputdir)
+'''.format(args.Analyzer,InputSamples,args.Outputdir,HOSTNAME,NJobs)
 JobFinishEmail += '''##################
 Job started at {0}
 Job finished at {1}
 '''.format(string_JobStartTime,string_ThisTime)
 
-EmailTitle = 'Job Summary'
+EmailTitle = '['+HOSTNAME+']'+' Job Summary'
 if GotError:
   JobFinishEmail = "#### ERROR OCCURED ####\n"+JobFinishEmail
   JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
