@@ -224,8 +224,11 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
   for(unsigned int i=0; i<jet_pt->size(); i++){
     Jet jet;
     jet.SetPtEtaPhiM(jet_pt->at(i), jet_eta->at(i), jet_phi->at(i), jet_m->at(i));
-    jet *= jet_smearedRes->at(i);
-    jet.SetResShift( jet_smearedResUp->at(i)/jet_smearedRes->at(i), jet_smearedResDown->at(i)/jet_smearedRes->at(i) );
+
+    if(!IsDATA){
+      jet *= jet_smearedRes->at(i);
+      jet.SetResShift( jet_smearedResUp->at(i)/jet_smearedRes->at(i), jet_smearedResDown->at(i)/jet_smearedRes->at(i) );
+    }
     jet.SetCharge(jet_charge->at(i));
 
     jet.SetArea(jet_area->at(i));
