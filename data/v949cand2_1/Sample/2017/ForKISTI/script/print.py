@@ -49,7 +49,7 @@ for line in lines:
     ndir = int(dircount[0])
 
     if ndir != 1:
-      print '[Need Only One TimeSampt] /xrootd_user/jskim/xrootd/SKFlat/'+PD+'/SKFlat_'+SKFlatV+'/*'
+      print '[Need Only One TimeSampt] /xrootd_user/jskim/xrootd/SKFlat/'+Year+'/'+PD+'/SKFlat_'+SKFlatV+'/'
 
     os.system('ls -1 /xrootd_user/jskim/xrootd/SKFlat/'+Year+'/'+PD+'/SKFlat_'+SKFlatV+'/*/*/*.root &> '+alias+'.txt')
     os.system("sed -i 's/\/xrootd_user\/jskim\/xrootd/root:\/\/cms-xrdr.sdfarm.kr:1094\/\/\/xrd\/store\/user\/jskim/g' "+alias+'.txt')
