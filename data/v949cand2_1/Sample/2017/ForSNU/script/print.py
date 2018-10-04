@@ -3,8 +3,8 @@ import os
 SKFlatV = os.environ['SKFlatV']
 Year = "2017"
 
-#txtfilename = 'sample_DATA.txt'
-txtfilename = 'sample_MC.txt'
+txtfilename = 'sample_DATA.txt'
+#txtfilename = 'sample_MC.txt'
 #txtfilename = 'sample_PrivateMC.txt'
 
 IsDATA = ("DATA" in txtfilename)
@@ -36,3 +36,6 @@ for line in lines:
 
     outname = alias+'.txt'
     os.system('ls -1 /data7/DATA/SKFlat/'+SKFlatV+'/MC/'+PD+'/*/*/*.root > '+outname)
+    ## check number of files
+    tmp = open(alias+'.txt').readlines()
+    print alias+'\t'+str(len(tmp))
