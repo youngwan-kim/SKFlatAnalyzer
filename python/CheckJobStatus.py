@@ -12,23 +12,44 @@ def GetEventDone(l):
 
   return str(nums[0])+':'+str(nums[1])
 
-def GetJobID(logfiledir, cycle, jobnumber):
-  jobid = open(logfiledir+'/submitlog.log').readlines()[0].split()[2]
+def GetJobID(logfiledir, cycle, jobnumber, hostname):
+
+  ## SNU : Your job 7223628 ("job_0_GetEffLumi") has been submitted
+  ## KNU : 3145702.cluster118.knu.ac.kr
+
+  jobid = ""
+
+  IsSNU = ("snu" in hostname)
+  IsKNU = ("knu" in hostname)
+
+  if IsSNU:
+    jobid = open(logfiledir+'/submitlog.log').readlines()[0].split()[2]
+  if IsKNU:
+    jobid = open(logfiledir+'/submitlog.log').readlines()[0].split('.')[0]
+
   return jobid
 
-def CheckJobStatus(logfiledir, cycle, jobnumber, IsKISTI):
+
+def CheckJobStatus(logfiledir, cycle, jobnumber, hostname):
   FinishString = "JOB FINISHED"
 
   path_log_e = ""
   path_log_o = ""
 
+  IsKISTI = ("ui10.sdfarm.kr" in hostname)
+  IsSNU = ("snu" in hostname)
+  IsKNU = ("knu" in hostname)
+
   if IsKISTI:
     path_log_e = logfiledir+"/job_"+str(jobnumber)+".err"
     path_log_o = logfiledir+"/job_"+str(jobnumber)+".log"
-  else:
+  if IsSNU:
     jobid = open(logfiledir+'/job_'+str(jobnumber)+'/submitlog.log').readlines()[0].split()[2]
     path_log_e = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.e'+jobid
     path_log_o = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.o'+jobid
+  if IsKNU:
+    path_log_e = logfiledir+'job_'+str(jobnumber)+'/stderr.log'
+    path_log_o = logfiledir+'job_'+str(jobnumber)+'/stdout.log'
 
   if (not os.path.exists(path_log_e)) or (not os.path.exists(path_log_o)):
     return "BATCH JOB NOT STARTED"
