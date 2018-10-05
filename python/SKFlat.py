@@ -153,70 +153,18 @@ for InputSample in InputSamples:
   #os.system('scp -r '+this_webdir+' jskim@147.47.242.71:/var/www/html/SKFlatAnalyzerJobLogs/')
   #os.system('ssh -Y jskim@147.47.242.71 chmod -R 777 /var/www/html/SKFlatAnalyzerJobLogs/'+base_rundir.replace(SKFlatRunlogDir,''))
 
+  ## If KNU, copy grid cert
+  os.system('cp /tmp/x509up_u'+UID+' '+base_rundir)
+
   ## Get Sample Path
 
   lines_files = []
-  if IsKISTI or IsKNU:
-    tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'.txt'
-    if IsDATA:
-      tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForKISTI/'+InputSample+'_'+DataPeriod+'.txt'
-    lines_files = open(tmpfilepath).readlines()
-    os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
 
-  elif IsSNU:
-    tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForSNU/'+InputSample+'.txt'
-    if IsDATA:
-      tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/ForSNU/'+InputSample+'_'+DataPeriod+'.txt'
-    lines_files = open(tmpfilepath).readlines()
-    os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
-
-  else:
-    lines_SamplePath = open(SAMPLE_DATA_DIR+'/'+args.Year+"/SamplePath.txt").readlines()
-    Samplepath_Section="Alias"
-    SampleBaseDirs = []
-    NtupleFilePath = ""
-    for line in lines_SamplePath:
-
-      if line[0]=="#":
-        continue
-
-      if len(line.split())==0:
-        continue
-
-      words = line.split()
-
-      if "Section:" in line:
-        Samplepath_Section = words[1]
-        continue
-
-      if Samplepath_Section=="Alias":
-        SampleBaseDirs.append( (words[0], words[1]) )
-
-
-      if IsDATA and Samplepath_Section=="DATA":
-        if words[0]==InputSample:
-          NtupleFilePath = words[1]
-          break
-
-      if not IsDATA and Samplepath_Section=="MC":
-        if words[0]==InputSample:
-          NtupleFilePath = words[1]
-          break
-        
-    for BaseDir in SampleBaseDirs:
-      alias = BaseDir[0]
-      path = BaseDir[1]
-      if alias in NtupleFilePath:
-        if IsKISTI:
-          NtupleFilePath = NtupleFilePath.replace(alias,path)
-          NtupleFilePath = NtupleFilePath.replace('<SKFlatV>','SKFlat_'+SKFlatV)
-        else:
-          NtupleFilePath = NtupleFilePath.replace(alias,path+'/'+SKFlatV+'/')
-    if IsDATA:
-      NtupleFilePath = NtupleFilePath+'period'+DataPeriod+'/'
-
-    os.system('ls -1 '+NtupleFilePath+'/*.root > '+base_rundir+'/input_filelist.txt')
-    lines_files = open(base_rundir+'/input_filelist.txt').readlines()
+  tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/For'+HOSTNAME+'/'+InputSample+'.txt'
+  if IsDATA:
+    tmpfilepath = SAMPLE_DATA_DIR+'/'+args.Year+'/For'+HOSTNAME+'/'+InputSample+'_'+DataPeriod+'.txt'
+  lines_files = open(tmpfilepath).readlines()
+  os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
 
   NTotalFiles = len(lines_files)
 
@@ -365,8 +313,6 @@ queue {2}
       runCfileFullPath = thisjob_dir+'run.C'
 
     IncludeLine = 'R__LOAD_LIBRARY({1}/{0}_C.so)'.format(args.Analyzer, libdir)
-    if IsKNU:
-      IncludeLine = '#include "{0}.C"'.format(args.Analyzer)
 
     out = open(runCfileFullPath, 'w')
     print>>out,'''{3}
@@ -437,9 +383,10 @@ root -l -b -q run.C
     if IsKNU:
       run_commands = open(thisjob_dir+'commands.sh','w')
       print>>run_commands,'''cd {0}
+cp ../x509up_u{1} /tmp/
 echo "[SKFlat.py] Okay, let's run the analysis"
 root -l -b -q run.C 1>stdout.log 2>stderr.log
-'''.format(thisjob_dir)
+'''.format(thisjob_dir,UID)
       run_commands.close()
 
       jobname = 'job_'+str(it_job)+'_'+args.Analyzer
@@ -473,6 +420,9 @@ root -l -b -q run.C 1>stdout.log 2>stderr.log
       jobid = GetJobID(thisjob_dir, args.Analyzer, it_job, HOSTNAME)
       KillCommand.write('qdel '+jobid+' ## job_'+str(it_job)+' ##\n')
     KillCommand.close()
+
+if args.no_exec:
+  exit()
 
 print '##################################'
 print '#### Submittion is FINISHED!! ####'
@@ -741,7 +691,7 @@ except KeyboardInterrupt:
 
 ## Send Email now
 
-from SendEmail import SendEmail
+from SendEmail import *
 JobFinishEmail = '''#### Job Info ####
 HOST = {3}
 Analyzer = {0}
@@ -760,7 +710,10 @@ if GotError:
   JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
   EmailTitle = '[ERROR] Job Summary'
 
-SendEmail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
+if IsKNU:
+  SendEmailbyGMail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
+else:
+  SendEmail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
 
 
 
