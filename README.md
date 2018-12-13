@@ -23,6 +23,20 @@ voms-proxy-init --voms cms -valid 24:00
 python python/SKFlat.py -a ExampleRun -i ZToMuMu_M_50_120 -n 50 &
 ```
 
+## SMPValidation job
+```bash
+source SMPValidation.sh
+```
+
+### SMPValidation plotting
+Edit $TString filedir$ in plot.cc  
+Save plots
+```bash
+root -b <<EOF
+SaveAll()
+EOF
+```
+
 ## Making a new Ananlyzer
 ```bash
 cd script/MakeCycleSkeleton/
