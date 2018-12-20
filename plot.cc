@@ -1,18 +1,3 @@
-/*
-TString hsseopath="/cms/scratch/hsseo/SKFlatOutput/v949cand2_2/FirstAnalyzer/2017/";
-const int nfile=8;
-TString filenames[nfile]={"FirstAnalyzer_DoubleMuon.root","FirstAnalyzer_DYJets.root","FirstAnalyzer_DYJets.root","FirstAnalyzer_WW_pythia.root","FirstAnalyzer_WZ_pythia.root","FirstAnalyzer_ZZ_pythia.root","FirstAnalyzer_WJets_MG.root","FirstAnalyzer_TTLL_powheg.root"};
-int sampleindex[nfile]={0,1,2,3,3,3,4,5};
-*/
-
-/*
-TString hsseopath="/data2/CAT_SKTreeOutput/JobOutPut/hsseo/LQanalyzer/data/output/CAT/ISR2016MuonAnalyzer/periodBtoH/";
-#include<vector>
-const int nfile=10;
-TString filenames[nfile]={"ISR2016MuonAnalyzer_data_DoubleMuon_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_10to50_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_10to50_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWW_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWZ_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKZZ_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWJets_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKTT_powheg_dilep_cat_v8-0-7.root"};
-int sampleindex[nfile]={0,1,1,2,2,3,3,3,4,5};
-*/
-
 #include<iostream>
 #include<vector>
 #include"TH2D.h"
@@ -24,30 +9,102 @@ int sampleindex[nfile]={0,1,1,2,2,3,3,3,4,5};
 #include"TCanvas.h"
 #include"TLine.h"
 using namespace std;
+
 TString filedir="/data7/Users/hsseo/SKFlatOutput/v949cand2_2/SMPValidation/2017/";
-const int nfile=12;
-TString filenames[nfile]={"DATA/SMPValidation_DoubleMuon_B.root","DATA/SMPValidation_DoubleMuon_C.root","DATA/SMPValidation_DoubleMuon_D.root","DATA/SMPValidation_DoubleMuon_E.root","DATA/SMPValidation_DoubleMuon_F.root","SMPValidation_DYJets.root","SMPValidation_DYJets.root","SMPValidation_WW_pythia.root","SMPValidation_WZ_pythia.root","SMPValidation_ZZ_pythia.root","SMPValidation_WJets_MG.root","SMPValidation_TTLL_powheg.root"};
-int sampleindex[nfile]={0,0,0,0,0,1,2,3,3,3,4,5};
 
-const int nsample=6;
-TString samplenames[nsample]={"data","#gamma*/Z#rightarrow#mu#mu","#gamma*/Z#rightarrow#tau#tau","Diboson","W","t#bar{t}"};
-int colorcode[nsample]={1,2,3,4,5,6};
+struct Sample{
+  TString name;
+  int type;
+  int colorcode;
+  vector<TString> files;
+};
+struct Systematic{
+  TString name;
+  int type;
+  bool exist_data;
+  bool exist_bg;
+};
+TString setting;
+vector<Sample> samples;
+vector<Systematic> systematics;
+void AddSample(TString name_,int type_,int colorcode_,vector<TString> files_){
+  Sample sample;
+  sample.name=name_;
+  sample.type=type_;
+  sample.colorcode=colorcode_;
+  sample.files=files_;
+  cout<<" [AddSample] "<<sample.name<<" "<<sample.type<<" "<<sample.colorcode<<endl;
+  for(int i=0;i<sample.files.size();i++)
+    cout<<"   "<<sample.files.at(i)<<endl;
+    
+  samples.push_back(sample);
+}
+void AddSample(TString name_,int type_,int colorcode_,TString file1,TString file2="",TString file3="",TString file4="",TString file5=""){
+  vector<TString> files;
+  if(file1!="") files.push_back(file1);
+  if(file2!="") files.push_back(file2);
+  if(file3!="") files.push_back(file3);
+  if(file4!="") files.push_back(file4);
+  if(file5!="") files.push_back(file5);
+  AddSample(name_,type_,colorcode_,files);
+}
+void AddSystematic(TString name_,int type_,bool exist_data_,bool exist_bg_){
+  Systematic systematic;
+  systematic.name=name_;
+  systematic.type=type_;
+  systematic.exist_data=exist_data_;
+  systematic.exist_bg=exist_bg_;
+  cout<<" [AddSystematic] "<<systematic.name<<" "<<systematic.type<<" "<<systematic.exist_data<<" "<<systematic.exist_bg<<endl;
+  systematics.push_back(systematic);
+}
+void Setup(TString key){
+  setting=key;
+  samples.clear();
+  systematics.clear();
+  cout<<"[Setup] setting="<<setting<<endl;
+  if(key=="muon2017"){
+    AddSample("data",0,1,"DATA/SMPValidation_SkimTree_SMP_DoubleMuon_B.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_C.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_D.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_E.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_F.root");
+    AddSample("#gamma*/Z#rightarrow#mu#mu",1,2,"SMPValidation_SkimTree_SMP_DYJets.root");
+  }else if(key=="electron2017"){
+    AddSample("data",0,1,"DATA/SMPValidation_SkimTree_SMP_DoubleEG_B.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_C.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_D.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_E.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_F.root");
+    AddSample("#gamma*/Z#rightarrowee",1,2,"SMPValidation_SkimTree_SMP_DYJets.root");
+  }
+  AddSample("#gamma*/Z#rightarrow#tau#tau",2,3,"SMPValidation_SkimTree_SMP_DYJets.root");
+  AddSample("Diboson",3,4,"SMPValidation_SkimTree_SMP_WW_pythia.root","SMPValidation_SkimTree_SMP_WZ_pythia.root","SMPValidation_SkimTree_SMP_ZZ_pythia.root");
+  AddSample("W",4,5,"SMPValidation_SkimTree_SMP_WJets_MG.root");
+  AddSample("t#bar{t}",5,6,"SMPValidation_SkimTree_SMP_TTLL_powheg.root");
+  
+  AddSystematic("RECOSF",2,0,1);
+  AddSystematic("IDSF",2,0,1);
+  AddSystematic("ISOSF",2,0,1);
+  AddSystematic("triggerSF",2,0,1);
+  AddSystematic("PUreweight",2,0,1);
+  AddSystematic("prefireweight",2,0,1);
+  AddSystematic("alphaS",2,0,0);
+  AddSystematic("scalevariation",9,0,0);
+  AddSystematic("noRECOSF",1,0,1);
+  AddSystematic("noIDSF",1,0,1);
+  AddSystematic("noISOSF",1,0,1);
+  AddSystematic("notriggerSF",1,0,1);
+  AddSystematic("noPUreweight",1,0,1);
+  AddSystematic("noprefireweight",1,0,1);
+  AddSystematic("noefficiencySF",1,0,1);
+  AddSystematic("efficiencySF",-15,0,0);
+  AddSystematic("totalsys",-255,0,0);
 
-const int nsys=14;
-TString sysname[nsys]={"RECOSF","IDSF","ISOSF","triggerSF","PUreweight","alphaS","scalevariation","noRECOSF","noIDSF","noISOSF","notriggerSF","noPUreweight","noefficiencySF","totalsys"};
-int systype[nsys]={2,2,2,2,2,2,9,1,1,1,1,1,1,-((1<<7)-1)};
-int sysexist_data[nsys]={0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-int sysexist_bg[nsys]={1,1,1,1,1,0,0,1,1,1,1,1,1,0};
+  cout<<"[Setup] nsample: "<<samples.size()<<endl;
+  cout<<"[Setup] nsys: "<<systematics.size()<<endl;
+}
 
 void PrintKeys(TList* keys){
   for(int i=0;i<keys->GetSize();i++){
     TKey* key=(TKey*)keys->At(i);
     if(strcmp(key->GetClassName(),"TDirectoryFile")==0) PrintKeys(((TDirectoryFile*)key->ReadObj())->GetListOfKeys());   
-    else cout<<key->GetName()<<"\n";
+    else cout<<key->GetMotherDir()->GetPath()<<" "<<key->GetName()<<"\n";
   }
 }
-void PrintHistList(int filenum=1){
-  TFile f(filedir+filenames[filenum]);
+void PrintHistList(int samplenum=1){
+  TFile f(filedir+samples.at(samplenum).files.at(1));
   cout<<f.GetName()<<" "<<f.GetTitle()<<endl;
   PrintKeys(f.GetListOfKeys());
 }
@@ -64,30 +121,24 @@ TH1* GetHist(TString filename,TString histname){
 }
 vector<TH1*> GetHists(TString dirname,TString datahistname,TString dyhistname,TString bghistname){
   vector<TH1*> hists;
-  vector<TString> histnames;
-  for(int i=0;i<nfile;i++){
-    if(sampleindex[i]==0) histnames.push_back(datahistname);
-    else if(sampleindex[i]==1) histnames.push_back(dyhistname);
-    else if(sampleindex[i]==2) histnames.push_back(bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length()));
-    else histnames.push_back(bghistname);
-  }					   
-  for(int i=0;i<nfile;i++){
-    TH1* hist=GetHist(dirname+filenames[i],histnames[i]);
+  for(int i=0;i<samples.size();i++){
+    TH1* hist=NULL;
+    TString histname;
+    if(samples[i].type==0) histname=datahistname;
+    else if(samples[i].type==1) histname=dyhistname;
+    else if(samples[i].type==2) histname=bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length());
+    else histname=bghistname;
+    for(int j=0;j<samples[i].files.size();j++){
+      if(!hist) hist=GetHist(filedir+samples[i].files[j],histname);
+      else hist->Add(GetHist(filedir+samples[i].files[j],histname));
+    }
     if(hist){
-      hist->SetName(samplenames[sampleindex[i]]);
+      hist->SetName(samples[i].name);
       hist->SetTitle(dyhistname);
       hist->GetXaxis()->SetTitle(dyhistname);
-      hist->SetLineColor(colorcode[sampleindex[i]]);
-      hist->SetFillColor(colorcode[sampleindex[i]]);
-      bool isexist=false;
-      for(int j=0;j<(int)hists.size();j++){
-	if(strcmp(hists.at(j)->GetName(),hist->GetName())==0){
-	  hists.at(j)->Add(hist);
-	  isexist=true;
-	  continue;
-	}
-      }
-      if(!isexist) hists.push_back(hist);
+      hist->SetLineColor(samples[i].colorcode);
+      hist->SetFillColor(samples[i].colorcode);
+      hists.push_back(hist);
     }
   }
   return hists;
@@ -144,7 +195,7 @@ TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variat
 }    
 int AddError(TH1* hist,TH1* sys){
   for(int i=1;i<hist->GetNbinsX()+1;i++){
-    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))>0.000001*hist->GetBinContent(i)){
+    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))>0.0001*hist->GetBinContent(i)){
       cout<<"[AddError] sys hist is wrong"<<endl;
       return -1;
     }
@@ -241,24 +292,24 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
   vector<TH1*> hists_central=GetHists(filedir,histname,histname,histname);
   TH1* central=GetMCHist(hists_central);
   vector<TH1*> syss;
-  for(int i=0;i<nsys;i++){
+  for(int i=0;i<systematics.size();i++){
     if((sysbit>>i)%2==1){
-      cout<<"systype="<<systype[i]<<endl;
-      if(systype[i]<1) continue;
+      cout<<"systype="<<systematics[i].type<<endl;
+      if(systematics[i].type<1) continue;
       vector<TString> suffix;
-      if(systype[i]==1) suffix.push_back("");
-      else if(systype[i]==2){
+      if(systematics[i].type==1) suffix.push_back("");
+      else if(systematics[i].type==2){
 	suffix.push_back("_up");
 	suffix.push_back("_down");
-      }else if(systype[i]>2){
-	for(int j=0;j<systype[i];j++) suffix.push_back(Form("%d",j));
+      }else if(systematics[i].type>2){
+	for(int j=0;j<systematics[i].type;j++) suffix.push_back(Form("%d",j));
       }
       vector<TH1*> variations;
-      for(int j=0;j<systype[i];j++){
-	if((systype[i]==9&&j==4)||(systype[i]==9&&j==8)) continue;
-	TString datahistname=histname+(sysexist_data[i]?("_"+sysname[i]+suffix[j]):"");
-	TString dyhistname=histname+"_"+sysname[i]+suffix[j];
-	TString bghistname=histname+(sysexist_bg[i]?("_"+sysname[i]+suffix[j]):"");
+      for(int j=0;j<systematics[i].type;j++){
+	if((systematics[i].type==9&&j==4)||(systematics[i].type==9&&j==8)) continue;
+	TString datahistname=histname+(systematics[i].exist_data?("_"+systematics[i].name+suffix[j]):"");
+	TString dyhistname=histname+"_"+systematics[i].name+suffix[j];
+	TString bghistname=histname+(systematics[i].exist_bg?("_"+systematics[i].name+suffix[j]):"");
 	cout<<datahistname<<" "<<dyhistname<<" "<<bghistname<<endl;
 	vector<TH1*> gethists=GetHists(filedir,datahistname,dyhistname,bghistname);
 	variations.push_back(GetMCHist(gethists));
@@ -266,7 +317,7 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
       }
       syss.push_back(GetSysHistMax(central,variations));
       for(int j=0;j<(int)variations.size();j++) delete variations.at(j);
-      cout<<sysname[i]+": "<<variations.size()<<" variations"<<endl;
+      cout<<systematics[i].name+": "<<variations.size()<<" variations"<<endl;
     }
   }
   TH1* sys_total=NULL;
@@ -280,16 +331,31 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
   return GetCompareStack(hists_central,sys_total,rebin,xmin,xmax,setlog);
 }
 void SaveAll(){
-  const int nhist=14;
-  TString histname[nhist]={"muon2017/OS/Z/dimass","muon2017/OS/Z/dipt","muon2017/OS/Z/dirap","muon2017/OS/Z/l0pt","muon2017/OS/Z/l0eta","muon2017/OS/Z/l1pt","muon2017/OS/Z/l1eta","muon2017/OS/dimass","muon2017/OS/dipt","muon2017/OS/dirap","muon2017/OS/l0pt","muon2017/OS/l0eta","muon2017/OS/l1pt","muon2017/OS/l1eta"};
-  int histrebin[nhist]={0,4,0,4,0,4,0, 4,4,0,4,0,4,0};
-  double histxmin[nhist]={80,0,0,0,0,0,0, 0,0,0,0,0,0,0};
-  double histxmax[nhist]={100,0,0,0,0,0,0, 0,0,0,0,0,0,0};
-  for(int i=0;i<nsys;i++) 
+  vector<TString> histname;
+  vector<int> histrebin;
+  vector<double> histxmax,histxmin;
+  TString channel[]={setting};
+  for(int ichannel=0;ichannel<sizeof(channel)/sizeof(TString);ichannel++){
+    TString region[]={"OS","OS_Z","OS_Z_y0.0to0.4","OS_Z_y0.4to1.0","OS_Z_y1.0to2.4","SS"};
+    for(int iregion=0;iregion<sizeof(region)/sizeof(TString);iregion++){
+      TString hname[12]={"dimass","dipt","dirap","l0pt","l0eta","l0riso","l1pt","l1eta","l1riso","lldelR","lldelphi","nPV"}; 
+      int hrebin[12]={4,4,0,4,0,0,4,0,0,0,0,0};
+      double hxmin[12]={80,0,0,0,0,0,0,0,0,0,0,0};
+      double hxmax[12]={100,100,0,0,0,0,0,0,0,0,0,0};
+      for(int ihist=0;ihist<sizeof(hname)/sizeof(TString);ihist++){
+	histname.push_back(channel[ichannel]+"/"+region[iregion]+"/"+hname[ihist]);
+	histrebin.push_back(iregion!=0&&ihist==0?0:hrebin[ihist]);
+	histxmin.push_back(iregion==0&&ihist==0?0:hxmin[ihist]);
+	histxmax.push_back(iregion==0&&ihist==0?0:hxmax[ihist]);
+      }
+    }
+  }
+  int nhist=histname.size();
+  for(int i=0;i<systematics.size();i++) 
     for(int j=0;j<nhist;j++){
       TString this_histname=histname[j];
-      cout<<"mkdir -p plot/"+this_histname(0,this_histname.Last('/')+1)+sysname[i]<<endl;
-      system("mkdir -p plot/"+this_histname(0,this_histname.Last('/')+1)+sysname[i]);
+      cout<<"mkdir -p plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[i].name<<endl;
+      system("mkdir -p plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[i].name);
     }
   TCanvas* c=NULL;
   for(int i=0;i<nhist;i++){
@@ -298,13 +364,13 @@ void SaveAll(){
     c=GetCompareStack(this_histname,0,histrebin[i],histxmin[i],histxmax[i]);
     c->SaveAs("plot/"+this_histname+".png");
     delete c;
-    for(int j=0;j<nsys;j++){
+    for(int j=0;j<systematics.size();j++){
       int sysbit=0;
       TCanvas* c;
-      if(systype[j]>1) c=GetCompareStack(this_histname,1<<j,histrebin[i],histxmin[i],histxmax[i]);
-      else if(systype[j]==1) c=GetCompareStack(GetHists(filedir,this_histname+(sysexist_data[j]?"_"+sysname[j]:""),this_histname+"_"+sysname[j],this_histname+(sysexist_bg[j]?"_"+sysname[j]:"")),0,histrebin[i],histxmin[i],histxmax[i]);
-      else c=GetCompareStack(this_histname,-systype[j],histrebin[i],histxmin[i],histxmax[i]);
-      c->SaveAs("plot/"+this_histname(0,this_histname.Last('/')+1)+sysname[j]+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
+      if(systematics[j].type>1) c=GetCompareStack(this_histname,1<<j,histrebin[i],histxmin[i],histxmax[i]);
+      else if(systematics[j].type==1) c=GetCompareStack(GetHists(filedir,this_histname+(systematics[j].exist_data?"_"+systematics[j].name:""),this_histname+"_"+systematics[j].name,this_histname+(systematics[j].exist_bg?"_"+systematics[j].name:"")),0,histrebin[i],histxmin[i],histxmax[i]);
+      else c=GetCompareStack(this_histname,-systematics[j].type,histrebin[i],histxmin[i],histxmax[i]);
+      c->SaveAs("plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[j].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
       delete c;
     }      
   }
@@ -341,5 +407,20 @@ void SaveAll_ISR2016Muon(){
     }      
   }
 }
+*/
+
+/*
+TString hsseopath="/cms/scratch/hsseo/SKFlatOutput/v949cand2_2/FirstAnalyzer/2017/";
+const int nfile=8;
+TString filenames[nfile]={"FirstAnalyzer_DoubleMuon.root","FirstAnalyzer_DYJets.root","FirstAnalyzer_DYJets.root","FirstAnalyzer_WW_pythia.root","FirstAnalyzer_WZ_pythia.root","FirstAnalyzer_ZZ_pythia.root","FirstAnalyzer_WJets_MG.root","FirstAnalyzer_TTLL_powheg.root"};
+int sampleindex[nfile]={0,1,2,3,3,3,4,5};
+*/
+
+/*
+TString hsseopath="/data2/CAT_SKTreeOutput/JobOutPut/hsseo/LQanalyzer/data/output/CAT/ISR2016MuonAnalyzer/periodBtoH/";
+#include<vector>
+const int nfile=10;
+TString filenames[nfile]={"ISR2016MuonAnalyzer_data_DoubleMuon_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_10to50_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_10to50_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWW_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWZ_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKZZ_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWJets_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKTT_powheg_dilep_cat_v8-0-7.root"};
+int sampleindex[nfile]={0,1,1,2,2,3,3,3,4,5};
 */
 
