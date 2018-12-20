@@ -15,6 +15,7 @@ export SKFlatLogEmail='' # <- put your email address here
 Everytime when using new shell,
 ```bash
 source setup.sh
+make
 voms-proxy-init --voms cms -valid 24:00
 ```
 
@@ -30,9 +31,18 @@ source SMPValidation.sh
 
 ### SMPValidation plotting
 Edit $TString filedir$ in plot.cc  
+Draw a plot
+```bash
+root -l
+Setup("electron2017")
+GetCompareStack("electron2017/OS_Z/dimass",0,0,80,100)
+```
 Save plots
 ```bash
 root -b <<EOF
+Setup("electron2017")
+SaveAll()
+Setup("muon2017")
 SaveAll()
 EOF
 ```
