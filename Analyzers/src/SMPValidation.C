@@ -35,6 +35,7 @@ void SMPValidation::executeEvent(){
       if(!IsDATA||DataStream.Contains("DoubleEG")) executeEventFromParameter(channelname,ev,electrontrigger);
     }
   }
+  delete ev;
 }
 
 void SMPValidation::executeEventFromParameter(TString channelname,Event* ev,TString trigger){
