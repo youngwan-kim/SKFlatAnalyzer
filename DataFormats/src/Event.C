@@ -202,9 +202,6 @@ double Event::GetTriggerLumi(TString trig){
     else if(trig=="HLT_Ele23_CaloIdL_TrackIdL_IsoVL_PFJet30_v"){
       return 43.468;
     }
-    else if(trig=="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v"){
-      return 41527.540;
-    }
     else if(trig=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"){
       return 7449.301;
     }

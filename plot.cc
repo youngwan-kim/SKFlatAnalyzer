@@ -82,12 +82,14 @@ void Setup(TString key){
   AddSystematic("prefireweight",2,0,1);
   AddSystematic("alphaS",2,0,0);
   AddSystematic("scalevariation",9,0,0);
+
   AddSystematic("noRECOSF",1,0,1);
   AddSystematic("noIDSF",1,0,1);
   AddSystematic("noISOSF",1,0,1);
   AddSystematic("notriggerSF",1,0,1);
   AddSystematic("noPUreweight",1,0,1);
   AddSystematic("noprefireweight",1,0,1);
+  AddSystematic("nozptcor",1,0,0);
   AddSystematic("noefficiencySF",1,0,1);
   AddSystematic("efficiencySF",-15,0,0);
   AddSystematic("totalsys",-255,0,0);
@@ -195,8 +197,11 @@ TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variat
 }    
 int AddError(TH1* hist,TH1* sys){
   for(int i=1;i<hist->GetNbinsX()+1;i++){
-    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))>0.0001*hist->GetBinContent(i)){
+    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*10000>*hist->GetBinContent(i)){
+      //if(hist->GetBinContent(i)!=sys->GetBinContent(i)){
       cout<<"[AddError] sys hist is wrong"<<endl;
+      cout.precision(20);
+      cout<<i<<" "<<hist->GetBinContent(i)<<" "<<sys->GetBinContent(i)<<" "<<fabs(hist->GetBinContent(i)-sys->GetBinContent(i))<<endl;
       return -1;
     }
   }
@@ -207,6 +212,68 @@ int AddError(TH1* hist,TH1* sys){
   }
   return 1;
 } 
+TCanvas* GetCompareBGSub(vector<TH1*> hists,int rebin=0,double xmin=0,double xmax=0,bool setlog=0){
+  if(rebin){
+    for(int i=0;i<(int)hists.size();i++) hists.at(i)->Rebin(rebin);
+  }
+  if(xmin||xmax){
+    for(int i=0;i<(int)hists.size();i++) hists.at(i)->GetXaxis()->SetRangeUser(xmin,xmax);
+  }
+  TCanvas* c1=new TCanvas(hists.at(1)->GetTitle(),hists.at(1)->GetTitle(),800,800);
+  c1->Divide(1,2);
+  c1->cd(1);
+  gPad->SetPad(0,0.35,1,1);
+  gPad->SetBottomMargin(0.02);
+  TH1* hdata=(TH1*)hists.at(0)->Clone("data_bgsub");
+  for(int i=2;i<hists.size();i++) hdata->Add(hists.at(i),-1.);
+  hdata->Draw("e");
+  hdata->GetXaxis()->SetLabelSize(0);
+  hdata->GetXaxis()->SetTitle("");
+  hdata->SetStats(0);
+  hdata->SetMarkerStyle(20);
+  hdata->SetMarkerSize(0.7);
+
+  TH1* mchist=hists.at(1);
+  mchist->Draw("same hist");
+
+  vector<TH1*> hists_bgsub;
+  hists_bgsub.push_back(hdata);
+  hists_bgsub.push_back(mchist);
+  TLegend* legend=GetLegend(hists_bgsub);
+  legend->Draw();
+
+  if(hdata->GetMaximum()<mchist->GetMaximum()) hdata->GetYaxis()->SetRangeUser(0,mchist->GetMaximum()*1.1);
+  if(setlog){
+    if(hdata->GetMinimum()==0) hdata->SetMinimum(1000);
+    gPad->SetLogy();
+  }
+  hdata->Draw("same a e");
+
+  c1->cd(2);
+  gPad->SetPad(0,0,1,0.35);
+  gPad->SetTopMargin(0.02);
+  gPad->SetBottomMargin(0.2);
+  gPad->SetGridx();gPad->SetGridy();
+  TH1* ratio=(TH1*)hdata->Clone("ratio");
+  ratio->SetTitle("");
+  ratio->SetStats(0);
+  ratio->Divide(mchist);
+  ratio->Draw();
+  ratio->GetYaxis()->SetTitle("Data/Simulation");
+  ratio->GetYaxis()->SetTitleSize(0.1);
+  ratio->GetYaxis()->SetTitleOffset(0.5);
+  ratio->GetYaxis()->SetRangeUser(0.8,1.2);
+  ratio->GetYaxis()->SetLabelSize(0.1);
+  ratio->GetXaxis()->SetTitle(hdata->GetTitle());
+  ratio->GetXaxis()->SetTitleSize(0.1);
+  ratio->GetXaxis()->SetLabelSize(0.1);
+  TLine *line=new TLine(xmin?xmin:ratio->GetXaxis()->GetXmin(),1,xmax?xmax:ratio->GetXaxis()->GetXmax(),1);
+  line->SetLineColor(2);
+  line->Draw();
+  ratio->Draw("same");
+
+  return c1;
+}
 TCanvas* GetCompareStack(vector<TH1*> hists,TH1* sys=NULL,int rebin=0,double xmin=0,double xmax=0,bool setlog=0){
   if(rebin){
     if(sys) sys->Rebin(rebin);
@@ -322,9 +389,10 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
   }
   TH1* sys_total=NULL;
   if(syss.size()>0){
+    sys_total=(TH1*)central->Clone("sys");
+    for(int i=0;i<sys_total->GetNbinsX()+2;i++) sys_total->SetBinError(i,0);
     for(int i=0;i<(int)syss.size();i++){
-      if(i==0) sys_total=(TH1*)syss.at(0)->Clone("sys");
-      else AddError(sys_total,syss.at(i));
+      AddError(sys_total,syss.at(i));
       delete syss.at(i);
     }
   }
@@ -336,7 +404,7 @@ void SaveAll(){
   vector<double> histxmax,histxmin;
   TString channel[]={setting};
   for(int ichannel=0;ichannel<sizeof(channel)/sizeof(TString);ichannel++){
-    TString region[]={"OS","OS_Z","OS_Z_y0.0to0.4","OS_Z_y0.4to1.0","OS_Z_y1.0to2.4","SS"};
+    TString region[]={"OS","OS_Z","OS_Z_y0.0to0.5","OS_Z_y0.5to1.0","OS_Z_y1.0to3.0","SS"};
     for(int iregion=0;iregion<sizeof(region)/sizeof(TString);iregion++){
       TString hname[12]={"dimass","dipt","dirap","l0pt","l0eta","l0riso","l1pt","l1eta","l1riso","lldelR","lldelphi","nPV"}; 
       int hrebin[12]={4,4,0,4,0,0,4,0,0,0,0,0};
@@ -375,52 +443,4 @@ void SaveAll(){
     }      
   }
 }
-/*
-void SaveAll_ISR2016Muon(){
-  const int nhist=16;
-  TString prefix="Hists/";
-  TString histname[nhist]={"dimass","dipt","met","nvtx","l1pt","l2pt","l1eta","l2eta","dimass_m5","dipt_m5","met_m5","nvtx_m5","l1pt_m5","l2pt_m5","l1eta_m5","l2eta_m5"};
-  int histrebin[nhist]={4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-  double histxmax[nhist]={0,0,0,0,0,0,0,0,80,0,0,0,0,0,0,0};
-  double histxmin[nhist]={0,0,0,0,0,0,0,0,100,0,0,0,0,0,0,0};
-  for(int i=0;i<nsys;i++) system("mkdir -p plot/"+sysname[i]);
-  system("mkdir -p plot/totalsys");
-  TCanvas* c=NULL;
-  for(int i=0;i<nhist;i++){
-    c=GetCompareStack(prefix+histname[i],0,histrebin[i],histxmax[i],histxmin[i]);
-    c->SaveAs("plot/"+histname[i]+".png");
-    delete c;
-    c=GetCompareStack(prefix+histname[i],(1<<nsys)-1,histrebin[i],histxmax[i],histxmin[i]);
-    c->SaveAs("plot/totalsys/"+histname[i]+".png");
-    delete c;
-    for(int j=0;j<nsys;j++){
-      system("mkdir -p plot/"+sysname[j]);
-      TCanvas* c=GetCompareStack(prefix+histname[i],1<<j,histrebin[i],histxmax[i],histxmin[i]);
-      c->SaveAs("plot/"+sysname[j]+"/"+histname[i]+".png");
-      delete c;
-    }      
-    for(int j=0;j<nno;j++){
-      system("mkdir -p plot/no"+sysname[j]);
-      TCanvas* c=GetCompareStack(GetHists(filedir,prefix+histname[i]+(noexist_data[j]?("_no"+sysname[j]):""),prefix+histname[i]+"_no"+sysname[j],prefix+histname[i]+(noexist_bg[j]?("_no"+sysname[j]):"")),0,histrebin[i],histxmax[i],histxmin[i]);
-      c->SaveAs("plot/no"+sysname[j]+"/"+histname[i]+"_no"+sysname[j]+".png");
-      delete c;
-    }      
-  }
-}
-*/
-
-/*
-TString hsseopath="/cms/scratch/hsseo/SKFlatOutput/v949cand2_2/FirstAnalyzer/2017/";
-const int nfile=8;
-TString filenames[nfile]={"FirstAnalyzer_DoubleMuon.root","FirstAnalyzer_DYJets.root","FirstAnalyzer_DYJets.root","FirstAnalyzer_WW_pythia.root","FirstAnalyzer_WZ_pythia.root","FirstAnalyzer_ZZ_pythia.root","FirstAnalyzer_WJets_MG.root","FirstAnalyzer_TTLL_powheg.root"};
-int sampleindex[nfile]={0,1,2,3,3,3,4,5};
-*/
-
-/*
-TString hsseopath="/data2/CAT_SKTreeOutput/JobOutPut/hsseo/LQanalyzer/data/output/CAT/ISR2016MuonAnalyzer/periodBtoH/";
-#include<vector>
-const int nfile=10;
-TString filenames[nfile]={"ISR2016MuonAnalyzer_data_DoubleMuon_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_10to50_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_cat_v8-0-7.root","ISR2016MuonAnalyzer_DYJets_10to50_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWW_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWZ_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKZZ_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKWJets_dilep_cat_v8-0-7.root","ISR2016MuonAnalyzer_SKTT_powheg_dilep_cat_v8-0-7.root"};
-int sampleindex[nfile]={0,1,1,2,2,3,3,3,4,5};
-*/
 

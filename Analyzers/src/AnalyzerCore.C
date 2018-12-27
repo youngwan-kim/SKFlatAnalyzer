@@ -1664,7 +1664,7 @@ void AnalyzerCore::WriteHist(){
   }
   for(std::map< TString, TH2D* >::iterator mapit = maphist_TH2D.begin(); mapit!=maphist_TH2D.end(); mapit++){
     TString this_fullname=mapit->second->GetName();
-    TString this_name=this_fullname(this_fullname.Last('/'),this_fullname.Length());
+    TString this_name=this_fullname(this_fullname.Last('/')+1,this_fullname.Length());
     TString this_suffix=this_fullname(0,this_fullname.Last('/'));
     TDirectory *dir = outfile->GetDirectory(this_suffix);
     if(!dir){

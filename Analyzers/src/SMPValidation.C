@@ -11,7 +11,36 @@ void SMPValidation::initializeAnalyzer(){
   //fChain->SetBranchStatus("photon_*",0);
   //fChain->SetBranchStatus("fatjet_*",0);
   //fChain->SetBranchStatus("pfMET_*",0);
-  
+  cout<<"[SMPValidation::initializeAnalyzer] setting zptcor"<<endl;
+  TString datapath=getenv("DATA_DIR");
+  TFile fzpt(datapath+"/"+TString::Itoa(DataYear,10)+"/ZPt/ZPtWeight.root");
+  for(int i=0;i<20;i++){
+    TH2D* this_hzpt_muon=(TH2D*)fzpt.Get(Form("muon%d_iter%d",DataYear,i));
+    if(this_hzpt_muon){
+      if(hzpt_muon){
+	hzpt_muon->Multiply(this_hzpt_muon);
+	cout<<"[SMPValidation::initializeAnalyzer] setting muon zptcor iter"<<i<<endl;
+      }else{
+	hzpt_muon=this_hzpt_muon;
+	cout<<"[SMPValidation::initializeAnalyzer] setting first muon zptcor"<<i<<endl;
+      }
+    }else break;
+  }
+  if(hzpt_muon) hzpt_muon->SetDirectory(0);
+
+  for(int i=0;i<20;i++){
+    TH2D* this_hzpt_electron=(TH2D*)fzpt.Get(Form("electron%d_iter%d",DataYear,i));
+    if(this_hzpt_electron){
+      if(hzpt_electron){
+	hzpt_electron->Multiply(this_hzpt_electron);
+	cout<<"[SMPValidation::initializeAnalyzer] setting electron zptcor iter"<<i<<endl;
+      }else{
+	hzpt_electron=this_hzpt_electron;
+	cout<<"[SMPValidation::initializeAnalyzer] setting first electron zptcor"<<i<<endl;
+      }
+    }else break;
+  }
+  if(hzpt_electron) hzpt_electron->SetDirectory(0);
 }
 
 void SMPValidation::executeEvent(){
@@ -21,23 +50,37 @@ void SMPValidation::executeEvent(){
   *ev=GetEvent();
   TString channelname,muontrigger,electrontrigger;
   if(DataYear==2016){
-    //NEEDTOADD
+    vector<TString> muontrigger;
+    muontrigger.push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v");
+    muontrigger.push_back("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v");
+    muontrigger.push_back("HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v");
+    muontrigger.push_back("HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v");
+    electrontrigger="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v";
+    if(ev->PassTrigger(muontrigger)){
+      channelname="muon2016";
+      //if(!IsDATA||DataStream.Contains("DoubleMuon")) executeEventFromParameter(channelname,ev);
+    }
+    if(ev->PassTrigger(electrontrigger)){
+      channelname="electron2016";
+      //if(!IsDATA||DataStream.Contains("DoubleEG")) executeEventFromParameter(channelname,ev);
+    }
   }
   else if(DataYear==2017){
     muontrigger="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8_v";
     electrontrigger="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v";
     if(ev->PassTrigger(muontrigger)){
       channelname="muon2017";
-      if(!IsDATA||DataStream.Contains("DoubleMuon")) executeEventFromParameter(channelname,ev,muontrigger);
+      if(!IsDATA||DataStream.Contains("DoubleMuon")) executeEventFromParameter(channelname,ev);
     }
     if(ev->PassTrigger(electrontrigger)){
       channelname="electron2017";
-      if(!IsDATA||DataStream.Contains("DoubleEG")) executeEventFromParameter(channelname,ev,electrontrigger);
+      if(!IsDATA||DataStream.Contains("DoubleEG")) executeEventFromParameter(channelname,ev);
     }
   }
+  delete ev;
 }
 
-void SMPValidation::executeEventFromParameter(TString channelname,Event* ev,TString trigger){
+void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
   std::vector<Muon> muons=GetMuons("POGTightWithTightIso",7.,2.4);
   std::sort(muons.begin(),muons.end(),PtComparing);
   std::vector<Electron> electrons=GetElectrons("passMediumID",9.,2.5);
@@ -77,7 +120,7 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev,TStr
   /////////////////lumi weight///////////////////
   double weight=1.,totalweight=1.;
   if(!IsDATA){
-    weight=weight_norm_1invpb*ev->MCweight()*ev->GetTriggerLumi(trigger);
+    weight=weight_norm_1invpb*ev->MCweight()*ev->GetTriggerLumi("Full");
     totalweight*=weight;
   }
   FillHist("cutflow",0.5,totalweight,20,0,20);
@@ -163,85 +206,133 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev,TStr
   totalweight*=prefireweight;
   FillHist("cutflow",10.5,totalweight,20,0,20);
 
-  ///////////////////////weight systematics//////////////////
-  map<TString,double> map_systematic;
-  if(!IsDATA){
-    map_systematic["noPUreweight"]=weight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight;
-    map_systematic["PUreweight_up"]=weight*PUreweight_up*RECOSF*IDSF*ISOSF*triggerSF*prefireweight;
-    map_systematic["PUreweight_down"]=weight*PUreweight_down*RECOSF*IDSF*ISOSF*triggerSF*prefireweight;
-  
-    map_systematic["noefficiencySF"]=weight*PUreweight*prefireweight;
-  
-    map_systematic["noRECOSF"]=weight*PUreweight*IDSF*ISOSF*triggerSF*prefireweight;
-    map_systematic["RECOSF_up"]=weight*PUreweight*RECOSF_up*IDSF*ISOSF*triggerSF*prefireweight;
-    map_systematic["RECOSF_down"]=weight*PUreweight*RECOSF_down*IDSF*ISOSF*triggerSF*prefireweight;
-    
-    map_systematic["noIDSF"]=weight*PUreweight*RECOSF*ISOSF*triggerSF*prefireweight;
-    map_systematic["IDSF_up"]=weight*PUreweight*RECOSF*IDSF_up*ISOSF*triggerSF*prefireweight;
-    map_systematic["IDSF_down"]=weight*PUreweight*RECOSF*IDSF_down*ISOSF*triggerSF*prefireweight;
-    
-    map_systematic["noISOSF"]=weight*PUreweight*RECOSF*IDSF*triggerSF*prefireweight;
-    map_systematic["ISOSF_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF_up*triggerSF*prefireweight;
-    map_systematic["ISOSF_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF_down*triggerSF*prefireweight;
-    
-    map_systematic["notriggerSF"]=weight*PUreweight*RECOSF*IDSF*ISOSF*prefireweight;
-    map_systematic["triggerSF_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF_up*prefireweight;
-    map_systematic["triggerSF_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF_down*prefireweight;
-
-    map_systematic["noprefireweight"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF;
-    map_systematic["prefireweight_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight_up;
-    map_systematic["prefireweight_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight_down;
-    
-    if(PDFWeights_AlphaS->size()==2){
-      map_systematic["alphaS_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*PDFWeights_AlphaS->at(0);
-      map_systematic["alphaS_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*PDFWeights_AlphaS->at(1);
-    }
-  
-    for(int i=0;i<(int)PDFWeights_Scale->size();i++){
-      map_systematic[Form("scalevariation%d",i)]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*PDFWeights_Scale->at(i);
-    }
-  }
 
   ////////////////////////check tautau events//////////////////
   TString prefix="";
-  Gen genZ,genl0,genl1,genfsr,gentau0,gentau1;
+  Gen genl0,genl1,genfsr,genhardl0,genhardl1;
+  TLorentzVector genZ;
+  double zptcor=1.;
   if(MCSample.Contains("DYJets")){
     vector<Gen> gens=GetGens();
     for(int i=0;i<(int)gens.size();i++){
       if(!gens.at(i).isPrompt()) continue;
-      if(gentau0.IsEmpty()&&abs(gens.at(i).PID())==15) gentau0=gens.at(i);
-      else if(!gentau0.IsEmpty()&&gens.at(i).PID()==-gentau0.PID()){
-	gentau1=gens.at(i);
-	prefix="tau_";
-	break;
+      if(gens.at(i).isHardProcess()){
+	if(genhardl0.IsEmpty()&&(abs(gens.at(i).PID())==11||abs(gens.at(i).PID())==13||abs(gens.at(i).PID())==15)) genhardl0=gens.at(i);
+	else if(!genhardl0.IsEmpty()&&gens.at(i).PID()==-genhardl0.PID()){
+	  genhardl1=gens.at(i);
+	  if(abs(genhardl1.PID())==15){
+	    prefix="tau_";
+	    break;
+	  }
+	}
       }
+      if(gens.at(i).Status()==1){
+	if(genl0.IsEmpty()&&(abs(gens.at(i).PID())==11||abs(gens.at(i).PID())==13)) genl0=gens.at(i);
+	else if(!genl0.IsEmpty()&&gens.at(i).PID()==-genl0.PID()){
+	  genl1=gens.at(i);
+	}
+	else if(gens.at(i).PID()==22){
+	  genfsr+=gens.at(i);
+	}
+      }	
+    }
+    if(abs(genhardl0.PID())!=15){
+      genZ=(genl0+genl1+genfsr);
+      if(genZ.Pt()==0) PrintGens(gens);
+      zptcor*=GetZPtWeight(genZ.Pt(),genZ.Rapidity(),leps.at(0)->LeptonFlavour());
+    }
+  }
+  //cout<<genZ.M()<<" "<<genZ.Pt()<<" "<<genZ.Rapidity()<<" "<<zptcor<<endl;
+  totalweight*=zptcor;
+  FillHist("cutflow",11.5,totalweight,20,0,20);
+
+  ///////////////////////weight systematics//////////////////
+  map<TString,double> map_systematic;
+  if(!IsDATA){
+    map_systematic["noPUreweight"]=weight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor;
+    map_systematic["PUreweight_up"]=weight*PUreweight_up*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor;
+    map_systematic["PUreweight_down"]=weight*PUreweight_down*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor;
+  
+    map_systematic["noefficiencySF"]=weight*PUreweight*prefireweight*zptcor;
+  
+    map_systematic["noRECOSF"]=weight*PUreweight*IDSF*ISOSF*triggerSF*prefireweight*zptcor;
+    map_systematic["RECOSF_up"]=weight*PUreweight*RECOSF_up*IDSF*ISOSF*triggerSF*prefireweight*zptcor;
+    map_systematic["RECOSF_down"]=weight*PUreweight*RECOSF_down*IDSF*ISOSF*triggerSF*prefireweight*zptcor;
+    
+    map_systematic["noIDSF"]=weight*PUreweight*RECOSF*ISOSF*triggerSF*prefireweight*zptcor;
+    map_systematic["IDSF_up"]=weight*PUreweight*RECOSF*IDSF_up*ISOSF*triggerSF*prefireweight*zptcor;
+    map_systematic["IDSF_down"]=weight*PUreweight*RECOSF*IDSF_down*ISOSF*triggerSF*prefireweight*zptcor;
+    
+    map_systematic["noISOSF"]=weight*PUreweight*RECOSF*IDSF*triggerSF*prefireweight*zptcor;
+    map_systematic["ISOSF_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF_up*triggerSF*prefireweight*zptcor;
+    map_systematic["ISOSF_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF_down*triggerSF*prefireweight*zptcor;
+    
+    map_systematic["notriggerSF"]=weight*PUreweight*RECOSF*IDSF*ISOSF*prefireweight*zptcor;
+    map_systematic["triggerSF_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF_up*prefireweight*zptcor;
+    map_systematic["triggerSF_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF_down*prefireweight*zptcor;
+
+    map_systematic["noprefireweight"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*zptcor;
+    map_systematic["prefireweight_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight_up*zptcor;
+    map_systematic["prefireweight_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight_down*zptcor;
+    
+    map_systematic["nozptcor"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight;
+
+    if(PDFWeights_AlphaS->size()==2){
+      map_systematic["alphaS_up"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_AlphaS->at(0);
+      map_systematic["alphaS_down"]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_AlphaS->at(1);
+    }
+  
+    for(int i=0;i<(int)PDFWeights_Scale->size();i++){
+      map_systematic[Form("scalevariation%d",i)]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_Scale->at(i);
     }
   }
 
+  
+  
   ///////////////////////fill hists///////////////////////
   if(leps.at(0)->Charge()*leps.at(1)->Charge()<0){
-    FillHist("cutflow",11.5,totalweight,20,0,20);
+    FillHist("cutflow",12.5,totalweight,20,0,20);
     FillBasicHists(channelname+"/OS/"+prefix,"",leps,totalweight);
     FillSystematicHists(channelname+"/OS/"+prefix,"",leps,map_systematic);
     if(((*leps.at(0))+(*leps.at(1))).M()<100&&((*leps.at(0))+(*leps.at(1))).M()>80){
-      FillHist("cutflow",12.5,totalweight,20,0,20);
+      FillHist("cutflow",13.5,totalweight,20,0,20);
       FillBasicHists(channelname+"/OS_Z/"+prefix,"",leps,totalweight);
       FillSystematicHists(channelname+"/OS_Z/"+prefix,"",leps,map_systematic);
-      double yrange[4]={0,0.4,1.0,2.4};
+      double yrange[4]={0,0.5,1.0,3.0};
       for(int i=0;i<3;i++){
 	if(fabs(((*leps.at(0))+(*leps.at(1))).Rapidity())>=yrange[i]&&fabs(((*leps.at(0))+(*leps.at(1))).Rapidity())<yrange[i+1]){
 	  FillBasicHists(channelname+Form("/OS_Z_y%.1fto%.1f/",yrange[i],yrange[i+1])+prefix,"",leps,totalweight);
 	  FillSystematicHists(channelname+Form("/OS_Z_y%.1fto%.1f/",yrange[i],yrange[i+1])+prefix,"",leps,map_systematic);
 	}
       }
+      FillHist(channelname+"/OS_Z/"+prefix+"dipty",((*leps.at(0))+(*leps.at(1))).Pt(),fabs(((*leps.at(0))+(*leps.at(1))).Rapidity()),totalweight,46,(double*)zptcor_ptbinning,3,(double*)zptcor_ybinning);
+      FillHist(channelname+"/OS_Z/"+prefix+"dipty_nozptcor",((*leps.at(0))+(*leps.at(1))).Pt(),fabs(((*leps.at(0))+(*leps.at(1))).Rapidity()),map_systematic["nozptcor"],46,(double*)zptcor_ptbinning,3,(double*)zptcor_ybinning);
     }
   }else{
-    FillHist("cutflow",13.5,totalweight,20,0,20);
+    FillHist("cutflow",14.5,totalweight,20,0,20);
     FillBasicHists(channelname+"/SS/"+prefix,"",leps,totalweight);
     FillSystematicHists(channelname+"/SS/"+prefix,"",leps,map_systematic);
   }
 }
-
+/*
+void SMPValidation::FillGenHists(TString prefix,TString suffix,TLorentzVector genl0,TLorentzVector genl1,TLorentzVector genfsr,double w){
+  TLorentzVector dilepton=genl0+genl1+genfsr;
+  FillHist(prefix+"genZmass"+suffix,genZ.M(),w,400,0,400);
+  FillHist(prefix+"genZpt"+suffix,genZ.Pt(),w,400,0,400);
+  FillHist(prefix+"genZrap"+suffix,genZ.Rapidity(),w,50,-5,5);
+  if(genl0.Pt()<genl1.Pt()){
+    TLorentzVector temp=genl0;
+    genl0=genl1;
+    genl1=temp;
+  }
+  FillHist(Form("%sgenl0pt%s",prefix.Data(),i,suffix.Data()),genl0.Pt(),w,200,0,200);
+  FillHist(Form("%sgenl0eta%s",prefix.Data(),i,suffix.Data()),genl0.Eta(),w,50,-5,5);
+  FillHist(Form("%sgenl1pt%s",prefix.Data(),i,suffix.Data()),genl1.Pt(),w,200,0,200);
+  FillHist(Form("%sgenl1eta%s",prefix.Data(),i,suffix.Data()),genl1.Eta(),w,50,-5,5);
+  FillHist(prefix+"lldelR"+suffix,genl0->DeltaR(genl1),w,70,0,7);  
+  FillHist(prefix+"lldelphi"+suffix,genl0->DeltaPhi(genl1),w,80,-4,4);
+} 
+*/ 
 void SMPValidation::FillBasicHists(TString prefix,TString suffix,const vector<Lepton*>& leps,double w){
   Particle dilepton=((*leps.at(0))+(*leps.at(1)));
   FillHist(prefix+"dimass"+suffix,dilepton.M(),w,400,0,400);
@@ -303,7 +394,6 @@ double SMPValidation::DileptonTrigger_SF(TString SFhistkey0,TString SFhistkey1,c
     double etamax=this_hist[i]->GetXaxis()->GetXmax();    
     if(this_pt<ptmin) this_pt=ptmin+0.001;
     if(this_pt>ptmax) this_pt=ptmax-0.001;
-
     if(etamin>=0) this_eta=fabs(this_eta);
     if(this_eta<etamin) this_eta=etamin+0.001;
     if(this_eta>etamax) this_eta=etamax-0.001;
@@ -312,8 +402,34 @@ double SMPValidation::DileptonTrigger_SF(TString SFhistkey0,TString SFhistkey1,c
   return triggerSF;
 }
 
-SMPValidation::SMPValidation(){
+double SMPValidation::GetZPtWeight(double zpt,double zrap,Lepton::Flavour flavour){
+  TH2D* hzpt=NULL;
+  if(flavour==Lepton::MUON) hzpt=hzpt_muon;
+  else if(flavour==Lepton::ELECTRON) hzpt=hzpt_electron;
 
+  if(!hzpt) return 1;
+  double ptmin=hzpt->GetXaxis()->GetXmin();
+  double ptmax=hzpt->GetXaxis()->GetXmax();
+  double rapmin=hzpt->GetYaxis()->GetXmin();
+  double rapmax=hzpt->GetYaxis()->GetXmax();
+  if(zpt<ptmin) zpt=ptmin+0.001;
+  if(zpt>ptmax) zpt=ptmax-0.001;
+  if(rapmin>=0) zrap=fabs(zrap);
+  if(zrap<rapmin) zrap=rapmin+0.001;
+  if(zrap>rapmax) zrap=rapmax-0.001;
+  //cout<<"[SMPValidation::GetZPtWeight]"<<endl;
+  //cout<<zpt<<" "<<zrap<<" "<<hzpt->GetBinContent(hzpt->FindBin(zpt,zrap))<<endl;
+  return hzpt->GetBinContent(hzpt->FindBin(zpt,zrap));
+}
+void SMPValidation::PrintGens(const vector<Gen>& gens){
+  cout<<"index\tpid\tmother\tstatus\tpropt\thard\n";
+  for(int i=0;i<(int)gens.size();i++){
+    cout<<gens.at(i).Index()<<"\t"<<gens.at(i).PID()<<"\t"<<gens.at(i).MotherIndex()<<"\t"<<gens.at(i).Status()<<"\t"<<gens.at(i).isPrompt()<<"\t"<<gens.at(i).isHardProcess()<<endl;
+  }
+}
+SMPValidation::SMPValidation(){
+  hzpt_muon=NULL;
+  hzpt_electron=NULL;
 }
 
 SMPValidation::~SMPValidation(){
