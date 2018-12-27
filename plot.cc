@@ -197,7 +197,7 @@ TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variat
 }    
 int AddError(TH1* hist,TH1* sys){
   for(int i=1;i<hist->GetNbinsX()+1;i++){
-    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*10000>*hist->GetBinContent(i)){
+    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*10000>hist->GetBinContent(i)){
       //if(hist->GetBinContent(i)!=sys->GetBinContent(i)){
       cout<<"[AddError] sys hist is wrong"<<endl;
       cout.precision(20);
