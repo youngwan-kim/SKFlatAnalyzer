@@ -5,3 +5,4 @@ RECO	SF	ptgt20	egammaEffi.txt_EGM2D_runBCDEF_passingRECO.root	EGamma_SF2D
 RECO	SF	ptlt20	egammaEffi.txt_EGM2D_runBCDEF_passingRECO_lowEt.root	EGamma_SF2D
 Trigger	SF	Ele23_MediumID  egammaEffi.txt_EGM2D_runBCDEF_passingEle23_MediumID.root	EGamma_SF2D
 Trigger	SF	Ele12_MediumID  egammaEffi.txt_EGM2D_runBCDEF_passingEle12_MediumID.root	EGamma_SF2D
+ID	SF	passMediumID_jihkim  egammaEffi.txt_EGM2D_runBCDEF_passingMedium94X_jihkim.root	EGamma_SF2D

@@ -91,6 +91,7 @@ void Setup(TString key){
   AddSystematic("noprefireweight",1,0,1);
   AddSystematic("nozptcor",1,0,0);
   AddSystematic("noefficiencySF",1,0,1);
+  AddSystematic("IDSF_POG",1,0,1);
   AddSystematic("efficiencySF",-15,0,0);
   AddSystematic("totalsys",-255,0,0);
 
@@ -197,7 +198,7 @@ TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variat
 }    
 int AddError(TH1* hist,TH1* sys){
   for(int i=1;i<hist->GetNbinsX()+1;i++){
-    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*10000>hist->GetBinContent(i)){
+    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*10000>fabs(hist->GetBinContent(i))){
       //if(hist->GetBinContent(i)!=sys->GetBinContent(i)){
       cout<<"[AddError] sys hist is wrong"<<endl;
       cout.precision(20);
