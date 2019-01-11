@@ -26,7 +26,7 @@ python python/SKFlat.py -a ExampleRun -i ZToMuMu_M_50_120 -n 50 &
 
 ## SMPValidation job
 ```bash
-source SMPValidation.sh
+source SMPValidationSubmit.sh
 ```
 
 ### SMPValidation plotting
