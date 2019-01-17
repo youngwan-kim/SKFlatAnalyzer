@@ -1,4 +1,32 @@
 #include "plot.cc"
+/*
+This is functions for Z boson pT correction.
+You should use dileptonPt-dileptonRapidity 2D histogram in SMPValidation ( ex. muon2017/OS_Z/dipty)
+and apply the SF in generator level iteratively.
+Lastly, you can apply normalization SF to make rapidity distribution remain same.
+
+Usage: This is made for 2017 SMPValidation code. For 2016, you should change paths and histogram name below.
+0. source setup.sh
+1. Make empty root file for ZPt correction.
+ex) root
+TFile f("data/v949cand2_2/2017/ZPt/ZPtWeight.root","update");
+.q
+2. Make histograms with all samples
+source SMPValidationSubmit.sh
+3. Save first ZPt correction 
+root
+.L zptcor.cc
+SaveZPtWeight()
+.q
+4. Iterate 2. and 3. enough. (Actually in this stage, you don't need to submit all samples. It is OK with just DY sample)
+5. Make histograms for genlevel. (You shouldn't use skimmed tree)
+python python/SKFlat.py -a SMPValidation -y 2017 -i DYJets -n 100
+6. Save normalization correction 
+root
+.L zptcor.cc
+SaveZPtWeight(1)
+.q
+*/
 TH1* ExtractZPtWeight(TString channelname){
   Setup(channelname);
   vector<TH1*> hists=GetHists(filedir,channelname+"/OS_Z/dipty");
@@ -11,19 +39,6 @@ TH1* ExtractZPtWeight(TString channelname){
 }
 TH1* ExtractNormWeight(TString channelname){
   Setup(channelname);
-  /*
-  TH2D* dipty=(TH2D*)GetHist(filedir+"/SMPValidation_DYJets.root",channelname+"gen/dipty");
-  TH2D* dipty_nozptcor=(TH2D*)GetHist(filedir+"/SMPValidation_DYJets.root",channelname+"gen/dipty_nozptcor");
-  TH2D* ratio=(TH2D*)dipty->Clone("ratio");
-  ratio->Reset();
-  for(int iy=1;iy<ratio->GetYaxis()->GetNbins()+1;iy++){
-    double norm=dipty_nozptcor->Integral(0,-1,iy,iy)/dipty->Integral(0,-1,iy,iy);
-    if(iy==ratio->GetYaxis()->GetNbins()) norm=dipty_nozptcor->Integral(0,-1,iy,iy+1)/dipty->Integral(0,-1,iy,iy+1);
-    for(int ix=0;ix<ratio->GetXaxis()->GetNbins()+2;ix++){
-      ratio->SetBinContent(ix,iy,norm);
-    }
-  }
-  */
   TH2D* genZrap=(TH2D*)GetHist(filedir+"/SMPValidation_DYJets.root",channelname+"gen/genZrap");
   TH2D* genZrap_nozptcor=(TH2D*)GetHist(filedir+"/SMPValidation_DYJets.root",channelname+"gen/genZrap_nozptcor");
   double ptbins[2]={0,400};
