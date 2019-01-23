@@ -69,12 +69,15 @@ IsUI10 = ("ui10.sdfarm.kr" in HOSTNAME)
 IsUI20 = ("ui20.sdfarm.kr" in HOSTNAME)
 IsSNU = ("snu" in HOSTNAME)
 IsKNU = ("knu" in HOSTNAME)
+IsTAMSA2 = ("tamsa2" in HOSTNAME)
 if IsKISTI:
   HOSTNAME = "KISTI"
 if IsSNU:
   HOSTNAME = "SNU"
 if IsKNU:
   HOSTNAME = "KNU"
+if IsTAMSA2:
+  HOSTNAME = "TAMSA2"
 
 ## Is Skim run?
 IsSkimTree = "SkimTree" in args.Analyzer
@@ -482,6 +485,26 @@ root -l -b -q run.C
 
       jobname = 'job_'+str(it_job)+'_'+args.Analyzer
       cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
+
+      if not args.no_exec:
+        cwd = os.getcwd()
+        os.chdir(thisjob_dir)
+        os.system(cmd+' > submitlog.log')
+        os.chdir(cwd)
+      sublog = open(thisjob_dir+'/submitlog.log','a')
+      sublog.write('\nSubmission command was : '+cmd+'\n')
+      sublog.close()
+
+    if IsTAMSA2:
+      run_commands = open(thisjob_dir+'commands.sh','w')
+      print>>run_commands,'''cd {0}
+echo "[SKFlat.py] Okay, let's run the analysis"
+root -l -b -q run.C
+'''.format(thisjob_dir)
+      run_commands.close()
+
+      jobname = 'job_'+str(it_job)+'_'+args.Analyzer
+      cmd = 'qsub -V -N '+jobname+' commands.sh '
 
       if not args.no_exec:
         cwd = os.getcwd()
