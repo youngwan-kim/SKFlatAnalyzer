@@ -26,11 +26,38 @@ Everytime when using new shell,
 source setup.sh
 # If in KNU, need proxy
 # voms-proxy-init --voms cms -valid 24:00
+=======
+make
+voms-proxy-init --voms cms -valid 24:00
 ```
 
 ## Test job
 ```bash
 SKFlat.py -a ExampleRun -i DYJets -n 50 &
+```
+
+## SMPValidation job
+```bash
+source SMPValidationSubmit.sh
+```
+
+### SMPValidation plotting
+Edit TString filedir in plot.cc  
+Draw a plot
+```bash
+root -l
+.L plot.cc
+Setup("electron2017")
+GetCompareStack("electron2017/OS_Z/dimass",0,0,80,100)
+```
+Save plots
+```bash
+root -b
+.L plot.cc
+Setup("electron2017")
+SaveAll()
+Setup("muon2017")
+SaveAll()
 ```
 
 ## Making a new Ananlyzer
