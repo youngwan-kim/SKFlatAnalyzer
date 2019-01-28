@@ -497,8 +497,8 @@ root -l -b -q run.C
     if IsTAMSA2:
       run_commands = open(thisjob_dir+'commands.sh','w')
       print>>run_commands,'''cd {0}
-echo "[SKFlat.py] Okay, let's run the analysis"
-root -l -b -q run.C
+echo "[SKFlat.py] Okay, let's run the analysis"r
+root -l -b -q run.C 1>stdout.log 2>stderr.log
 '''.format(thisjob_dir)
       run_commands.close()
 

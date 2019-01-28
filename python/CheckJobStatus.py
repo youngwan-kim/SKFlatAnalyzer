@@ -58,9 +58,8 @@ def CheckJobStatus(logfiledir, cycle, jobnumber, hostname):
     path_log_e = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.e'+jobid
     path_log_o = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.o'+jobid
   if hostname=="TAMSA2":
-    jobid = open(logfiledir+'/job_'+str(jobnumber)+'/submitlog.log').readlines()[0].split('.')[0]
-    path_log_e = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.e'+jobid
-    path_log_o = logfiledir+'job_'+str(jobnumber)+'/job_'+str(jobnumber)+'_'+cycle+'.o'+jobid
+    path_log_e = logfiledir+'job_'+str(jobnumber)+'/stderr.log'
+    path_log_o = logfiledir+'job_'+str(jobnumber)+'/stdout.log'
   if hostname=="KNU":
     path_log_e = logfiledir+'job_'+str(jobnumber)+'/stderr.log'
     path_log_o = logfiledir+'job_'+str(jobnumber)+'/stdout.log'
