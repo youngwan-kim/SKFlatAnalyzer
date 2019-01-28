@@ -39,6 +39,21 @@ elif [[ $HOSTNAME == *"cms.snu.ac.kr"* ]]; then
   export PATH=$GCC_HOME/bin:$PATH
   export LD_LIBRARY_PATH=$GCC_HOME/lib64:$GCC_HOME/lib:$LD_LIBRARY_PATH
 
+elif [[ $HOSTNAME == *"tamsa2"* ]]; then
+
+  echo "Working on 67cluster"
+  export SKFlatRunlogDir="/data9/Users/$USER/SKFlatRunlog/"
+  export SKFlatOutputDir="/data9/Users/$USER/SKFlatOutput/"
+  export DATA_DIR=$SKFlat_WD/data/$SKFlatV
+
+  export CMS_PATH=/cvmfs/cms.cern.ch
+  source $CMS_PATH/cmsset_default.sh
+  export SCRAM_ARCH=slc6_amd64_gcc630
+  cd /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_9_cand2/src/
+  eval `scramv1 runtime -sh`
+  cd -
+  source /cvmfs/cms.cern.ch/slc6_amd64_gcc630/cms/cmssw/CMSSW_9_4_9_cand2/external/slc6_amd64_gcc630/bin/thisroot.sh
+
 elif [[ $HOSTNAME == *"knu"* ]]; then
 
   echo "Working on KNU"
