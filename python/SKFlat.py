@@ -6,6 +6,7 @@ import datetime
 from CheckJobStatus import *
 from TimeTools import *
 import random
+import subprocess
 
 parser = argparse.ArgumentParser(description='SKFlat Command')
 parser.add_argument('-a', dest='Analyzer', default="")
@@ -82,9 +83,10 @@ if IsTAMSA2:
 ## Is Skim run?
 IsSkimTree = "SkimTree" in args.Analyzer
 if IsSkimTree:
-  if not IsSNU:
+  if not (IsSNU or IsTAMSA2):
     print "Skimming only possible in SNU"
     exit()
+  NJobMax=args.NJobs
   args.NJobs = 999999
 
 ## Machine-dependent variables
@@ -441,7 +443,11 @@ void {2}(){{
       ## /data7/DATA/SKFlat/v949cand2_2/2017/DATA/SingleMuon/periodB/181107_231447/0000
       ## /data7/DATA/SKFlat/v949cand2_2/2017/MC/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/181108_152345/0000/SKFlatNtuple_2017_MC_100.root
       dir1 = '/data7/DATA/SKFlat/'+SKFlatV+'/'+args.Year+'/'
-      dir2 = dir1
+      if args.Outputdir!='':
+        dir2 = args.Outputdir+'/SKFlat/'+SKFlatV+'/'+args.Year+'/'
+      else:
+        dir2 = dir1
+    
       if IsDATA:
         dir1 += "DATA/"
         dir2 += "DATA_"+args.Analyzer+"/"
@@ -506,6 +512,9 @@ root -l -b -q run.C 1>stdout.log 2>stderr.log
       cmd = 'qsub -V -N '+jobname+' commands.sh '
 
       if not args.no_exec:
+        if IsSkimTree:
+          while int(subprocess.check_output("qstat|grep $USER|wc -l",shell=True))  > NJobMax:
+            time.sleep(60)
         cwd = os.getcwd()
         os.chdir(thisjob_dir)
         os.system(cmd+' > submitlog.log')
