@@ -30,7 +30,7 @@ SaveZPtWeightALL(1)
 */
 TH1* ExtractZPtWeight(int channel,int year){
   TString channelname=Setup(channel,year);
-  vector<TH1*> hists=GetHists(filedir,channelname+"/OS_Z/dipty");
+  vector<TH1*> hists=GetHists(channelname+"/OS_Z/dipty");
   TCanvas* cc=GetCompareBGSub(hists);
   TH1* ratio=(TH1*)cc->GetPad(2)->GetPrimitive("ratio");
   ratio->SetDirectory(0);
@@ -39,6 +39,7 @@ TH1* ExtractZPtWeight(int channel,int year){
   return ratio;
 }
 TH1* ExtractNormWeight(int channel,int year){
+  TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/"+Analyzer+"/";
   TString channelname=Setup(channel,year);
   TString syear=Form("%d",year);
   TH2D* genZrap=(TH2D*)GetHist(filedir+syear+"/SMPValidation_SkimTree_GEN_DYJets.root",channelname+"gen/genZrap");

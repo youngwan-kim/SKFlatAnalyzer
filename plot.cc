@@ -9,10 +9,9 @@
 #include"TCanvas.h"
 #include"TLine.h"
 using namespace std;
-
-TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/SMPValidation/";
-//TString filedir="/data7/Users/hsseo/SKFlatOutput/v949cand2_2/SMPValidation/";
-
+/////////////////////////////////////////////////////////////////////////////
+///////////////////////////// struct and enum ///////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 struct Sample{
   TString name;
   int type;
@@ -24,6 +23,16 @@ struct Systematic{
   int type;
   bool exist_data;
   bool exist_bg;
+};
+struct Histogram{
+  TString name;
+  int rebin;
+  double xmin;
+  double xmax;
+};
+struct Directory{
+  TString name;
+  vector<Histogram> histograms;
 };
 enum SampleType{DATA,DY,TAU,BG};
 TString GetStringSampleType(SampleType type){
@@ -54,9 +63,18 @@ TString GetStringChannel(Channel channel){
   default: return "Bad Channel";
   }
 }
-TString setting;
+
+/////////////////////////////////////////////////////////////////////////////
+///////////////////////////// global variables ///////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 vector<Sample> samples;
 vector<Systematic> systematics;
+vector<Directory> directories;
+
+
+/////////////////////////////////////////////////////////////////////////////
+//////////////////// Add functions for global variables//////////////////////
+/////////////////////////////////////////////////////////////////////////////
 void AddSample(TString name_,SampleType type_,EColor colorcode_,vector<TString> files_){
   Sample sample;
   sample.name=name_;
@@ -65,8 +83,7 @@ void AddSample(TString name_,SampleType type_,EColor colorcode_,vector<TString> 
   sample.files=files_;
   cout<<" [AddSample] "<<sample.name<<" "<<GetStringSampleType((SampleType)sample.type)<<" "<<GetStringEColor((EColor)sample.colorcode)<<endl;
   for(int i=0;i<sample.files.size();i++)
-    cout<<"   "<<sample.files.at(i)<<endl;
-    
+    cout<<"   "<<sample.files.at(i)<<endl;    
   samples.push_back(sample);
 }
 void AddSample(TString name_,SampleType type_,EColor colorcode_,TString file1,TString file2="",TString file3="",TString file4="",TString file5="",TString file6="",TString file7=""){
@@ -89,35 +106,47 @@ void AddSystematic(TString name_,int type_,bool exist_data_,bool exist_bg_){
   cout<<" [AddSystematic] "<<systematic.name<<" "<<systematic.type<<" "<<systematic.exist_data<<" "<<systematic.exist_bg<<endl;
   systematics.push_back(systematic);
 }
-TString Setup(int channel,int year){
-  TString schannel=GetStringChannel((Channel)channel);
+void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,double xmax_){
+  Histogram histogram;
+  histogram.name=name_;
+  histogram.rebin=rebin_;
+  histogram.xmin=xmin_;
+  histogram.xmax=xmax_;
+  //cout<<" [AddHistogram] to <<histogram.name<<" "<<histogram.rebin<<" "<<histogram.xmin<<" "<<histogram.xmax<<endl;
+  directory.histograms.push_back(histogram);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Setup functions///////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+void SetupSamples(TString Analyzer,int channel,int year){
   TString syear=Form("%d",year);
-  setting=schannel+syear;
-  samples.clear();
-  systematics.clear();
-  cout<<"[Setup] "<<schannel<<year<<endl;
+  cout<<"[SetupSamples] "<<GetStringChannel((Channel)channel)<<year<<endl;
+  TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/"+Analyzer+"/";
   if(year==2017){
     if(channel==Channel::MUON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,"2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_B.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_C.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_D.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_E.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_F.root");
-      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,"2017/SMPValidation_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_B.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_C.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_D.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_E.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_F.root");
+      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,filedir+"2017/"+Analyzer+"_SkimTree_SMP_DYJets.root");
     }else if(channel==Channel::ELECTRON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,"2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_B.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_C.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_D.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_E.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_F.root");
-      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,"2017/SMPValidation_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_B.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_C.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_D.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_E.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_F.root");
+      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,filedir+"2017/"+Analyzer+"_SkimTree_SMP_DYJets.root");
     }else return "";
   }else if(year==2016){
     if(channel==Channel::MUON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,"2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_B_ver2.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_C.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_D.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_E.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_F.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_G.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_H.root");
-      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,"2016/SMPValidation_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_B_ver2.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_C.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_D.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_E.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_F.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_G.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_H.root");
+      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,filedir+"2016/"+Analyzer+"_SkimTree_SMP_DYJets.root");
     }else if(channel==Channel::ELECTRON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,"2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_B_ver2.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_C.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_D.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_E.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_F.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_G.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_H.root");
-      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,"2016/SMPValidation_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_B_ver2.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_C.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_D.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_E.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_F.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_G.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_H.root");
+      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,filedir+"2016/"+Analyzer+"_SkimTree_SMP_DYJets.root");
     }else return "";
   }else return "";
-  AddSample("#gamma*/Z#rightarrow#tau#tau",SampleType::TAU,EColor::kGreen,syear+"/SMPValidation_SkimTree_SMP_DYJets.root");
-  AddSample("Diboson",SampleType::BG,EColor::kBlue,syear+"/SMPValidation_SkimTree_SMP_WW_pythia.root",syear+"/SMPValidation_SkimTree_SMP_WZ_pythia.root",syear+"/SMPValidation_SkimTree_SMP_ZZ_pythia.root");
-  AddSample("W",SampleType::BG,EColor::kYellow,syear+"/SMPValidation_SkimTree_SMP_WJets_MG.root");
-  AddSample("t#bar{t}",SampleType::BG,EColor::kMagenta,year==2017?"2017/SMPValidation_SkimTree_SMP_TTLL_powheg.root":"2016/SMPValidation_SkimTree_SMP_TT_powheg.root");
-  
+  AddSample("#gamma*/Z#rightarrow#tau#tau",SampleType::TAU,EColor::kGreen,filedir+syear+"/"+Analyzer+"_SkimTree_SMP_DYJets.root");
+  AddSample("Diboson",SampleType::BG,EColor::kBlue,filedir+syear+"/"+Analyzer+"_SkimTree_SMP_WW_pythia.root",filedir+syear+"/"+Analyzer+"_SkimTree_SMP_WZ_pythia.root",filedir+syear+"/"+Analyzer+"_SkimTree_SMP_ZZ_pythia.root");
+  AddSample("W",SampleType::BG,EColor::kYellow,filedir+syear+"/"+Analyzer+"_SkimTree_SMP_WJets_MG.root");
+  AddSample("t#bar{t}",SampleType::BG,EColor::kMagenta,year==2017?filedir+"2017/"+Analyzer+"_SkimTree_SMP_TTLL_powheg.root":filedir+"2016/"+Analyzer+"_SkimTree_SMP_TT_powheg.root");
+}
+void SetupSystematics(){
+  cout<<"[SetupSystematics]"<<endl;
   AddSystematic("RECOSF",2,0,1);
   AddSystematic("IDSF",2,0,1);
   AddSystematic("ISOSF",2,0,1);
@@ -138,24 +167,95 @@ TString Setup(int channel,int year){
   AddSystematic("IDSF_POG",1,0,1);
   AddSystematic("efficiencySF",-15,0,0);
   AddSystematic("totalsys",-255,0,0);
+}
+void SetupDirectories(int channel,int year){
+  cout<<"[SetupDirectories] for "<<GetStringChannel((Channel)channel)<<year<<endl;
+  TString region[]={"OS","OS_Z","OS_Z_y0.0to0.4","OS_Z_y0.4to0.8","OS_Z_y0.8to1.2","OS_Z_y1.2to1.6","OS_Z_y1.6to2.0","OS_Z_y2.0to2.4","SS"};
+  for(int i=0;i<sizeof(region)/sizeof(TString);i++){
+    Directory directory;
+    directory.name=GetStringChannel((Channel)channel)+Form("%d",year)+"/"+region[i]+"/";
+    cout<<directory.name<<" ";
+    AddHistogram(directory,"dimass",0,80,100);
+    AddHistogram(directory,"dipt",4,0,200);
+    AddHistogram(directory,"dirap",0,0,0);
+    AddHistogram(directory,"l0pt",4,0,200);
+    AddHistogram(directory,"l0eta",0,0,0);
+    AddHistogram(directory,"l0riso",0,0,0);
+    AddHistogram(directory,"l1pt",4,0,200);
+    AddHistogram(directory,"l1eta",0,0,0);
+    AddHistogram(directory,"l1riso",0,0,0);
+    AddHistogram(directory,"lldelR",0,0,0);
+    AddHistogram(directory,"lldelphi",0,0,0);
+    AddHistogram(directory,"nPV",0,0,0);
+    directories.push_back(directory);
+  }
+  cout<<endl;
+  directories[0].histograms[0].rebin=4;
+  directories[0].histograms[0].xmin=0;
+  directories[0].histograms[0].xmin=0;
+}
+TString Setup(int channel,int year){
+  TString schannel=GetStringChannel((Channel)channel);
+  TString syear=Form("%d",year);
+
+  samples.clear();
+  systematics.clear();
+  directories.clear();
+
+  SetupSamples("SMPValidation",channel,year);
+  SetupSystematics();
+  SetupDirectories(channel,year);
 
   cout<<"[Setup] nsample: "<<samples.size()<<endl;
   cout<<"[Setup] nsys: "<<systematics.size()<<endl;
-  return setting;
+  cout<<"[Setup] ndirectories: "<<directories.size()<<endl;  
+  return schannel+syear;
+}
+void SetupAFBDirectories(int channel,int year){
+  cout<<"[SetupAFBDirectories] for "<<GetStringChannel((Channel)channel)<<year<<endl;
+  TString region[]={"OS_m60to120","OS_m60to120_y0.0to0.4","OS_m60to120_y0.4to0.8","OS_m60to120_y0.8to1.2","OS_m60to120_y1.2to1.6","OS_m60to120_y1.6to2.0","OS_m60to120_y2.0to2.4"};
+  for(int i=0;i<sizeof(region)/sizeof(TString);i++){
+    Directory directory;
+    directory.name=GetStringChannel((Channel)channel)+Form("%d",year)+"/"+region[i]+"/";
+    cout<<directory.name<<" ";
+    AddHistogram(directory,"dimass",2,60,120);
+    AddHistogram(directory,"dipt",4,0,200);
+    AddHistogram(directory,"dirap",0,0,0);
+    AddHistogram(directory,"l0pt",4,0,200);
+    AddHistogram(directory,"l0eta",0,0,0);
+    AddHistogram(directory,"l0riso",0,0,0);
+    AddHistogram(directory,"l1pt",4,0,200);
+    AddHistogram(directory,"l1eta",0,0,0);
+    AddHistogram(directory,"l1riso",0,0,0);
+    AddHistogram(directory,"lldelR",0,0,0);
+    AddHistogram(directory,"lldelphi",0,0,0);
+    AddHistogram(directory,"nPV",0,0,0);
+    AddHistogram(directory,"costhetaCS",0,0,0);
+    directories.push_back(directory);
+  }
+  cout<<endl;
+}
+TString SetupAFB(int channel,int year){
+  TString schannel=GetStringChannel((Channel)channel);
+  TString syear=Form("%d",year);
+
+  samples.clear();
+  systematics.clear();
+  directories.clear();
+
+  SetupSamples("AFBAnalyzer",channel,year);
+  SetupSystematics();
+  SetupAFBDirectories(channel,year);
+
+  cout<<"[SetupAFB] nsample: "<<samples.size()<<endl;
+  cout<<"[SetupAFB] nsys: "<<systematics.size()<<endl;
+  cout<<"[SetupAFB] ndirectories: "<<directories.size()<<endl;  
+  return schannel+syear;
 }
 
-void PrintKeys(TList* keys){
-  for(int i=0;i<keys->GetSize();i++){
-    TKey* key=(TKey*)keys->At(i);
-    if(strcmp(key->GetClassName(),"TDirectoryFile")==0) PrintKeys(((TDirectoryFile*)key->ReadObj())->GetListOfKeys());   
-    else cout<<key->GetMotherDir()->GetPath()<<" "<<key->GetName()<<"\n";
-  }
-}
-void PrintHistList(int samplenum=1){
-  TFile f(filedir+samples.at(samplenum).files.at(1));
-  cout<<f.GetName()<<" "<<f.GetTitle()<<endl;
-  PrintKeys(f.GetListOfKeys());
-}
+/////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Core functions////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 TH1* GetHist(TString filename,TString histname){
   TFile f(filename);
   TH1* hist=(TH1*)f.Get(histname);
@@ -167,7 +267,7 @@ TH1* GetHist(TString filename,TString histname){
     return NULL;
   }
 }
-vector<TH1*> GetHists(TString dirname,TString datahistname,TString dyhistname,TString bghistname){
+vector<TH1*> GetHists(TString datahistname,TString dyhistname,TString bghistname){
   vector<TH1*> hists;
   for(int i=0;i<samples.size();i++){
     TH1* hist=NULL;
@@ -177,8 +277,8 @@ vector<TH1*> GetHists(TString dirname,TString datahistname,TString dyhistname,TS
     else if(samples[i].type==SampleType::TAU) histname=bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length());
     else histname=bghistname;
     for(int j=0;j<samples[i].files.size();j++){
-      if(!hist) hist=GetHist(filedir+samples[i].files[j],histname);
-      else hist->Add(GetHist(filedir+samples[i].files[j],histname));
+      if(!hist) hist=GetHist(samples[i].files[j],histname);
+      else hist->Add(GetHist(samples[i].files[j],histname));
     }
     if(hist){
       hist->SetName(samples[i].name);
@@ -191,8 +291,8 @@ vector<TH1*> GetHists(TString dirname,TString datahistname,TString dyhistname,TS
   }
   return hists;
 }
-vector<TH1*> GetHists(TString dirname,TString histname){
-  return GetHists(dirname,histname,histname,histname);
+vector<TH1*> GetHists(TString histname){
+  return GetHists(histname,histname,histname);
 }
 
 THStack *GetStack(vector<TH1*> hists){
@@ -402,7 +502,7 @@ TCanvas* GetCompareStack(vector<TH1*> hists,TH1* sys=NULL,int rebin=0,double xmi
   return c1;
 }
 TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0,double xmax=0,bool setlog=0){
-  vector<TH1*> hists_central=GetHists(filedir,histname,histname,histname);
+  vector<TH1*> hists_central=GetHists(histname,histname,histname);
   TH1* central=GetMCHist(hists_central);
   vector<TH1*> syss;
   for(int i=0;i<systematics.size();i++){
@@ -424,7 +524,7 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
 	TString dyhistname=histname+"_"+systematics[i].name+suffix[j];
 	TString bghistname=histname+(systematics[i].exist_bg?("_"+systematics[i].name+suffix[j]):"");
 	cout<<datahistname<<" "<<dyhistname<<" "<<bghistname<<endl;
-	vector<TH1*> gethists=GetHists(filedir,datahistname,dyhistname,bghistname);
+	vector<TH1*> gethists=GetHists(datahistname,dyhistname,bghistname);
 	variations.push_back(GetMCHist(gethists));
 	for(int k=0;k<(int)gethists.size();k++) delete gethists.at(k);
       }
@@ -445,48 +545,48 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
   return GetCompareStack(hists_central,sys_total,rebin,xmin,xmax,setlog);
 }
 void SaveAll(){
-  vector<TString> histname;
-  vector<int> histrebin;
-  vector<double> histxmax,histxmin;
-  TString channel[]={setting};
-  for(int ichannel=0;ichannel<sizeof(channel)/sizeof(TString);ichannel++){
-    TString region[]={"OS","OS_Z","OS_Z_y0.0to0.4","OS_Z_y0.4to0.8","OS_Z_y0.8to1.2","OS_Z_y1.2to1.6","OS_Z_y1.6to2.0","OS_Z_y2.0to2.4","SS"};
-    for(int iregion=0;iregion<sizeof(region)/sizeof(TString);iregion++){
-      TString hname[12]={"dimass","dipt","dirap","l0pt","l0eta","l0riso","l1pt","l1eta","l1riso","lldelR","lldelphi","nPV"}; 
-      int hrebin[12]={4,4,0,4,0,0,4,0,0,0,0,0};
-      double hxmin[12]={80,0,0,0,0,0,0,0,0,0,0,0};
-      double hxmax[12]={100,100,0,200,0,0,200,0,0,0,0,0};
-      for(int ihist=0;ihist<sizeof(hname)/sizeof(TString);ihist++){
-	histname.push_back(channel[ichannel]+"/"+region[iregion]+"/"+hname[ihist]);
-	histrebin.push_back(iregion!=0&&ihist==0?0:hrebin[ihist]);
-	histxmin.push_back(iregion==0&&ihist==0?0:hxmin[ihist]);
-	histxmax.push_back(iregion==0&&ihist==0?0:hxmax[ihist]);
+  int dmax=directories.size();
+  int smax=systematics.size();
+  TCanvas* c=NULL;
+  for(int id=0;id<dmax;id++){
+    cout<<"mkdir -p plot/"+directories[id].name<<endl;
+    system("mkdir -p plot/"+directories[id].name);
+    int hmax=directories[id].histograms.size();
+    for(int ih=0;ih<hmax;ih++){
+      Histogram *histogram=&(directories[id].histograms[ih]);
+      TString this_histname=directories[id].name+histogram->name;
+      c=GetCompareStack(this_histname,0,histogram->rebin,histogram->xmin,histogram->xmax);
+      c->SaveAs("plot/"+this_histname+".png");
+      delete c;      
+    }
+    for(int is=0;is<smax;is++){
+      cout<<"mkdir -p plot/"+directories[id].name+systematics[is].name<<endl;
+      system("mkdir -p plot/"+directories[id].name+systematics[is].name);
+      for(int ih=0;ih<hmax;ih++){
+	Histogram *histogram=&(directories[id].histograms[ih]);
+	TString this_histname=directories[id].name+histogram->name;
+	if(systematics[is].type>1) c=GetCompareStack(this_histname,1<<is,histogram->rebin,histogram->xmin,histogram->xmax);
+	else if(systematics[is].type==1) c=GetCompareStack(GetHists(this_histname+(systematics[is].exist_data?"_"+systematics[is].name:""),this_histname+"_"+systematics[is].name,this_histname+(systematics[is].exist_bg?"_"+systematics[is].name:"")),0,histogram->rebin,histogram->xmin,histogram->xmax);
+	else c=GetCompareStack(this_histname,-systematics[is].type,histogram->rebin,histogram->xmin,histogram->xmax);
+	c->SaveAs("plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[is].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
+	delete c;
       }
     }
-  }
-  int nhist=histname.size();
-  for(int i=0;i<systematics.size();i++) 
-    for(int j=0;j<nhist;j++){
-      TString this_histname=histname[j];
-      cout<<"mkdir -p plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[i].name<<endl;
-      system("mkdir -p plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[i].name);
-    }
-  TCanvas* c=NULL;
-  for(int i=0;i<nhist;i++){
-    TString this_histname=histname[i];
-    cout<<this_histname<<" "<<histrebin[i]<<" "<<histxmin[i]<<" "<<histxmax[i]<<endl;
-    c=GetCompareStack(this_histname,0,histrebin[i],histxmin[i],histxmax[i]);
-    c->SaveAs("plot/"+this_histname+".png");
-    delete c;
-    for(int j=0;j<systematics.size();j++){
-      int sysbit=0;
-      TCanvas* c;
-      if(systematics[j].type>1) c=GetCompareStack(this_histname,1<<j,histrebin[i],histxmin[i],histxmax[i]);
-      else if(systematics[j].type==1) c=GetCompareStack(GetHists(filedir,this_histname+(systematics[j].exist_data?"_"+systematics[j].name:""),this_histname+"_"+systematics[j].name,this_histname+(systematics[j].exist_bg?"_"+systematics[j].name:"")),0,histrebin[i],histxmin[i],histxmax[i]);
-      else c=GetCompareStack(this_histname,-systematics[j].type,histrebin[i],histxmin[i],histxmax[i]);
-      c->SaveAs("plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[j].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
-      delete c;
-    }      
-  }
+  }  
 }
 
+/////////////////////////////////////////////////////////////////////////////
+////////////////////////////// etc.//////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+void PrintKeys(TList* keys){
+  for(int i=0;i<keys->GetSize();i++){
+    TKey* key=(TKey*)keys->At(i);
+    if(strcmp(key->GetClassName(),"TDirectoryFile")==0) PrintKeys(((TDirectoryFile*)key->ReadObj())->GetListOfKeys());   
+    else cout<<key->GetMotherDir()->GetPath()<<" "<<key->GetName()<<"\n";
+  }
+}
+void PrintHistList(int samplenum=1){
+  TFile f(samples.at(samplenum).files.at(1));
+  cout<<f.GetName()<<" "<<f.GetTitle()<<endl;
+  PrintKeys(f.GetListOfKeys());
+}
