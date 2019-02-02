@@ -10,7 +10,8 @@
 #include"TLine.h"
 using namespace std;
 
-TString filedir="/data7/Users/hsseo/SKFlatOutput/v949cand2_2/SMPValidation/2017/";
+TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/SMPValidation/";
+//TString filedir="/data7/Users/hsseo/SKFlatOutput/v949cand2_2/SMPValidation/";
 
 struct Sample{
   TString name;
@@ -24,28 +25,59 @@ struct Systematic{
   bool exist_data;
   bool exist_bg;
 };
+enum SampleType{DATA,DY,TAU,BG};
+TString GetStringSampleType(SampleType type){
+  switch(type){
+  case DATA: return "DATA";
+  case DY: return "DY";
+  case TAU: return "TAU";
+  case BG: return "BG";
+  default: return "Bad SampleType";
+  }
+}
+TString GetStringEColor(EColor color){
+  switch(color){
+  case kBlack: return "kBlack";
+  case kRed: return "kRed";
+  case kGreen: return "kGreen";
+  case kBlue: return "kBlue";
+  case kYellow: return "kYellow";
+  case kMagenta: return "kMagenta";
+  default: return "Bad EColor";
+  }
+}
+enum Channel{MUON,ELECTRON};
+TString GetStringChannel(Channel channel){
+  switch(channel){
+  case MUON: return "muon";
+  case ELECTRON: return "electron";
+  default: return "Bad Channel";
+  }
+}
 TString setting;
 vector<Sample> samples;
 vector<Systematic> systematics;
-void AddSample(TString name_,int type_,int colorcode_,vector<TString> files_){
+void AddSample(TString name_,SampleType type_,EColor colorcode_,vector<TString> files_){
   Sample sample;
   sample.name=name_;
   sample.type=type_;
   sample.colorcode=colorcode_;
   sample.files=files_;
-  cout<<" [AddSample] "<<sample.name<<" "<<sample.type<<" "<<sample.colorcode<<endl;
+  cout<<" [AddSample] "<<sample.name<<" "<<GetStringSampleType((SampleType)sample.type)<<" "<<GetStringEColor((EColor)sample.colorcode)<<endl;
   for(int i=0;i<sample.files.size();i++)
     cout<<"   "<<sample.files.at(i)<<endl;
     
   samples.push_back(sample);
 }
-void AddSample(TString name_,int type_,int colorcode_,TString file1,TString file2="",TString file3="",TString file4="",TString file5=""){
+void AddSample(TString name_,SampleType type_,EColor colorcode_,TString file1,TString file2="",TString file3="",TString file4="",TString file5="",TString file6="",TString file7=""){
   vector<TString> files;
   if(file1!="") files.push_back(file1);
   if(file2!="") files.push_back(file2);
   if(file3!="") files.push_back(file3);
   if(file4!="") files.push_back(file4);
   if(file5!="") files.push_back(file5);
+  if(file6!="") files.push_back(file6);
+  if(file7!="") files.push_back(file7);
   AddSample(name_,type_,colorcode_,files);
 }
 void AddSystematic(TString name_,int type_,bool exist_data_,bool exist_bg_){
@@ -57,22 +89,34 @@ void AddSystematic(TString name_,int type_,bool exist_data_,bool exist_bg_){
   cout<<" [AddSystematic] "<<systematic.name<<" "<<systematic.type<<" "<<systematic.exist_data<<" "<<systematic.exist_bg<<endl;
   systematics.push_back(systematic);
 }
-void Setup(TString key){
-  setting=key;
+TString Setup(int channel,int year){
+  TString schannel=GetStringChannel((Channel)channel);
+  TString syear=Form("%d",year);
+  setting=schannel+syear;
   samples.clear();
   systematics.clear();
-  cout<<"[Setup] setting="<<setting<<endl;
-  if(key=="muon2017"){
-    AddSample("data",0,1,"DATA/SMPValidation_SkimTree_SMP_DoubleMuon_B.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_C.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_D.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_E.root","DATA/SMPValidation_SkimTree_SMP_DoubleMuon_F.root");
-    AddSample("#gamma*/Z#rightarrow#mu#mu",1,2,"SMPValidation_SkimTree_SMP_DYJets.root");
-  }else if(key=="electron2017"){
-    AddSample("data",0,1,"DATA/SMPValidation_SkimTree_SMP_DoubleEG_B.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_C.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_D.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_E.root","DATA/SMPValidation_SkimTree_SMP_DoubleEG_F.root");
-    AddSample("#gamma*/Z#rightarrowee",1,2,"SMPValidation_SkimTree_SMP_DYJets.root");
-  }
-  AddSample("#gamma*/Z#rightarrow#tau#tau",2,3,"SMPValidation_SkimTree_SMP_DYJets.root");
-  AddSample("Diboson",3,4,"SMPValidation_SkimTree_SMP_WW_pythia.root","SMPValidation_SkimTree_SMP_WZ_pythia.root","SMPValidation_SkimTree_SMP_ZZ_pythia.root");
-  AddSample("W",4,5,"SMPValidation_SkimTree_SMP_WJets_MG.root");
-  AddSample("t#bar{t}",5,6,"SMPValidation_SkimTree_SMP_TTLL_powheg.root");
+  cout<<"[Setup] "<<schannel<<year<<endl;
+  if(year==2017){
+    if(channel==Channel::MUON){
+      AddSample("data",SampleType::DATA,EColor::kBlack,"2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_B.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_C.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_D.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_E.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_F.root");
+      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,"2017/SMPValidation_SkimTree_SMP_DYJets.root");
+    }else if(channel==Channel::ELECTRON){
+      AddSample("data",SampleType::DATA,EColor::kBlack,"2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_B.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_C.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_D.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_E.root","2017/DATA/SMPValidation_SkimTree_SMP_DoubleEG_F.root");
+      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,"2017/SMPValidation_SkimTree_SMP_DYJets.root");
+    }else return "";
+  }else if(year==2016){
+    if(channel==Channel::MUON){
+      AddSample("data",SampleType::DATA,EColor::kBlack,"2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_B_ver2.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_C.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_D.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_E.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_F.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_G.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleMuon_H.root");
+      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,"2016/SMPValidation_SkimTree_SMP_DYJets.root");
+    }else if(channel==Channel::ELECTRON){
+      AddSample("data",SampleType::DATA,EColor::kBlack,"2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_B_ver2.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_C.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_D.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_E.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_F.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_G.root","2016/DATA/SMPValidation_SkimTree_SMP_DoubleEG_H.root");
+      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,"2016/SMPValidation_SkimTree_SMP_DYJets.root");
+    }else return "";
+  }else return "";
+  AddSample("#gamma*/Z#rightarrow#tau#tau",SampleType::TAU,EColor::kGreen,syear+"/SMPValidation_SkimTree_SMP_DYJets.root");
+  AddSample("Diboson",SampleType::BG,EColor::kBlue,syear+"/SMPValidation_SkimTree_SMP_WW_pythia.root",syear+"/SMPValidation_SkimTree_SMP_WZ_pythia.root",syear+"/SMPValidation_SkimTree_SMP_ZZ_pythia.root");
+  AddSample("W",SampleType::BG,EColor::kYellow,syear+"/SMPValidation_SkimTree_SMP_WJets_MG.root");
+  AddSample("t#bar{t}",SampleType::BG,EColor::kMagenta,year==2017?"2017/SMPValidation_SkimTree_SMP_TTLL_powheg.root":"2016/SMPValidation_SkimTree_SMP_TT_powheg.root");
   
   AddSystematic("RECOSF",2,0,1);
   AddSystematic("IDSF",2,0,1);
@@ -97,6 +141,7 @@ void Setup(TString key){
 
   cout<<"[Setup] nsample: "<<samples.size()<<endl;
   cout<<"[Setup] nsys: "<<systematics.size()<<endl;
+  return setting;
 }
 
 void PrintKeys(TList* keys){
@@ -127,9 +172,9 @@ vector<TH1*> GetHists(TString dirname,TString datahistname,TString dyhistname,TS
   for(int i=0;i<samples.size();i++){
     TH1* hist=NULL;
     TString histname;
-    if(samples[i].type==0) histname=datahistname;
-    else if(samples[i].type==1) histname=dyhistname;
-    else if(samples[i].type==2) histname=bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length());
+    if(samples[i].type==SampleType::DATA) histname=datahistname;
+    else if(samples[i].type==SampleType::DY) histname=dyhistname;
+    else if(samples[i].type==SampleType::TAU) histname=bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length());
     else histname=bghistname;
     for(int j=0;j<samples[i].files.size();j++){
       if(!hist) hist=GetHist(filedir+samples[i].files[j],histname);
@@ -405,12 +450,12 @@ void SaveAll(){
   vector<double> histxmax,histxmin;
   TString channel[]={setting};
   for(int ichannel=0;ichannel<sizeof(channel)/sizeof(TString);ichannel++){
-    TString region[]={"OS","OS_Z","OS_Z_y0.0to0.5","OS_Z_y0.5to1.0","OS_Z_y1.0to3.0","SS"};
+    TString region[]={"OS","OS_Z","OS_Z_y0.0to0.4","OS_Z_y0.4to0.8","OS_Z_y0.8to1.2","OS_Z_y1.2to1.6","OS_Z_y1.6to2.0","OS_Z_y2.0to2.4","SS"};
     for(int iregion=0;iregion<sizeof(region)/sizeof(TString);iregion++){
       TString hname[12]={"dimass","dipt","dirap","l0pt","l0eta","l0riso","l1pt","l1eta","l1riso","lldelR","lldelphi","nPV"}; 
       int hrebin[12]={4,4,0,4,0,0,4,0,0,0,0,0};
       double hxmin[12]={80,0,0,0,0,0,0,0,0,0,0,0};
-      double hxmax[12]={100,100,0,0,0,0,0,0,0,0,0,0};
+      double hxmax[12]={100,100,0,200,0,0,200,0,0,0,0,0};
       for(int ihist=0;ihist<sizeof(hname)/sizeof(TString);ihist++){
 	histname.push_back(channel[ichannel]+"/"+region[iregion]+"/"+hname[ihist]);
 	histrebin.push_back(iregion!=0&&ihist==0?0:hrebin[ihist]);

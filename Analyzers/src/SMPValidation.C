@@ -92,6 +92,7 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
   double (MCCorrection::*LeptonID_SF)(TString,double,double,int)=NULL;
   double (MCCorrection::*LeptonISO_SF)(TString,double,double,int)=NULL;
   double (MCCorrection::*LeptonReco_SF)(double,double,int)=NULL;
+  double (MCCorrection::*PileUpWeight)(int,int)=(DataYear==2017?&MCCorrection::GetPileUpWeightBySampleName:&MCCorrection::GetPileUpWeight);
   TString LeptonID_key,LeptonID_key_POG,LeptonISO_key,LeptonReco_key,triggerSF_key0,triggerSF_key1;
   if(channelname.Contains("muon")){
     leps=MakeLeptonPointerVector(muons);
@@ -131,9 +132,9 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
   /////////////////PUreweight///////////////////
   double PUreweight=1.,PUreweight_up=1.,PUreweight_down=1.;
   if(!IsDATA){
-    PUreweight=mcCorr.GetPileUpWeightAsSampleName(0,nPileUp);
-    PUreweight_up=mcCorr.GetPileUpWeightAsSampleName(1,nPileUp);
-    PUreweight_down=mcCorr.GetPileUpWeightAsSampleName(-1,nPileUp);
+    PUreweight=(mcCorr.*PileUpWeight)(nPileUp,0);
+    PUreweight_up=(mcCorr.*PileUpWeight)(nPileUp,1);
+    PUreweight_down=(mcCorr.*PileUpWeight)(nPileUp,-1);
     totalweight*=PUreweight;
   }
   FillHist("cutflow",1.5,totalweight,20,0,20);
@@ -211,9 +212,14 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
 
 
   //////////////////////PrefileWeight////////////////////
-  double prefireweight=L1PrefireReweight_Central;
-  double prefireweight_up=L1PrefireReweight_Up;
-  double prefireweight_down=L1PrefireReweight_Down;
+  double prefireweight=1.;
+  double prefireweight_up=1.;
+  double prefireweight_down=1.;
+  if(!IsDATA){
+    prefireweight=L1PrefireReweight_Central;
+    prefireweight_up=L1PrefireReweight_Up;
+    prefireweight_down=L1PrefireReweight_Down;
+  }
   totalweight*=prefireweight;
   FillHist("cutflow",10.5,totalweight,20,0,20);
 
@@ -316,7 +322,7 @@ void SMPValidation::FillBasicHists(TString pre,TString suf,const vector<Lepton*>
   FillHist(pre+"dipt"+suf,dilepton.Pt(),w,400,0,400);
   FillHist(pre+"dirap"+suf,dilepton.Rapidity(),w,50,-5,5);
   for(int i=0;i<(int)leps.size();i++){
-    FillHist(Form("%sl%dpt%s",pre.Data(),i,suf.Data()),leps.at(i)->Pt(),w,200,0,200);
+    FillHist(Form("%sl%dpt%s",pre.Data(),i,suf.Data()),leps.at(i)->Pt(),w,1000,0,1000);
     FillHist(Form("%sl%deta%s",pre.Data(),i,suf.Data()),leps.at(i)->Eta(),w,50,-5,5);
     FillHist(Form("%sl%driso%s",pre.Data(),i,suf.Data()),leps.at(i)->RelIso(),w,30,0,0.3);
   }
@@ -360,8 +366,8 @@ double SMPValidation::DileptonTrigger_SF(TString SFhistkey0,TString SFhistkey1,c
   }
   if(DataYear==2016&&leps[0]->LeptonFlavour()==Lepton::MUON){
     TH2F* this_hist[8]={};
-    TString sdata={"DATA","MC"};
-    TString speriod={"BCDEF","GH"};
+    TString sdata[2]={"DATA","MC"};
+    TString speriod[2]={"BCDEF","GH"};
     for(int id=0;id<2;id++){
       for(int ip=0;ip<2;ip++){
 	this_hist[4*id+2*ip]=(*map_hist_Lepton)["Trigger_Eff_"+sdata[id]+"_"+SFhistkey0+"_"+speriod[ip]];
@@ -411,31 +417,31 @@ void SMPValidation::SetupZPtWeight(){
   TString datapath=getenv("DATA_DIR");
   TFile fzpt(datapath+"/"+TString::Itoa(DataYear,10)+"/ZPt/ZPtWeight.root");
   TString sflavour[2]={"muon","electron"};
-  TH2D *hzpt=NULL,*hzpt_norm=NULL;
+  TH2D **hzpt=NULL,**hzpt_norm=NULL;
   for(int ifl=0;ifl<2;ifl++){
     if(ifl==0){
-      hzpt=hzpt_muon;
-      hzpt_norm=hzpt_norm_muon;
+      hzpt=&hzpt_muon;
+      hzpt_norm=&hzpt_norm_muon;
     }else if(ifl==1){
-      hzpt=hzpt_electron;
-      hzpt_norm=hzpt_norm_electron;
+      hzpt=&hzpt_electron;
+      hzpt_norm=&hzpt_norm_electron;
     }
     for(int i=0;i<20;i++){
       TH2D* this_hzpt=(TH2D*)fzpt.Get(Form("%s%d_iter%d",sflavour[ifl].Data(),DataYear,i));
       if(this_hzpt){
-	if(hzpt){
-	  hzpt->Multiply(this_hzpt);
+	if(*hzpt){
+	  (*hzpt)->Multiply(this_hzpt);
 	  cout<<"[SMPValidation::SetupZPtWeight] setting "<<sflavour[ifl]<<" zptcor iter"<<i<<endl;
 	}else{
-	  hzpt=this_hzpt;
+	  (*hzpt)=this_hzpt;
 	  cout<<"[SMPValidation::SetupZPtWeight] setting first "<<sflavour[ifl]<<" zptcor"<<i<<endl;
 	}
       }else break;
     }
-    if(hzpt) hzpt->SetDirectory(0);
-    hzpt_norm=(TH2D*)fzpt.Get(Form("%s%d_norm",sflavour[ifl].Data(),DataYear));
-    if(hzpt_norm){
-      hzpt_norm->SetDirectory(0);
+    if(*hzpt) (*hzpt)->SetDirectory(0);
+    *hzpt_norm=(TH2D*)fzpt.Get(Form("%s%d_norm",sflavour[ifl].Data(),DataYear));
+    if(*hzpt_norm){
+      (*hzpt_norm)->SetDirectory(0);
       cout<<"[SMPValidation::SetupZPtWeight] setting "<<sflavour[ifl]<<" zptcor norm"<<endl;
     }
   }

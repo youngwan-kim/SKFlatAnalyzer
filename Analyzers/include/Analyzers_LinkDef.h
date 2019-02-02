@@ -17,7 +17,6 @@
 #pragma link C++ class SkimTree_LRSMHighPt+;
 #pragma link C++ class SMPValidation+;
 #pragma link C++ class SkimTree_SMP+;
-#pragma link C++ class SkimTree_AFB+;
-#pragma link C++ class AFBAnalyzer+;
+#pragma link C++ class SkimTree_GEN+;
 
 #endif

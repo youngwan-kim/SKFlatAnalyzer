@@ -882,7 +882,7 @@ Job started at {0}
 Job finished at {1}
 '''.format(string_JobStartTime,string_ThisTime)
 
-if IsSNU or IsKNU:
+if IsSNU or IsKNU or IsTAMSA2:
   JobFinishEmail += 'Queue = '+args.Queue+'\n'
 
 EmailTitle = '['+HOSTNAME+']'+' Job Summary'
