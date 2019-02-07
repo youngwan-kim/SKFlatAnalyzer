@@ -127,26 +127,26 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
     weight=weight_norm_1invpb*ev->MCweight()*ev->GetTriggerLumi("Full");
     totalweight*=weight;
   }
-  FillHist("cutflow",0.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",0.5,totalweight,20,0,20);
 
   /////////////////PUreweight///////////////////
   double PUreweight=1.,PUreweight_up=1.,PUreweight_down=1.;
   if(!IsDATA){
-    PUreweight=(mcCorr.*PileUpWeight)(nPileUp,0);
-    PUreweight_up=(mcCorr.*PileUpWeight)(nPileUp,1);
-    PUreweight_down=(mcCorr.*PileUpWeight)(nPileUp,-1);
+    PUreweight=(mcCorr->*PileUpWeight)(nPileUp,0);
+    PUreweight_up=(mcCorr->*PileUpWeight)(nPileUp,1);
+    PUreweight_down=(mcCorr->*PileUpWeight)(nPileUp,-1);
     totalweight*=PUreweight;
   }
-  FillHist("cutflow",1.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",1.5,totalweight,20,0,20);
   
   /////////////////kinematic selections///////////////////
   if(leps.size()<2) return;
-  FillHist("cutflow",2.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",2.5,totalweight,20,0,20);
   if(leps.at(0)->Pt()<lep0ptcut||leps.at(1)->Pt()<lep1ptcut) return;
   if(fabs(leps.at(0)->Eta())>etacut||fabs(leps.at(1)->Eta()>etacut)) return;
-  FillHist("cutflow",3.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",3.5,totalweight,20,0,20);
   if(leps.size()!=2) return;
-  FillHist("cutflow",4.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",4.5,totalweight,20,0,20);
   
   /////////////////efficiency scale factors///////////////////
   double IDSF=1.,IDSF_up=1.,IDSF_down=1.;
@@ -167,35 +167,35 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
 	exit(EXIT_FAILURE);
       }
 
-      double this_RECOSF=LeptonReco_SF?(mcCorr.*LeptonReco_SF)(this_eta,this_pt,0):1.;
-      double this_RECOSF_up=LeptonReco_SF?(mcCorr.*LeptonReco_SF)(this_eta,this_pt,1):1.;
-      double this_RECOSF_down=LeptonReco_SF?(mcCorr.*LeptonReco_SF)(this_eta,this_pt,-1):1.;
+      double this_RECOSF=LeptonReco_SF?(mcCorr->*LeptonReco_SF)(this_eta,this_pt,0):1.;
+      double this_RECOSF_up=LeptonReco_SF?(mcCorr->*LeptonReco_SF)(this_eta,this_pt,1):1.;
+      double this_RECOSF_down=LeptonReco_SF?(mcCorr->*LeptonReco_SF)(this_eta,this_pt,-1):1.;
       RECOSF*=this_RECOSF; RECOSF_up*=this_RECOSF_up; RECOSF_down*=this_RECOSF_down;
 
-      double this_IDSF=LeptonID_SF?(mcCorr.*LeptonID_SF)(LeptonID_key,this_eta,this_pt,0):1.;
-      double this_IDSF_up=LeptonID_SF?(mcCorr.*LeptonID_SF)(LeptonID_key,this_eta,this_pt,1):1.;
-      double this_IDSF_down=LeptonID_SF?(mcCorr.*LeptonID_SF)(LeptonID_key,this_eta,this_pt,-1):1.;
+      double this_IDSF=LeptonID_SF?(mcCorr->*LeptonID_SF)(LeptonID_key,this_eta,this_pt,0):1.;
+      double this_IDSF_up=LeptonID_SF?(mcCorr->*LeptonID_SF)(LeptonID_key,this_eta,this_pt,1):1.;
+      double this_IDSF_down=LeptonID_SF?(mcCorr->*LeptonID_SF)(LeptonID_key,this_eta,this_pt,-1):1.;
       IDSF*=this_IDSF; IDSF_up*=this_IDSF_up; IDSF_down*=this_IDSF_down;
       
       if(LeptonID_key_POG!=""){
-	double this_IDSF_POG=LeptonID_SF?(mcCorr.*LeptonID_SF)(LeptonID_key_POG,this_eta,this_pt,0):1.;
-	double this_IDSF_POG_up=LeptonID_SF?(mcCorr.*LeptonID_SF)(LeptonID_key_POG,this_eta,this_pt,1):1.;
-	double this_IDSF_POG_down=LeptonID_SF?(mcCorr.*LeptonID_SF)(LeptonID_key_POG,this_eta,this_pt,-1):1.;
+	double this_IDSF_POG=LeptonID_SF?(mcCorr->*LeptonID_SF)(LeptonID_key_POG,this_eta,this_pt,0):1.;
+	double this_IDSF_POG_up=LeptonID_SF?(mcCorr->*LeptonID_SF)(LeptonID_key_POG,this_eta,this_pt,1):1.;
+	double this_IDSF_POG_down=LeptonID_SF?(mcCorr->*LeptonID_SF)(LeptonID_key_POG,this_eta,this_pt,-1):1.;
 	IDSF_POG*=this_IDSF_POG; IDSF_POG_up*=this_IDSF_POG_up; IDSF_POG_down*=this_IDSF_POG_down;
       }
 
-      double this_ISOSF=LeptonISO_SF?(mcCorr.*LeptonISO_SF)(LeptonISO_key,this_eta,this_pt,0):1.;
-      double this_ISOSF_up=LeptonISO_SF?(mcCorr.*LeptonISO_SF)(LeptonISO_key,this_eta,this_pt,1):1.;
-      double this_ISOSF_down=LeptonISO_SF?(mcCorr.*LeptonISO_SF)(LeptonISO_key,this_eta,this_pt,-1):1.;
+      double this_ISOSF=LeptonISO_SF?(mcCorr->*LeptonISO_SF)(LeptonISO_key,this_eta,this_pt,0):1.;
+      double this_ISOSF_up=LeptonISO_SF?(mcCorr->*LeptonISO_SF)(LeptonISO_key,this_eta,this_pt,1):1.;
+      double this_ISOSF_down=LeptonISO_SF?(mcCorr->*LeptonISO_SF)(LeptonISO_key,this_eta,this_pt,-1):1.;
       ISOSF*=this_ISOSF; ISOSF_up*=this_ISOSF_up; ISOSF_down*=this_ISOSF_down;
     }
   }
   totalweight*=RECOSF;
-  FillHist("cutflow",5.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",5.5,totalweight,20,0,20);
   totalweight*=IDSF;
-  FillHist("cutflow",6.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",6.5,totalweight,20,0,20);
   totalweight*=ISOSF;
-  FillHist("cutflow",7.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",7.5,totalweight,20,0,20);
 
   double triggerSF=1.,triggerSF_up=1.,triggerSF_down=1.;
   if(!IsDATA){
@@ -204,11 +204,11 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
     triggerSF_down*=DileptonTrigger_SF(triggerSF_key0,triggerSF_key1,leps,-1);
   }
   totalweight*=triggerSF;
-  FillHist("cutflow",8.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",8.5,totalweight,20,0,20);
 
   //////////////////////no MC for M<50////////////////
   if(((*leps.at(0))+(*leps.at(1))).M()<60) return;
-  FillHist("cutflow",9.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",9.5,totalweight,20,0,20);
 
 
   //////////////////////PrefileWeight////////////////////
@@ -221,10 +221,10 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
     prefireweight_down=L1PrefireReweight_Down;
   }
   totalweight*=prefireweight;
-  FillHist("cutflow",10.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",10.5,totalweight,20,0,20);
 
   totalweight*=zptcor;
-  FillHist("cutflow",11.5,totalweight,20,0,20);
+  FillHist(channelname+"/"+prefix+"cutflow",11.5,totalweight,20,0,20);
 
   ///////////////////////weight systematics//////////////////
   map<TString,double> map_systematic;
@@ -275,11 +275,11 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
   
   ///////////////////////fill hists///////////////////////
   if(leps.at(0)->Charge()*leps.at(1)->Charge()<0){
-    FillHist("cutflow",12.5,totalweight,20,0,20);
+    FillHist(channelname+"/"+prefix+"cutflow",12.5,totalweight,20,0,20);
     FillBasicHists(channelname+"/OS/"+prefix,"",leps,totalweight);
     FillSystematicHists(channelname+"/OS/"+prefix,"",leps,map_systematic);
     if(((*leps.at(0))+(*leps.at(1))).M()<100&&((*leps.at(0))+(*leps.at(1))).M()>80){
-      FillHist("cutflow",13.5,totalweight,20,0,20);
+      FillHist(channelname+"/"+prefix+"cutflow",13.5,totalweight,20,0,20);
       FillBasicHists(channelname+"/OS_Z/"+prefix,"",leps,totalweight);
       FillSystematicHists(channelname+"/OS_Z/"+prefix,"",leps,map_systematic);
       for(int i=0;i<zptcor_nybin;i++){
@@ -292,7 +292,7 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
       FillHist(channelname+"/OS_Z/"+prefix+"dipty_nozptcor",((*leps.at(0))+(*leps.at(1))).Pt(),fabs(((*leps.at(0))+(*leps.at(1))).Rapidity()),map_systematic["nozptcor"],zptcor_nptbin,(double*)zptcor_ptbin,zptcor_nybin,(double*)zptcor_ybin);
     }
   }else{
-    FillHist("cutflow",14.5,totalweight,20,0,20);
+    FillHist(channelname+"/"+prefix+"cutflow",14.5,totalweight,20,0,20);
     FillBasicHists(channelname+"/SS/"+prefix,"",leps,totalweight);
     FillSystematicHists(channelname+"/SS/"+prefix,"",leps,map_systematic);
   }
@@ -343,9 +343,9 @@ double SMPValidation::DileptonTrigger_SF(TString SFhistkey0,TString SFhistkey1,c
   }
   map<TString,TH2F*>* map_hist_Lepton=NULL;
   if(leps[0]->LeptonFlavour()==Lepton::MUON){
-    map_hist_Lepton=&mcCorr.map_hist_Muon;
+    map_hist_Lepton=&mcCorr->map_hist_Muon;
   }else if(leps[0]->LeptonFlavour()==Lepton::ELECTRON){
-    map_hist_Lepton=&mcCorr.map_hist_Electron;
+    map_hist_Lepton=&mcCorr->map_hist_Electron;
   }else{
     cout <<"[SMPValidation::Trigger_SF] Not ready"<<endl;
     exit(EXIT_FAILURE);

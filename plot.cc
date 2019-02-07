@@ -352,13 +352,13 @@ TH1* GetHMC(const vector<TH1*>& hists,TString option=""){
   }else if(option.Contains("stack")){
     THStack* hstack=new THStack;
     for(int i=(int)hists.size()-1;i>0;i--){
-      hstack->Add(hists.at(i),"HIST");
+      if(hists.at(i)) hstack->Add(hists.at(i),"HIST");
     }
     return (TH1*)hstack;
   }else if(option.Contains("BGSub")) return (TH1*)hists.at(1)->Clone();
   else{
     TH1* hist=(TH1*)hists.at(1)->Clone("hmc");
-    for(int i=2;i<(int)hists.size();i++) hist->Add(hists.at(i));
+    for(int i=2;i<(int)hists.size();i++) if(hists.at(i)) hist->Add(hists.at(i));
     return hist;
   }
 }
@@ -383,7 +383,7 @@ TH1* GetHData(const vector<TH1*>& hists,TString option=""){
     return hist;    
   }else if(option.Contains("BGSub")){
     TH1* hist=(TH1*)hists.at(0)->Clone("hdata");
-    for(int i=2;i<(int)samples.size();i++) hist->Add(hists.at(i),-1.);
+    for(int i=2;i<(int)samples.size();i++) if(hists.at(i)) hist->Add(hists.at(i),-1.);
     return hist;
   }
   else return (TH1*)hists.at(0)->Clone();
