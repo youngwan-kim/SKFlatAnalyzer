@@ -30,8 +30,7 @@ SaveZPtWeightALL(1)
 */
 TH1* ExtractZPtWeight(int channel,int year){
   TString channelname=Setup(channel,year);
-  vector<TH1*> hists=GetHists(channelname+"/OS_Z/dipty");
-  TCanvas* cc=GetCompareBGSub(hists);
+  TCanvas* cc=GetCompare(channelname+"/OS_Z/dipty",0,0,0,0,false,"BGSub");
   TH1* ratio=(TH1*)cc->GetPad(2)->GetPrimitive("ratio");
   ratio->SetDirectory(0);
   ratio->GetXaxis()->UnZoom();
@@ -39,7 +38,7 @@ TH1* ExtractZPtWeight(int channel,int year){
   return ratio;
 }
 TH1* ExtractNormWeight(int channel,int year){
-  TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/"+Analyzer+"/";
+  TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/SMPValidation/";
   TString channelname=Setup(channel,year);
   TString syear=Form("%d",year);
   TH2D* genZrap=(TH2D*)GetHist(filedir+syear+"/SMPValidation_SkimTree_GEN_DYJets.root",channelname+"gen/genZrap");
@@ -110,4 +109,4 @@ void AutoIteration(int iteration){
   system("python python/SKFlat.py -a SMPValidation -y 2016 -i DYJets -n 100 --skim SkimTree_GEN;");
   SaveZPtWeightAll(1);
 }
-    
+

@@ -29,6 +29,8 @@ struct Histogram{
   int rebin;
   double xmin;
   double xmax;
+  bool setlog;
+  TString option;
 };
 struct Directory{
   TString name;
@@ -106,12 +108,14 @@ void AddSystematic(TString name_,int type_,bool exist_data_,bool exist_bg_){
   cout<<" [AddSystematic] "<<systematic.name<<" "<<systematic.type<<" "<<systematic.exist_data<<" "<<systematic.exist_bg<<endl;
   systematics.push_back(systematic);
 }
-void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,double xmax_){
+void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,double xmax_,bool setlog_=false,TString option_=""){
   Histogram histogram;
   histogram.name=name_;
   histogram.rebin=rebin_;
   histogram.xmin=xmin_;
   histogram.xmax=xmax_;
+  histogram.setlog=setlog_;
+  histogram.option=option_;
   //cout<<" [AddHistogram] to <<histogram.name<<" "<<histogram.rebin<<" "<<histogram.xmin<<" "<<histogram.xmax<<endl;
   directory.histograms.push_back(histogram);
 }
@@ -213,8 +217,19 @@ TString Setup(int channel,int year){
 }
 void SetupAFBDirectories(int channel,int year){
   cout<<"[SetupAFBDirectories] for "<<GetStringChannel((Channel)channel)<<year<<endl;
-  TString region[]={"OS_m60to120","OS_m60to120_y0.0to0.4","OS_m60to120_y0.4to0.8","OS_m60to120_y0.8to1.2","OS_m60to120_y1.2to1.6","OS_m60to120_y1.6to2.0","OS_m60to120_y2.0to2.4"};
-  for(int i=0;i<sizeof(region)/sizeof(TString);i++){
+  const int ybinnum=6;
+  double yrange[ybinnum+1]={0.0,0.4,0.8,1.2,1.6,2.0,2.4};
+  const int mbinnum=12;
+  double massrange[mbinnum+1]={60,70,78,84,87,89,91,93,95,98,104,112,120};
+  vector<TString> region;
+  region.push_back(Form("OS_m%.0fto%.0f",massrange[0],massrange[mbinnum]));
+  for(int iy=0;iy<ybinnum;iy++){
+    region.push_back(Form("OS_m%.0fto%.0f_y%.1fto%.1f",massrange[0],massrange[mbinnum],yrange[iy],yrange[iy+1]));
+    for(int im=0;im<mbinnum;im++){
+      //region.push_back(Form("OS_m%.0fto%.0f_y%.1fto%.1f",massrange[im],massrange[im+1],yrange[iy],yrange[iy+1]));
+    }
+  }
+  for(int i=0;i<region.size();i++){
     Directory directory;
     directory.name=GetStringChannel((Channel)channel)+Form("%d",year)+"/"+region[i]+"/";
     cout<<directory.name<<" ";
@@ -231,6 +246,7 @@ void SetupAFBDirectories(int channel,int year){
     AddHistogram(directory,"lldelphi",0,0,0);
     AddHistogram(directory,"nPV",0,0,0);
     AddHistogram(directory,"costhetaCS",0,0,0);
+    if(region[i].Contains("m60to120")) AddHistogram(directory,"AFB",0,0,0,false,"AFB");
     directories.push_back(directory);
   }
   cout<<endl;
@@ -267,57 +283,136 @@ TH1* GetHist(TString filename,TString histname){
     return NULL;
   }
 }
-vector<TH1*> GetHists(TString datahistname,TString dyhistname,TString bghistname){
+vector<TH1*> GetHists(TString datahistname,TString dyhistname,TString bghistname,TString option){
   vector<TH1*> hists;
-  for(int i=0;i<samples.size();i++){
-    TH1* hist=NULL;
-    TString histname;
-    if(samples[i].type==SampleType::DATA) histname=datahistname;
-    else if(samples[i].type==SampleType::DY) histname=dyhistname;
-    else if(samples[i].type==SampleType::TAU) histname=bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length());
+  if(option.Contains("AFB")){
+    TString datahistname_forward=datahistname;
+    TString dyhistname_forward=dyhistname;
+    TString bghistname_forward=bghistname;
+    datahistname_forward.ReplaceAll("AFB","forward");
+    dyhistname_forward.ReplaceAll("AFB","forward");
+    bghistname_forward.ReplaceAll("AFB","forward");
+    TString datahistname_backward=datahistname;
+    TString dyhistname_backward=dyhistname;
+    TString bghistname_backward=bghistname;
+    datahistname_backward.ReplaceAll("AFB","backward");
+    dyhistname_backward.ReplaceAll("AFB","backward");
+    bghistname_backward.ReplaceAll("AFB","backward");
+    hists=GetHists(datahistname_forward,dyhistname_forward,bghistname_forward,"");
+    vector<TH1*> hists_backward=GetHists(datahistname_backward,dyhistname_backward,bghistname_backward,"");
+    hists.insert(hists.end(),hists_backward.begin(),hists_backward.end());
+  }
+  else{
+    for(int i=0;i<samples.size();i++){
+      TH1* hist=NULL;
+      TString histname;
+      if(samples[i].type==SampleType::DATA) histname=datahistname;
+      else if(samples[i].type==SampleType::DY) histname=dyhistname;
+      else if(samples[i].type==SampleType::TAU) histname=bghistname(0,bghistname.Last('/')+1)+"tau_"+bghistname(bghistname.Last('/')+1,bghistname.Length());
     else histname=bghistname;
-    for(int j=0;j<samples[i].files.size();j++){
-      if(!hist) hist=GetHist(samples[i].files[j],histname);
-      else hist->Add(GetHist(samples[i].files[j],histname));
-    }
-    if(hist){
-      hist->SetName(samples[i].name);
-      hist->SetTitle(dyhistname);
-      hist->GetXaxis()->SetTitle(dyhistname);
-      hist->SetLineColor(samples[i].colorcode);
-      hist->SetFillColor(samples[i].colorcode);
+      for(int j=0;j<samples[i].files.size();j++){
+	if(!hist) hist=GetHist(samples[i].files[j],histname);
+	else hist->Add(GetHist(samples[i].files[j],histname));
+      }
+      if(hist){
+	hist->SetName(samples[i].name);
+	hist->SetTitle(dyhistname);
+	hist->GetXaxis()->SetTitle(dyhistname);
+	hist->SetLineColor(samples[i].colorcode);
+	hist->SetFillColor(samples[i].colorcode);
+      }
       hists.push_back(hist);
     }
   }
   return hists;
 }
-vector<TH1*> GetHists(TString histname){
-  return GetHists(histname,histname,histname);
+vector<TH1*> GetHists(TString histname,TString option){
+  return GetHists(histname,histname,histname,option);
 }
-
-THStack *GetStack(vector<TH1*> hists){
-  THStack* hstack=new THStack;
-  for(int i=(int)hists.size()-1;i>0;i--){
-    hstack->Add(hists.at(i),"HIST");
+TH1* GetHistAFB(TH1* hist_forward,TH1* hist_backward){
+  TH1* hist=(TH1*)hist_forward->Clone("afb");
+  hist->Reset();
+  for(int i=0;i<hist->GetNbinsX()+2;i++){
+    double valf=hist_forward->GetBinContent(i);
+    double ef=hist_forward->GetBinError(i);
+    double valb=hist_backward->GetBinContent(i);
+    double eb=hist_backward->GetBinError(i);
+    hist->SetBinContent(i,(valf-valb)/(valf+valb));
+    hist->SetBinError(i,2*sqrt(ef*ef*valb*valb+eb*eb*valf*valf)/pow(valf+valb,2));
   }
-  return hstack;
-}
-TH1* GetMCHist(const vector<TH1*>& hists){
-  TH1* hist=(TH1*)hists.at(1)->Clone("mchist");
-  for(int i=2;i<(int)hists.size();i++) hist->Add(hists.at(i));
   return hist;
 }
-TLegend* GetLegend(vector<TH1*> hists){
-  TLegend* legend=new TLegend(0.67,0.4,0.89,0.88);
-  for(int i=0;i<(int)hists.size();i++){
-    TString option="f";
-    if(i==0) option="lp";
-    legend->AddEntry(hists.at(i),hists.at(i)->GetName(),option);
+TH1* GetHMC(const vector<TH1*>& hists,TString option=""){
+  if(option.Contains("AFB")){
+    TH1* hist_forward=hists.at(1);
+    TH1* hist_backward=hists.at(samples.size()+1);
+    TH1* hist=GetHistAFB(hist_forward,hist_backward);
+    hist->SetName("DY");
+    return hist;        
+  }else if(option.Contains("stack")){
+    THStack* hstack=new THStack;
+    for(int i=(int)hists.size()-1;i>0;i--){
+      hstack->Add(hists.at(i),"HIST");
+    }
+    return (TH1*)hstack;
+  }else if(option.Contains("BGSub")) return (TH1*)hists.at(1)->Clone();
+  else{
+    TH1* hist=(TH1*)hists.at(1)->Clone("hmc");
+    for(int i=2;i<(int)hists.size();i++) hist->Add(hists.at(i));
+    return hist;
+  }
+}
+TH1* GetHMC(THStack* hstack){
+  TList* list=hstack->GetHists();
+  TH1* hist=(TH1*)list->At(0)->Clone("hmc");
+  for(int i=1;i<list->GetSize();i++){
+    hist->Add((TH1*)list->At(i));
+  }
+  return hist;
+}
+TH1* GetHData(const vector<TH1*>& hists,TString option=""){
+  if(option.Contains("AFB")){
+    vector<TH1*> hists_forward,hists_backward;
+    hists_forward.insert(hists_forward.begin(),hists.begin(),hists.begin()+samples.size());
+    hists_backward.insert(hists_backward.begin(),hists.begin()+samples.size(),hists.end());
+    TH1* hist_forward=GetHData(hists_forward,"BGSub");
+    TH1* hist_backward=GetHData(hists_backward,"BGSub");
+    TH1* hist=GetHistAFB(hist_forward,hist_backward);
+    delete hist_forward;delete hist_backward;
+    hist->SetName("data");
+    return hist;    
+  }else if(option.Contains("BGSub")){
+    TH1* hist=(TH1*)hists.at(0)->Clone("hdata");
+    for(int i=2;i<(int)samples.size();i++) hist->Add(hists.at(i),-1.);
+    return hist;
+  }
+  else return (TH1*)hists.at(0)->Clone();
+}
+TLegend* GetLegend(const vector<TH1*>& hists,TString option=""){
+  int histssize=hists.size();
+  if(option.Contains("BGSub")) histssize=2;
+  TLegend* legend=new TLegend(0.67,0.88-histssize*0.07,0.89,0.88);
+  for(int i=0;i<histssize;i++){
+    TString att="f";
+    if(i==0) att="lp";
+    legend->AddEntry(hists.at(i),hists.at(i)->GetName(),att);
   }
   legend->SetBorderSize(0);
   return legend;
 }
-TH1* GetSysHistMax(TH1* central,vector<TH1*> variations){
+TLegend* GetLegend(TH1* h1,TH1* h2){
+  vector<TH1*> hists;
+  hists.push_back(h1);
+  if(strstr(h2->ClassName(),"THStack")){
+    TList* list=((THStack*)h2)->GetHists();
+    for(int i=list->GetSize()-1;i>=0;i--){
+      hists.push_back((TH1*)list->At(i));
+    }
+  }else hists.push_back(h2);
+  return GetLegend(hists,"");
+}
+TH1* GetSysHistMax(TH1* central,const vector<TH1*>& variations){
+  if(strstr(central->ClassName(),"THStack")) central=GetHMC((THStack*)central);
   TH1* syshist=(TH1*)central->Clone("sys");
   for(int i=1;i<syshist->GetNbinsX()+1;i++) syshist->SetBinError(i,0);
   for(int i=0;i<(int)variations.size();i++){
@@ -343,8 +438,7 @@ TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variat
 }    
 int AddError(TH1* hist,TH1* sys){
   for(int i=1;i<hist->GetNbinsX()+1;i++){
-    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*10000>fabs(hist->GetBinContent(i))){
-      //if(hist->GetBinContent(i)!=sys->GetBinContent(i)){
+    if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*1000000>fabs(hist->GetBinContent(i))){
       cout<<"[AddError] sys hist is wrong"<<endl;
       cout.precision(20);
       cout<<i<<" "<<hist->GetBinContent(i)<<" "<<sys->GetBinContent(i)<<" "<<fabs(hist->GetBinContent(i)-sys->GetBinContent(i))<<endl;
@@ -357,137 +451,109 @@ int AddError(TH1* hist,TH1* sys){
     hist->SetBinError(i,sqrt(err1*err1+err2*err2));
   }
   return 1;
-} 
-TCanvas* GetCompareBGSub(vector<TH1*> hists,int rebin=0,double xmin=0,double xmax=0,bool setlog=0){
-  if(rebin){
-    for(int i=0;i<(int)hists.size();i++) hists.at(i)->Rebin(rebin);
-  }
-  if(xmin||xmax){
-    for(int i=0;i<(int)hists.size();i++) hists.at(i)->GetXaxis()->SetRangeUser(xmin,xmax);
-  }
-  TCanvas* c1=new TCanvas(hists.at(1)->GetTitle(),hists.at(1)->GetTitle(),800,800);
-  c1->Divide(1,2);
-  c1->cd(1);
-  gPad->SetPad(0,0.35,1,1);
-  gPad->SetBottomMargin(0.02);
-  TH1* hdata=(TH1*)hists.at(0)->Clone("data_bgsub");
-  for(int i=2;i<hists.size();i++) hdata->Add(hists.at(i),-1.);
-  hdata->Draw("e");
-  hdata->GetXaxis()->SetLabelSize(0);
-  hdata->GetXaxis()->SetTitle("");
-  hdata->SetStats(0);
-  hdata->SetMarkerStyle(20);
-  hdata->SetMarkerSize(0.7);
-
-  TH1* mchist=hists.at(1);
-  mchist->Draw("same hist");
-
-  vector<TH1*> hists_bgsub;
-  hists_bgsub.push_back(hdata);
-  hists_bgsub.push_back(mchist);
-  TLegend* legend=GetLegend(hists_bgsub);
-  legend->Draw();
-
-  if(hdata->GetMaximum()<mchist->GetMaximum()) hdata->GetYaxis()->SetRangeUser(0,mchist->GetMaximum()*1.1);
-  if(setlog){
-    if(hdata->GetMinimum()==0) hdata->SetMinimum(1000);
-    gPad->SetLogy();
-  }
-  hdata->Draw("same a e");
-
-  c1->cd(2);
-  gPad->SetPad(0,0,1,0.35);
-  gPad->SetTopMargin(0.02);
-  gPad->SetBottomMargin(0.2);
-  gPad->SetGridx();gPad->SetGridy();
-  TH1* ratio=(TH1*)hdata->Clone("ratio");
-  ratio->SetTitle("");
-  ratio->SetStats(0);
-  ratio->Divide(mchist);
-  ratio->Draw();
-  ratio->GetYaxis()->SetTitle("Data/Simulation");
-  ratio->GetYaxis()->SetTitleSize(0.1);
-  ratio->GetYaxis()->SetTitleOffset(0.5);
-  ratio->GetYaxis()->SetRangeUser(0.8,1.2);
-  ratio->GetYaxis()->SetLabelSize(0.1);
-  ratio->GetXaxis()->SetTitle(hdata->GetTitle());
-  ratio->GetXaxis()->SetTitleSize(0.1);
-  ratio->GetXaxis()->SetLabelSize(0.1);
-  TLine *line=new TLine(xmin?xmin:ratio->GetXaxis()->GetXmin(),1,xmax?xmax:ratio->GetXaxis()->GetXmax(),1);
-  line->SetLineColor(2);
-  line->Draw();
-  ratio->Draw("same");
-
-  return c1;
 }
-TCanvas* GetCompareStack(vector<TH1*> hists,TH1* sys=NULL,int rebin=0,double xmin=0,double xmax=0,bool setlog=0){
+TCanvas* GetCompare(TH1* h1,TH1* h1sys,TH1* h2,TH1* h2sys,int rebin,double xmin,double xmax,bool setlog){
+  THStack *hstack=NULL;
+  if(strstr(h2->ClassName(),"THStack")!=NULL){
+    hstack=(THStack*)h2;
+    h2=GetHMC(hstack);
+  }
   if(rebin){
-    if(sys) sys->Rebin(rebin);
-    for(int i=0;i<(int)hists.size();i++) hists.at(i)->Rebin(rebin);
+    h1->Rebin(rebin);
+    if(h1sys) h1sys->Rebin(rebin);
+    if(hstack){
+      TList* list=hstack->GetHists();
+      for(int i=0;i<list->GetSize();i++){
+	((TH1*)list->At(i))->Rebin(rebin);
+      }
+    }
+    h2->Rebin(rebin);
+    if(h2sys) h2sys->Rebin(rebin);
   }
   if(xmin||xmax){
-    if(sys) sys->GetXaxis()->SetRangeUser(xmin,xmax);
-    for(int i=0;i<(int)hists.size();i++) hists.at(i)->GetXaxis()->SetRangeUser(xmin,xmax);
+    h1->GetXaxis()->SetRangeUser(xmin,xmax);
   }
-  TCanvas* c1=new TCanvas(hists.at(1)->GetTitle(),hists.at(1)->GetTitle(),800,800);
+
+  h1->SetStats(0);
+  h1->SetMarkerStyle(20);
+  h1->SetMarkerSize(0.7);
+  TH1 *h1total=NULL,*h2total=NULL;
+  if(h1sys){
+    h1total=(TH1*)h1->Clone("h1total");
+    AddError(h1total,h1sys);
+  }else{
+    h1total=h1;
+  }
+  if(h2sys){
+    h2total=(TH1*)h2->Clone("h2total");
+    AddError(h2total,h2sys);
+  }else{
+    h2total=h2;
+  }
+
+  TCanvas* c1=new TCanvas(h2->GetTitle(),h2->GetTitle(),800,800);
   c1->Divide(1,2);
   c1->cd(1);
   gPad->SetPad(0,0.35,1,1);
   gPad->SetBottomMargin(0.02);
-  hists.at(0)->Draw("e");
-  hists.at(0)->GetXaxis()->SetLabelSize(0);
-  hists.at(0)->GetXaxis()->SetTitle("");
-  hists.at(0)->SetStats(0);
-  hists.at(0)->SetMarkerStyle(20);
-  hists.at(0)->SetMarkerSize(0.7);
-  THStack* hstack=GetStack(hists);
-  hstack->Draw("same");
 
-  TH1* mchist=GetMCHist(hists);
-  TH1* mchistsys=(TH1*)mchist->Clone("mchistsys");
-  if(sys) AddError(mchistsys,sys);
-  mchistsys->SetFillStyle(3002);
-  mchistsys->SetFillColor(4);
-  mchistsys->Draw("same e2");
+  h1total->Draw("e");
+  h1total->GetXaxis()->SetLabelSize(0);
+  h1total->GetXaxis()->SetTitle("");
+  if(h1sys) h1->Draw("same e1");
 
-  TLegend* legend=GetLegend(hists);
+  if(hstack){
+    hstack->Draw("same");
+    h2total->SetFillColor(4);
+  }
+  h2total->SetFillStyle(3002);
+  h2total->Draw("same e2");
+  if(h2sys) h2->Draw("same e2");
+
+  TLegend* legend=GetLegend(h1,hstack?(TH1*)hstack:h2);
   legend->Draw();
 
-  if(hists.at(0)->GetMaximum()<mchist->GetMaximum()) hists.at(0)->GetYaxis()->SetRangeUser(0,mchist->GetMaximum()*1.1);
   if(setlog){
-    if(hists.at(0)->GetMinimum()==0) hists.at(0)->SetMinimum(1000);
     gPad->SetLogy();
+  }else{
+    double maximum=h1total->GetMaximum()>h2total->GetMaximum()?h1total->GetMaximum():h2total->GetMaximum();
+    double minimum=h1total->GetMinimum()<h2total->GetMinimum()?h1total->GetMinimum():h2total->GetMinimum();
+    double range=fabs(maximum-minimum);
+    h1total->GetYaxis()->SetRangeUser(minimum?minimum-0.1*range:0,maximum+0.1*range);
   }
-  hists.at(0)->Draw("same a e");
+  h1total->Draw("same a e");
 
   c1->cd(2);
   gPad->SetPad(0,0,1,0.35);
   gPad->SetTopMargin(0.02);
   gPad->SetBottomMargin(0.2);
   gPad->SetGridx();gPad->SetGridy();
-  TH1* ratio=(TH1*)hists.at(0)->Clone("ratio");
+
+  TH1* ratio=(TH1*)h1->Clone("ratio");
   ratio->SetTitle("");
   ratio->SetStats(0);
-  ratio->Divide(mchist);
+  ratio->Divide(h2);
   ratio->Draw();
   ratio->GetYaxis()->SetTitle("Data/Simulation");
   ratio->GetYaxis()->SetTitleSize(0.1);
   ratio->GetYaxis()->SetTitleOffset(0.5);
   ratio->GetYaxis()->SetRangeUser(0.8,1.2);
   ratio->GetYaxis()->SetLabelSize(0.1);
-  ratio->GetXaxis()->SetTitle(hists.at(0)->GetTitle());
+  ratio->GetXaxis()->SetTitle(h2->GetTitle());
   ratio->GetXaxis()->SetTitleSize(0.1);
   ratio->GetXaxis()->SetLabelSize(0.1);
   TLine *line=new TLine(xmin?xmin:ratio->GetXaxis()->GetXmin(),1,xmax?xmax:ratio->GetXaxis()->GetXmax(),1);
   line->SetLineColor(2);
   line->Draw();
-  if(sys){
-    TH1* ratiosys=(TH1*)sys->Clone("ratiosys");
+  if(h1sys||h2sys){
+    TH1* ratiosys=(TH1*)h2->Clone("ratiosys");
     for(int i=1;i<ratiosys->GetNbinsX()+1;i++){
-      double y=mchist->GetBinContent(i);
-      if(y==0) continue;
-      ratiosys->SetBinContent(i,ratiosys->GetBinContent(i)/y);
-      ratiosys->SetBinError(i,ratiosys->GetBinError(i)/y);  
+      double yh1sys=h1sys?h1sys->GetBinContent(i):0;
+      double eyh1sys=(yh1sys==0)?0:h1sys->GetBinError(i)/yh1sys;
+      double yh2sys=h2sys?h2sys->GetBinContent(i):0;
+      double eyh2sys=yh2sys==0?0:h2sys->GetBinError(i)/yh2sys;
+      ratiosys->SetBinContent(i,1);
+      ratiosys->SetBinError(i,sqrt(eyh1sys*eyh1sys+eyh2sys*eyh2sys));  
     }
     ratiosys->SetFillStyle(3002);
     ratiosys->SetFillColor(4);
@@ -501,10 +567,13 @@ TCanvas* GetCompareStack(vector<TH1*> hists,TH1* sys=NULL,int rebin=0,double xmi
 
   return c1;
 }
-TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0,double xmax=0,bool setlog=0){
-  vector<TH1*> hists_central=GetHists(histname,histname,histname);
-  TH1* central=GetMCHist(hists_central);
-  vector<TH1*> syss;
+TCanvas* GetCompare(TString histname,int sysbit=0,int rebin=0,double xmin=0,double xmax=0,bool setlog=false,TString option=""){
+  if(option.Contains("AFB")) option+=" BGSub";
+  vector<TH1*> hists_central=GetHists(histname,histname,histname,option);
+  TH1* hdata_central=GetHData(hists_central,option);
+  TH1* hmc_central=GetHMC(hists_central,option);
+  THStack* hstack_central=option.Contains("BGSub")?NULL:(THStack*)GetHMC(hists_central,"stack");
+  vector<TH1*> hdata_syss,hmc_syss;
   for(int i=0;i<systematics.size();i++){
     if((sysbit>>i)%2==1){
       cout<<"systype="<<systematics[i].type<<endl;
@@ -517,33 +586,49 @@ TCanvas* GetCompareStack(TString histname,int sysbit=0,int rebin=0,double xmin=0
       }else if(systematics[i].type>2){
 	for(int j=0;j<systematics[i].type;j++) suffix.push_back(Form("%d",j));
       }
-      vector<TH1*> variations;
+      vector<TH1*> hdata_variations;
+      vector<TH1*> hmc_variations;
       for(int j=0;j<systematics[i].type;j++){
 	if((systematics[i].type==9&&j==4)||(systematics[i].type==9&&j==8)) continue;
 	TString datahistname=histname+(systematics[i].exist_data?("_"+systematics[i].name+suffix[j]):"");
 	TString dyhistname=histname+"_"+systematics[i].name+suffix[j];
 	TString bghistname=histname+(systematics[i].exist_bg?("_"+systematics[i].name+suffix[j]):"");
 	cout<<datahistname<<" "<<dyhistname<<" "<<bghistname<<endl;
-	vector<TH1*> gethists=GetHists(datahistname,dyhistname,bghistname);
-	variations.push_back(GetMCHist(gethists));
+	vector<TH1*> gethists=GetHists(datahistname,dyhistname,bghistname,option);
+	hdata_variations.push_back(GetHData(gethists,option));
+	hmc_variations.push_back(GetHMC(gethists,option));
 	for(int k=0;k<(int)gethists.size();k++) delete gethists.at(k);
       }
-      syss.push_back(GetSysHistMax(central,variations));
-      for(int j=0;j<(int)variations.size();j++) delete variations.at(j);
-      cout<<systematics[i].name+": "<<variations.size()<<" variations"<<endl;
+      hdata_syss.push_back(GetSysHistMax(hdata_central,hdata_variations));
+      hmc_syss.push_back(GetSysHistMax(hmc_central,hmc_variations));
+      for(int j=0;j<(int)hdata_variations.size();j++){
+	delete hdata_variations.at(j);
+	delete hmc_variations.at(j);
+      }
+      cout<<systematics[i].name+": "<<hdata_variations.size()<<" variations"<<endl;
     }
   }
-  TH1* sys_total=NULL;
-  if(syss.size()>0){
-    sys_total=(TH1*)central->Clone("sys");
-    for(int i=0;i<sys_total->GetNbinsX()+2;i++) sys_total->SetBinError(i,0);
-    for(int i=0;i<(int)syss.size();i++){
-      AddError(sys_total,syss.at(i));
-      delete syss.at(i);
+  TH1 *hdata_sys=NULL,*hmc_sys=NULL;
+  if(hdata_syss.size()>0){
+    hdata_sys=(TH1*)hdata_central->Clone("hdata_sys");
+    hmc_sys=(TH1*)hmc_central->Clone("hmc_sys");
+    for(int i=0;i<hdata_sys->GetNbinsX()+2;i++){
+      hdata_sys->SetBinError(i,0);
+      hmc_sys->SetBinError(i,0);
+    }
+    for(int i=0;i<(int)hdata_syss.size();i++){
+      AddError(hdata_sys,hdata_syss.at(i));
+      AddError(hmc_sys,hmc_syss.at(i));
+      delete hdata_syss.at(i);delete hmc_syss.at(i);
     }
   }
-  return GetCompareStack(hists_central,sys_total,rebin,xmin,xmax,setlog);
+  TCanvas* c1=GetCompare(hdata_central,hdata_sys,hstack_central?(TH1*)hstack_central:hmc_central,hmc_sys,rebin,xmin,xmax,setlog);
+  if(option.Contains("AFB")){
+    ((TH1*)c1->GetPad(2)->GetPrimitive("ratio"))->GetYaxis()->SetRangeUser(0,2);
+  }
+  return c1;
 }
+
 void SaveAll(){
   int dmax=directories.size();
   int smax=systematics.size();
@@ -555,7 +640,7 @@ void SaveAll(){
     for(int ih=0;ih<hmax;ih++){
       Histogram *histogram=&(directories[id].histograms[ih]);
       TString this_histname=directories[id].name+histogram->name;
-      c=GetCompareStack(this_histname,0,histogram->rebin,histogram->xmin,histogram->xmax);
+      c=GetCompare(this_histname,0,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
       c->SaveAs("plot/"+this_histname+".png");
       delete c;      
     }
@@ -565,9 +650,8 @@ void SaveAll(){
       for(int ih=0;ih<hmax;ih++){
 	Histogram *histogram=&(directories[id].histograms[ih]);
 	TString this_histname=directories[id].name+histogram->name;
-	if(systematics[is].type>1) c=GetCompareStack(this_histname,1<<is,histogram->rebin,histogram->xmin,histogram->xmax);
-	else if(systematics[is].type==1) c=GetCompareStack(GetHists(this_histname+(systematics[is].exist_data?"_"+systematics[is].name:""),this_histname+"_"+systematics[is].name,this_histname+(systematics[is].exist_bg?"_"+systematics[is].name:"")),0,histogram->rebin,histogram->xmin,histogram->xmax);
-	else c=GetCompareStack(this_histname,-systematics[is].type,histogram->rebin,histogram->xmin,histogram->xmax);
+	if(systematics[is].type>=1) c=GetCompare(this_histname,1<<is,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
+	else c=GetCompare(this_histname,-systematics[is].type,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
 	c->SaveAs("plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[is].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
 	delete c;
       }

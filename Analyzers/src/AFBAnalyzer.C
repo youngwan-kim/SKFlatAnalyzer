@@ -190,25 +190,23 @@ void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
   }
 
   
-  
   ///////////////////////fill hists///////////////////////
   if(leps.at(0)->Charge()*leps.at(1)->Charge()<0){
     FillHist("cutflow",12.5,totalweight,20,0,20);
-    
-    const int massnum=12;
-    double massrange[massnum+1]={60,70,78,84,87,89,91,93,95,98,104,112,120};
-    if(((*leps.at(0))+(*leps.at(1))).M()>=massrange[0]&&((*leps.at(0))+(*leps.at(1))).M()<massrange[massnum]){
+    double dimass=((*leps.at(0))+(*leps.at(1))).M();
+    double dirap=((*leps.at(0))+(*leps.at(1))).Rapidity();
+    if(dimass>=massrange[0]&&dimass<massrange[massbinnum]){
       FillHist("cutflow",13.5,totalweight,20,0,20);
-      FillAFBHists(channelname+Form("/OS_m%.0fto%.0f/",massrange[0],massrange[massnum])+prefix,"",leps,totalweight);
-      FillAFBSystematicHists(channelname+Form("/OS_m%.0fto%.0f/",massrange[0],massrange[massnum])+prefix,"",leps,map_systematic);
+      FillAFBHists(channelname+Form("/OS_m%.0fto%.0f/",massrange[0],massrange[massbinnum])+prefix,"",leps,totalweight);
+      FillAFBSystematicHists(channelname+Form("/OS_m%.0fto%.0f/",massrange[0],massrange[massbinnum])+prefix,"",leps,map_systematic);
       for(int iy=0;iy<zptcor_nybin;iy++){
-	if(fabs(((*leps.at(0))+(*leps.at(1))).Rapidity())>=zptcor_ybin[iy]&&fabs(((*leps.at(0))+(*leps.at(1))).Rapidity())<zptcor_ybin[iy+1]){
-	  FillAFBHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[0],massrange[massnum],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,totalweight);
-	  FillAFBSystematicHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[0],massrange[massnum],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,map_systematic);
-	  for(int im=0;im<massnum;im++){
-	    if(((*leps.at(0))+(*leps.at(1))).M()>=massrange[im]&&((*leps.at(0))+(*leps.at(1))).M()<massrange[im+1]){
-	      FillAFBHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[im],massrange[im+1],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,totalweight);
-	      FillAFBSystematicHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[im],massrange[im+1],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,map_systematic);
+	if(fabs(dirap)>=zptcor_ybin[iy]&&fabs(dirap)<zptcor_ybin[iy+1]){
+	  FillAFBHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[0],massrange[massbinnum],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,totalweight);
+	  FillAFBSystematicHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[0],massrange[massbinnum],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,map_systematic);
+	  for(int im=0;im<massbinnum;im++){
+	    if(dimass>=massrange[im]&&dimass<massrange[im+1]){
+	      //FillAFBHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[im],massrange[im+1],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,totalweight);
+	      //FillAFBSystematicHists(channelname+Form("/OS_m%.0fto%.0f_y%.1fto%.1f/",massrange[im],massrange[im+1],zptcor_ybin[iy],zptcor_ybin[iy+1])+prefix,"",leps,map_systematic);
 	    }
 	  }
 	}
@@ -225,7 +223,18 @@ AFBAnalyzer::AFBAnalyzer(){
 AFBAnalyzer::~AFBAnalyzer(){
 }
 double AFBAnalyzer::GetCosThetaCS(const vector<Lepton*>& leps){
-  TLorentzVector *l0=leps.at(0),*l1=leps.at(1);
+  TLorentzVector *l0,*l1;
+  if(leps.at(0)->Charge()<0&&leps.at(1)->Charge()>0){
+    l0=leps.at(0);
+    l1=leps.at(1);
+  }else if(leps.at(0)->Charge()>0&&leps.at(1)->Charge()<0){
+    l0=leps.at(1);
+    l1=leps.at(0);
+  }else{
+    cout <<"[AFBAnalyzer::GetCosThetaCS] same sign event"<<endl;
+    exit(EXIT_FAILURE);
+  }
+
   TLorentzVector dilepton=*l0+*l1;
   double l0pp=(l0->E()+l0->Pz())/sqrt(2);
   double l0pm=(l0->E()-l0->Pz())/sqrt(2);
@@ -238,7 +247,16 @@ double AFBAnalyzer::GetCosThetaCS(const vector<Lepton*>& leps){
 } 
 void AFBAnalyzer::FillAFBHists(TString pre,TString suf,const vector<Lepton*>& leps,double w){
   FillBasicHists(pre,suf,leps,w);
-  FillHist(pre+"costhetaCS"+suf,GetCosThetaCS(leps),w,40,-1,1);
+  if(pre.Contains("OS")){
+    double cost=GetCosThetaCS(leps);
+    FillHist(pre+"costhetaCS"+suf,cost,w,40,-1,1);
+    FillHist(pre+"abscosthetaCS"+suf,fabs(cost),w,20,0,1);
+    if(pre.Contains("m60to120")){
+      double dimass=((*leps.at(0))+(*leps.at(1))).M();
+      if(cost>0) FillHist(pre+"forward"+suf,dimass,w,massbinnum,(double*)massrange);
+      else FillHist(pre+"backward"+suf,dimass,w,massbinnum,(double*)massrange);
+    }
+  }
 }
 void AFBAnalyzer::FillAFBSystematicHists(TString pre,TString suf,const vector<Lepton*>& leps,map<TString,double> map_systematic){
   for(auto iter=map_systematic.begin();iter!=map_systematic.end();iter++){
