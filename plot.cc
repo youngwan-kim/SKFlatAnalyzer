@@ -18,11 +18,34 @@ struct Sample{
   int colorcode;
   vector<TString> files;
 };
+enum SuffixType{NONE,UPDOWN,NUMBER,COSTOM};
+TString GetStringSuffixType(SuffixType type){
+  switch(type){
+  case NONE: return "NONE";
+  case UPDOWN: return "UPDOWN";
+  case NUMBER: return "NUMBER";
+  case COSTOM: return "CUSTON";
+  default: return "WARNING Bad SuffixType";
+  }
+}
+enum SystematicType{ENVELOPE,GAUSSIAN,HESSIAN,MULTI};
+TString GetStringSystematicType(SystematicType type){
+  switch(type){
+  case ENVELOPE: return "ENVELOPE";
+  case GAUSSIAN: return "GAUSSIAN";
+  case HESSIAN: return "HESSIAN";
+  case MULTI: return "MULTI";
+  default: return "WARNING Bad SystematicType";
+  }
+}
 struct Systematic{
   TString name;
-  int type;
+  SystematicType type;
+  SuffixType suffixtype;
+  vector<TString> suffixes;
   bool exist_data;
   bool exist_bg;
+  int sysbit;
 };
 struct Histogram{
   TString name;
@@ -43,7 +66,7 @@ TString GetStringSampleType(SampleType type){
   case DY: return "DY";
   case TAU: return "TAU";
   case BG: return "BG";
-  default: return "Bad SampleType";
+  default: return "WARNING Bad SampleType";
   }
 }
 TString GetStringEColor(EColor color){
@@ -54,7 +77,7 @@ TString GetStringEColor(EColor color){
   case kBlue: return "kBlue";
   case kYellow: return "kYellow";
   case kMagenta: return "kMagenta";
-  default: return "Bad EColor";
+  default: return "WARNING Bad EColor";
   }
 }
 enum Channel{MUON,ELECTRON};
@@ -62,7 +85,7 @@ TString GetStringChannel(Channel channel){
   switch(channel){
   case MUON: return "muon";
   case ELECTRON: return "electron";
-  default: return "Bad Channel";
+  default: return "WARNING Bad Channel";
   }
 }
 
@@ -99,15 +122,38 @@ void AddSample(TString name_,SampleType type_,EColor colorcode_,TString file1,TS
   if(file7!="") files.push_back(file7);
   AddSample(name_,type_,colorcode_,files);
 }
-void AddSystematic(TString name_,int type_,bool exist_data_,bool exist_bg_){
+void AddSystematic(TString name_,SystematicType type_,vector<TString> includes,bool exist_data_,bool exist_bg_){
   Systematic systematic;
   systematic.name=name_;
   systematic.type=type_;
+  if(systematic.type==SystematicType::MULTI){
+    systematic.sysbit=0;
+    for(int i=0;i<systematics.size();i++)
+      for(int j=0;j<includes.size();j++)
+	if(systematics[i].name==includes[j]){
+	  systematic.sysbit|=systematics[i].sysbit;
+	  break;
+	}
+  }else{
+    systematic.sysbit=1<<systematics.size();
+    systematic.suffixes=includes;
+  }    
   systematic.exist_data=exist_data_;
   systematic.exist_bg=exist_bg_;
-  cout<<" [AddSystematic] "<<systematic.name<<" "<<systematic.type<<" "<<systematic.exist_data<<" "<<systematic.exist_bg<<endl;
+  cout<<" [AddSystematic] "<<systematic.name<<" "<<GetStringSystematicType(systematic.type)<<" sysbit:"<<systematic.sysbit<<" data:"<<(systematic.exist_data?"exist":"not_exist")<<" bg:"<<(systematic.exist_bg?"exist":"not_exist")<<endl;
+  cout<<"  INCLUDE=";for(int i=0;i<includes.size();i++) cout<<includes[i]<<" ";
+  cout<<endl;
   systematics.push_back(systematic);
 }
+void AddSystematic(TString name_,SystematicType type_,TString includes_,bool exist_data_,bool exist_bg_){
+  TObjArray* arr=includes_.Tokenize(" ");
+  vector<TString> includes;
+  for(int i=0;i<arr->GetEntries();i++){
+    includes.push_back(((TObjString*)arr->At(i))->String());
+  }
+  AddSystematic(name_,type_,includes,exist_data_,exist_bg_);
+}
+
 void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,double xmax_,bool setlog_=false,TString option_=""){
   Histogram histogram;
   histogram.name=name_;
@@ -123,57 +169,64 @@ void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,dou
 /////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// Setup functions///////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
-void SetupSamples(TString Analyzer,int channel,int year){
+void SetupSamples(int channel,int year,TString analyzer,TString skim){
   TString syear=Form("%d",year);
-  cout<<"[SetupSamples] "<<GetStringChannel((Channel)channel)<<year<<endl;
-  TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/"+Analyzer+"/";
+  if(skim!="") skim="_"+skim;
+  cout<<"[SetupSamples] "<<analyzer<<" "<<GetStringChannel((Channel)channel)<<year<<endl;
+  TString filedir=TString(getenv("SKFlatOutputDir"))+getenv("SKFlatV")+"/"+analyzer+"/";
   if(year==2017){
     if(channel==Channel::MUON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_B.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_C.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_D.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_E.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_F.root");
-      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,filedir+"2017/"+Analyzer+"_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2017/DATA/"+analyzer+skim+"_DoubleMuon_B.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleMuon_C.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleMuon_D.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleMuon_E.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleMuon_F.root");
+      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,filedir+"2017/"+analyzer+skim+"_DYJets.root");
     }else if(channel==Channel::ELECTRON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_B.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_C.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_D.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_E.root",filedir+"2017/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_F.root");
-      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,filedir+"2017/"+Analyzer+"_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2017/DATA/"+analyzer+skim+"_DoubleEG_B.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleEG_C.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleEG_D.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleEG_E.root",filedir+"2017/DATA/"+analyzer+skim+"_DoubleEG_F.root");
+      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,filedir+"2017/"+analyzer+skim+"_DYJets.root");
     }else return "";
   }else if(year==2016){
     if(channel==Channel::MUON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_B_ver2.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_C.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_D.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_E.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_F.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_G.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleMuon_H.root");
-      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,filedir+"2016/"+Analyzer+"_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_B_ver2.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_C.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_D.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_E.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_F.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_G.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleMuon_H.root");
+      AddSample("#gamma*/Z#rightarrow#mu#mu",SampleType::DY,EColor::kRed,filedir+"2016/"+analyzer+skim+"_DYJets.root");
     }else if(channel==Channel::ELECTRON){
-      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_B_ver2.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_C.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_D.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_E.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_F.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_G.root",filedir+"2016/DATA/"+Analyzer+"_SkimTree_SMP_DoubleEG_H.root");
-      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,filedir+"2016/"+Analyzer+"_SkimTree_SMP_DYJets.root");
+      AddSample("data",SampleType::DATA,EColor::kBlack,filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_B_ver2.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_C.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_D.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_E.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_F.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_G.root",filedir+"2016/DATA/"+analyzer+skim+"_DoubleEG_H.root");
+      AddSample("#gamma*/Z#rightarrowee",SampleType::DY,EColor::kRed,filedir+"2016/"+analyzer+skim+"_DYJets.root");
     }else return "";
   }else return "";
-  AddSample("#gamma*/Z#rightarrow#tau#tau",SampleType::TAU,EColor::kGreen,filedir+syear+"/"+Analyzer+"_SkimTree_SMP_DYJets.root");
-  AddSample("Diboson",SampleType::BG,EColor::kBlue,filedir+syear+"/"+Analyzer+"_SkimTree_SMP_WW_pythia.root",filedir+syear+"/"+Analyzer+"_SkimTree_SMP_WZ_pythia.root",filedir+syear+"/"+Analyzer+"_SkimTree_SMP_ZZ_pythia.root");
-  AddSample("W",SampleType::BG,EColor::kYellow,filedir+syear+"/"+Analyzer+"_SkimTree_SMP_WJets_MG.root");
-  AddSample("t#bar{t}",SampleType::BG,EColor::kMagenta,year==2017?filedir+"2017/"+Analyzer+"_SkimTree_SMP_TTLL_powheg.root":filedir+"2016/"+Analyzer+"_SkimTree_SMP_TT_powheg.root");
+  AddSample("#gamma*/Z#rightarrow#tau#tau",SampleType::TAU,EColor::kGreen,filedir+syear+"/"+analyzer+skim+"_DYJets.root");
+  AddSample("Diboson",SampleType::BG,EColor::kBlue,filedir+syear+"/"+analyzer+skim+"_WW_pythia.root",filedir+syear+"/"+analyzer+skim+"_WZ_pythia.root",filedir+syear+"/"+analyzer+skim+"_ZZ_pythia.root");
+  AddSample("W",SampleType::BG,EColor::kYellow,filedir+syear+"/"+analyzer+skim+"_WJets_MG.root");
+  AddSample("t#bar{t}",SampleType::BG,EColor::kMagenta,year==2017?filedir+"2017/"+analyzer+skim+"_TTLL_powheg.root":filedir+"2016/"+analyzer+skim+"_TT_powheg.root");
 }
-void SetupSystematics(){
+void SetupSystematics(int channel,int year,TString analyzer){
   cout<<"[SetupSystematics]"<<endl;
-  AddSystematic("RECOSF",2,0,1);
-  AddSystematic("IDSF",2,0,1);
-  AddSystematic("ISOSF",2,0,1);
-  AddSystematic("triggerSF",2,0,1);
-  AddSystematic("PUreweight",2,0,1);
-  AddSystematic("prefireweight",2,0,1);
-  AddSystematic("alphaS",2,0,0);
-  AddSystematic("scalevariation",9,0,0);
+  AddSystematic("RECOSF",SystematicType::ENVELOPE,"_RECOSF_up _RECOSF_down",0,1);
+  AddSystematic("IDSF",SystematicType::ENVELOPE,"_IDSF_up _IDSF_down",0,1);
+  AddSystematic("ISOSF",SystematicType::ENVELOPE,"_ISOSF_up _ISOSF_down",0,1);
+  AddSystematic("triggerSF",SystematicType::ENVELOPE,"_triggerSF_up _triggerSF_down",0,1);
+  AddSystematic("PUreweight",SystematicType::ENVELOPE,"_PUreweight_up _PUreweight_down",0,1);
+  AddSystematic("prefireweight",SystematicType::ENVELOPE,"_prefireweight_up _prefireweight_down",0,1);
+  AddSystematic("alphaS",SystematicType::ENVELOPE,"_alphaS_up _alphaS_down",0,0);
+  AddSystematic("scalevariation",SystematicType::ENVELOPE,"_scalevariation0 _scalevariation1 _scalevariation2 _scalevariation3 _scalevariation5 _scalevariation6 _scalevariation7",0,0);
+  
+  vector<TString> prefixes;
+  for(int i=0;i<100;i++) prefixes.push_back(Form("_pdf%d",i));
+  if(year==2017) AddSystematic("pdf",SystematicType::HESSIAN,prefixes,0,0);
+  else if(year==2016) AddSystematic("pdf",SystematicType::GAUSSIAN,prefixes,0,0);
+  else cout<<"[SetupSystematics] WARNING wrong year"<<endl;
 
-  AddSystematic("noRECOSF",1,0,1);
-  AddSystematic("noIDSF",1,0,1);
-  AddSystematic("noISOSF",1,0,1);
-  AddSystematic("notriggerSF",1,0,1);
-  AddSystematic("noPUreweight",1,0,1);
-  AddSystematic("noprefireweight",1,0,1);
-  AddSystematic("nozptcor",1,0,0);
-  AddSystematic("noefficiencySF",1,0,1);
-  AddSystematic("IDSF_POG",1,0,1);
-  AddSystematic("efficiencySF",-15,0,0);
-  AddSystematic("totalsys",-255,0,0);
+  AddSystematic("noRECOSF",SystematicType::ENVELOPE,"_noRECOSF",0,1);
+  AddSystematic("noIDSF",SystematicType::ENVELOPE,"_noIDSF",0,1);
+  AddSystematic("noISOSF",SystematicType::ENVELOPE,"_noISOSF",0,1);
+  AddSystematic("notriggerSF",SystematicType::ENVELOPE,"_notriggerSF",0,1);
+  AddSystematic("noPUreweight",SystematicType::ENVELOPE,"_noPUreweight",0,1);
+  AddSystematic("noprefireweight",SystematicType::ENVELOPE,"_noprefireweight",0,1);
+  AddSystematic("nozptcor",SystematicType::ENVELOPE,"_nozptcor",0,0);
+  AddSystematic("noefficiencySF",SystematicType::ENVELOPE,"_noefficiencySF",0,1);
+  AddSystematic("IDSF_POG",SystematicType::ENVELOPE,"_IDSF_POG",0,1);
+  AddSystematic("efficiencySF",SystematicType::MULTI,"RECOSF IDSF ISOSF triggerSF",0,0);
+  AddSystematic("totalsys",SystematicType::MULTI,"RECOSF IDSF ISOSF triggerSF PUreweight prefireweight alphaS scalevariation",0,0);
 }
-void SetupDirectories(int channel,int year){
-  cout<<"[SetupDirectories] for "<<GetStringChannel((Channel)channel)<<year<<endl;
+void SetupDirectoriesSMPValidation(int channel,int year){
+  cout<<"[SetupDirectoriesSMPValidation] SMPValidation "<<GetStringChannel((Channel)channel)<<year<<endl;
   TString region[]={"OS","OS_Z","OS_Z_y0.0to0.4","OS_Z_y0.4to0.8","OS_Z_y0.8to1.2","OS_Z_y1.2to1.6","OS_Z_y1.6to2.0","OS_Z_y2.0to2.4","SS"};
   for(int i=0;i<sizeof(region)/sizeof(TString);i++){
     Directory directory;
@@ -198,25 +251,8 @@ void SetupDirectories(int channel,int year){
   directories[0].histograms[0].xmin=0;
   directories[0].histograms[0].xmin=0;
 }
-TString Setup(int channel,int year){
-  TString schannel=GetStringChannel((Channel)channel);
-  TString syear=Form("%d",year);
-
-  samples.clear();
-  systematics.clear();
-  directories.clear();
-
-  SetupSamples("SMPValidation",channel,year);
-  SetupSystematics();
-  SetupDirectories(channel,year);
-
-  cout<<"[Setup] nsample: "<<samples.size()<<endl;
-  cout<<"[Setup] nsys: "<<systematics.size()<<endl;
-  cout<<"[Setup] ndirectories: "<<directories.size()<<endl;  
-  return schannel+syear;
-}
-void SetupAFBDirectories(int channel,int year){
-  cout<<"[SetupAFBDirectories] for "<<GetStringChannel((Channel)channel)<<year<<endl;
+void SetupDirectoriesAFBAnalyzer(int channel,int year){
+  cout<<"[SetupDirectoriesAFBAnalyzer] AFBAnalyzer "<<GetStringChannel((Channel)channel)<<year<<endl;
   const int ybinnum=6;
   double yrange[ybinnum+1]={0.0,0.4,0.8,1.2,1.6,2.0,2.4};
   const int mbinnum=12;
@@ -246,26 +282,29 @@ void SetupAFBDirectories(int channel,int year){
     AddHistogram(directory,"lldelphi",0,0,0);
     AddHistogram(directory,"nPV",0,0,0);
     AddHistogram(directory,"costhetaCS",0,0,0);
+    AddHistogram(directory,"abscosthetaCS",0,0,0);
     if(region[i].Contains("m60to120")) AddHistogram(directory,"AFB",0,0,0,false,"AFB");
     directories.push_back(directory);
   }
   cout<<endl;
 }
-TString SetupAFB(int channel,int year){
-  TString schannel=GetStringChannel((Channel)channel);
-  TString syear=Form("%d",year);
-
+TString Setup(int channel,int year,TString analyzer="SMPValidation",TString skim="SkimTree_SMP"){
   samples.clear();
   systematics.clear();
   directories.clear();
 
-  SetupSamples("AFBAnalyzer",channel,year);
-  SetupSystematics();
-  SetupAFBDirectories(channel,year);
+  SetupSamples(channel,year,analyzer,skim);
+  SetupSystematics(channel,year,analyzer);
+  if(analyzer.Contains("SMPValidation")) SetupDirectoriesSMPValidation(channel,year);
+  else if(analyzer.Contains("AFBAnalyzer")) SetupDirectoriesAFBAnalyzer(channel,year);
+  else cout<<"[Setup] WARNING: unknown Analyzer="<<analyzer<<endl;
 
-  cout<<"[SetupAFB] nsample: "<<samples.size()<<endl;
-  cout<<"[SetupAFB] nsys: "<<systematics.size()<<endl;
-  cout<<"[SetupAFB] ndirectories: "<<directories.size()<<endl;  
+  cout<<"[Setup] nsample: "<<samples.size()<<endl;
+  cout<<"[Setup] nsys: "<<systematics.size()<<endl;
+  cout<<"[Setup] ndirectories: "<<directories.size()<<endl;  
+
+  TString schannel=GetStringChannel((Channel)channel);
+  TString syear=Form("%d",year);
   return schannel+syear;
 }
 
@@ -411,7 +450,7 @@ TLegend* GetLegend(TH1* h1,TH1* h2){
   }else hists.push_back(h2);
   return GetLegend(hists,"");
 }
-TH1* GetSysHistMax(TH1* central,const vector<TH1*>& variations){
+TH1* GetEnvelope(TH1* central,const vector<TH1*>& variations){
   if(strstr(central->ClassName(),"THStack")) central=GetHMC((THStack*)central);
   TH1* syshist=(TH1*)central->Clone("sys");
   for(int i=1;i<syshist->GetNbinsX()+1;i++) syshist->SetBinError(i,0);
@@ -423,7 +462,7 @@ TH1* GetSysHistMax(TH1* central,const vector<TH1*>& variations){
   }
   return syshist;
 }
-TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variation3=NULL,TH1* variation4=NULL,TH1* variation5=NULL,TH1* variation6=NULL,TH1* variation7=NULL,TH1* variation8=NULL,TH1* variation9=NULL){
+TH1* GetEnvelope(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variation3=NULL,TH1* variation4=NULL,TH1* variation5=NULL,TH1* variation6=NULL,TH1* variation7=NULL,TH1* variation8=NULL,TH1* variation9=NULL){
   vector<TH1*> variations;
   if(variation1) variations.push_back(variation1);
   if(variation2) variations.push_back(variation2);
@@ -434,8 +473,33 @@ TH1* GetSysHistMax(TH1* central,TH1* variation1,TH1* variation2=NULL,TH1* variat
   if(variation7) variations.push_back(variation7);
   if(variation8) variations.push_back(variation8);
   if(variation9) variations.push_back(variation9);
-  return GetSysHistMax(central,variations);
+  return GetEnvelope(central,variations);
 }    
+TH1* GetHessianError(TH1* central,const vector<TH1*>& variations){
+  if(strstr(central->ClassName(),"THStack")) central=GetHMC((THStack*)central);
+  TH1* syshist=(TH1*)central->Clone("sys");
+  for(int i=1;i<syshist->GetNbinsX()+1;i++) syshist->SetBinError(i,0);
+  for(int i=0;i<(int)variations.size();i++){
+    for(int j=0;j<syshist->GetNbinsX()+1;j++){
+      double diff=fabs(syshist->GetBinContent(j)-variations.at(i)->GetBinContent(j));
+      syshist->SetBinError(j,sqrt(pow(syshist->GetBinError(j),2)+pow(diff,2)));
+    }
+  }
+  return syshist;
+}  
+TH1* GetRMSError(TH1* central,const vector<TH1*>& variations){
+  if(strstr(central->ClassName(),"THStack")) central=GetHMC((THStack*)central);
+  TH1* syshist=(TH1*)central->Clone("sys");
+  for(int i=1;i<syshist->GetNbinsX()+1;i++) syshist->SetBinError(i,0);
+  for(int i=0;i<(int)variations.size();i++){
+    for(int j=0;j<syshist->GetNbinsX()+1;j++){
+      double diff=fabs(syshist->GetBinContent(j)-variations.at(i)->GetBinContent(j));
+      syshist->SetBinError(j,sqrt(pow(syshist->GetBinError(j),2)+pow(diff,2)));
+    }
+  }
+  for(int i=1;i<syshist->GetNbinsX()+1;i++) syshist->SetBinError(i,syshist->GetBinError(i)/sqrt(variations.size()));
+  return syshist;
+}  
 int AddError(TH1* hist,TH1* sys){
   for(int i=1;i<hist->GetNbinsX()+1;i++){
     if(fabs(hist->GetBinContent(i)-sys->GetBinContent(i))*1000000>fabs(hist->GetBinContent(i))){
@@ -575,32 +639,33 @@ TCanvas* GetCompare(TString histname,int sysbit=0,int rebin=0,double xmin=0,doub
   THStack* hstack_central=option.Contains("BGSub")?NULL:(THStack*)GetHMC(hists_central,"stack");
   vector<TH1*> hdata_syss,hmc_syss;
   for(int i=0;i<systematics.size();i++){
-    if((sysbit>>i)%2==1){
-      cout<<"systype="<<systematics[i].type<<endl;
-      if(systematics[i].type<1) continue;
-      vector<TString> suffix;
-      if(systematics[i].type==1) suffix.push_back("");
-      else if(systematics[i].type==2){
-	suffix.push_back("_up");
-	suffix.push_back("_down");
-      }else if(systematics[i].type>2){
-	for(int j=0;j<systematics[i].type;j++) suffix.push_back(Form("%d",j));
-      }
+    if(systematics[i].type==SystematicType::MULTI) continue;
+    if(sysbit&systematics[i].sysbit){
+      cout<<"sysname="<<systematics[i].name<<" systype="<<GetStringSystematicType(systematics[i].type)<<endl;
       vector<TH1*> hdata_variations;
       vector<TH1*> hmc_variations;
-      for(int j=0;j<systematics[i].type;j++){
-	if((systematics[i].type==9&&j==4)||(systematics[i].type==9&&j==8)) continue;
-	TString datahistname=histname+(systematics[i].exist_data?("_"+systematics[i].name+suffix[j]):"");
-	TString dyhistname=histname+"_"+systematics[i].name+suffix[j];
-	TString bghistname=histname+(systematics[i].exist_bg?("_"+systematics[i].name+suffix[j]):"");
+      for(int j=0;j<systematics[i].suffixes.size();j++){
+	TString datahistname=histname+(systematics[i].exist_data?systematics[i].suffixes[j]:"");
+	TString dyhistname=histname+systematics[i].suffixes[j];
+	TString bghistname=histname+(systematics[i].exist_bg?systematics[i].suffixes[j]:"");
 	cout<<datahistname<<" "<<dyhistname<<" "<<bghistname<<endl;
 	vector<TH1*> gethists=GetHists(datahistname,dyhistname,bghistname,option);
 	hdata_variations.push_back(GetHData(gethists,option));
 	hmc_variations.push_back(GetHMC(gethists,option));
 	for(int k=0;k<(int)gethists.size();k++) delete gethists.at(k);
       }
-      hdata_syss.push_back(GetSysHistMax(hdata_central,hdata_variations));
-      hmc_syss.push_back(GetSysHistMax(hmc_central,hmc_variations));
+      if(systematics[i].type==SystematicType::ENVELOPE){
+	hdata_syss.push_back(GetEnvelope(hdata_central,hdata_variations));
+	hmc_syss.push_back(GetEnvelope(hmc_central,hmc_variations));
+      }else if(systematics[i].type==SystematicType::GAUSSIAN){
+	hdata_syss.push_back(GetRMSError(hdata_central,hdata_variations));
+	hmc_syss.push_back(GetRMSError(hmc_central,hmc_variations));
+      }else if(systematics[i].type==SystematicType::HESSIAN){
+	hdata_syss.push_back(GetHessianError(hdata_central,hdata_variations));
+	hmc_syss.push_back(GetHessianError(hmc_central,hmc_variations));
+      }else{
+	cout<<"[GetCompare] WARNING wrong SystematicType "<<systematics[i].type<<endl;
+      }
       for(int j=0;j<(int)hdata_variations.size();j++){
 	delete hdata_variations.at(j);
 	delete hmc_variations.at(j);
@@ -629,30 +694,29 @@ TCanvas* GetCompare(TString histname,int sysbit=0,int rebin=0,double xmin=0,doub
   return c1;
 }
 
-void SaveAll(){
+void SaveAll(TString outputdir="plot"){
   int dmax=directories.size();
   int smax=systematics.size();
   TCanvas* c=NULL;
   for(int id=0;id<dmax;id++){
-    cout<<"mkdir -p plot/"+directories[id].name<<endl;
-    system("mkdir -p plot/"+directories[id].name);
+    cout<<"mkdir -p "+outputdir+"/"+directories[id].name<<endl;
+    system("mkdir -p "+outputdir+"/"+directories[id].name);
     int hmax=directories[id].histograms.size();
     for(int ih=0;ih<hmax;ih++){
       Histogram *histogram=&(directories[id].histograms[ih]);
       TString this_histname=directories[id].name+histogram->name;
       c=GetCompare(this_histname,0,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
-      c->SaveAs("plot/"+this_histname+".png");
+      c->SaveAs(outputdir+"/"+this_histname+".png");
       delete c;      
     }
     for(int is=0;is<smax;is++){
-      cout<<"mkdir -p plot/"+directories[id].name+systematics[is].name<<endl;
-      system("mkdir -p plot/"+directories[id].name+systematics[is].name);
+      cout<<"mkdir -p "+outputdir+"/"+directories[id].name+systematics[is].name<<endl;
+      system("mkdir -p "+outputdir+"/"+directories[id].name+systematics[is].name);
       for(int ih=0;ih<hmax;ih++){
 	Histogram *histogram=&(directories[id].histograms[ih]);
 	TString this_histname=directories[id].name+histogram->name;
-	if(systematics[is].type>=1) c=GetCompare(this_histname,1<<is,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
-	else c=GetCompare(this_histname,-systematics[is].type,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
-	c->SaveAs("plot/"+this_histname(0,this_histname.Last('/')+1)+systematics[is].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
+	c=GetCompare(this_histname,systematics[is].sysbit,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
+	c->SaveAs(outputdir+"/"+this_histname(0,this_histname.Last('/')+1)+systematics[is].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
 	delete c;
       }
     }
@@ -670,7 +734,7 @@ void PrintKeys(TList* keys){
   }
 }
 void PrintHistList(int samplenum=1){
-  TFile f(samples.at(samplenum).files.at(1));
+  TFile f(samples.at(samplenum).files.at(0));
   cout<<f.GetName()<<" "<<f.GetTitle()<<endl;
   PrintKeys(f.GetListOfKeys());
 }

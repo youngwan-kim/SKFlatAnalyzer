@@ -269,6 +269,9 @@ void SMPValidation::executeEventFromParameter(TString channelname,Event* ev){
     for(int i=0;i<(int)PDFWeights_Scale->size();i++){
       map_systematic[Form("scalevariation%d",i)]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_Scale->at(i);
     }
+    for(int i=0;i<(int)PDFWeights_Error->size();i++){
+      map_systematic[Form("pdf%d",i)]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_Error->at(i);
+    }
   }
 
   

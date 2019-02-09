@@ -1,9 +1,16 @@
 #include "AFBAnalyzer.h"
 
 void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
-  std::vector<Muon> muons=GetMuons("POGTightWithTightIso",7.,2.4);
+  std::vector<Muon> muons=GetMuons("POGTightWithTightIso",0.0,2.4);
   std::sort(muons.begin(),muons.end(),PtComparing);
-  std::vector<Electron> electrons=GetElectrons("passMediumID",9.,2.5);
+  //std::vector<Electron> electrons=GetElectrons("passMediumID80X",0.0,2.5);
+  std::vector<Electron> electrons=GetElectrons("passMediumID",0.0,2.5);
+  for(int i=0;i<(int)electrons.size();i++){
+    if(fabs(electrons.at(i).scEta())>1.4442&&fabs(electrons.at(i).scEta())<1.566){
+      electrons.erase(electrons.begin()+i);
+      i--;
+    }
+  }
   std::sort(electrons.begin(),electrons.end(),PtComparing);
   std::vector<Lepton*> leps;
   double lep0ptcut,lep1ptcut,etacut;
@@ -61,7 +68,6 @@ void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
   if(leps.size()<2) return;
   FillHist(channelname+"/"+prefix+"cutflow",2.5,totalweight,20,0,20);
   if(leps.at(0)->Pt()<lep0ptcut||leps.at(1)->Pt()<lep1ptcut) return;
-  if(fabs(leps.at(0)->Eta())>etacut||fabs(leps.at(1)->Eta()>etacut)) return;
   FillHist(channelname+"/"+prefix+"cutflow",3.5,totalweight,20,0,20);
   if(leps.size()!=2) return;
   FillHist(channelname+"/"+prefix+"cutflow",4.5,totalweight,20,0,20);
@@ -186,6 +192,9 @@ void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
   
     for(int i=0;i<(int)PDFWeights_Scale->size();i++){
       map_systematic[Form("scalevariation%d",i)]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_Scale->at(i);
+    }
+    for(int i=0;i<(int)PDFWeights_Error->size();i++){
+      map_systematic[Form("pdf%d",i)]=weight*PUreweight*RECOSF*IDSF*ISOSF*triggerSF*prefireweight*zptcor*PDFWeights_Error->at(i);
     }
   }
 
