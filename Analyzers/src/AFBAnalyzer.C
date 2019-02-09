@@ -3,7 +3,6 @@
 void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
   std::vector<Muon> muons=GetMuons("POGTightWithTightIso",0.0,2.4);
   std::sort(muons.begin(),muons.end(),PtComparing);
-  //std::vector<Electron> electrons=GetElectrons("passMediumID80X",0.0,2.5);
   std::vector<Electron> electrons=GetElectrons("passMediumID",0.0,2.5);
   for(int i=0;i<(int)electrons.size();i++){
     if(fabs(electrons.at(i).scEta())>1.4442&&fabs(electrons.at(i).scEta())<1.566){
@@ -13,7 +12,7 @@ void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
   }
   std::sort(electrons.begin(),electrons.end(),PtComparing);
   std::vector<Lepton*> leps;
-  double lep0ptcut,lep1ptcut,etacut;
+  double lep0ptcut,lep1ptcut;
   double (MCCorrection::*LeptonID_SF)(TString,double,double,int)=NULL;
   double (MCCorrection::*LeptonISO_SF)(TString,double,double,int)=NULL;
   double (MCCorrection::*LeptonReco_SF)(double,double,int)=NULL;
@@ -23,7 +22,6 @@ void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
     leps=MakeLeptonPointerVector(muons);
     lep0ptcut=20.;
     lep1ptcut=10.;
-    etacut=2.4;
     LeptonID_SF=&MCCorrection::MuonID_SF;
     LeptonISO_SF=&MCCorrection::MuonISO_SF;
     LeptonID_key="NUM_TightID_DEN_genTracks";
@@ -34,7 +32,6 @@ void AFBAnalyzer::executeEventFromParameter(TString channelname,Event* ev){
     leps=MakeLeptonPointerVector(electrons);
     lep0ptcut=25.;
     lep1ptcut=15.;
-    etacut=2.5;
     LeptonID_SF=&MCCorrection::ElectronID_SF;
     LeptonReco_SF=&MCCorrection::ElectronReco_SF;
     LeptonID_key="passMediumID_jihkim";

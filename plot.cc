@@ -52,7 +52,6 @@ struct Histogram{
   int rebin;
   double xmin;
   double xmax;
-  bool setlog;
   TString option;
 };
 struct Directory{
@@ -154,13 +153,12 @@ void AddSystematic(TString name_,SystematicType type_,TString includes_,bool exi
   AddSystematic(name_,type_,includes,exist_data_,exist_bg_);
 }
 
-void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,double xmax_,bool setlog_=false,TString option_=""){
+void AddHistogram(Directory& directory,TString name_,int rebin_,double xmin_,double xmax_,TString option_=""){
   Histogram histogram;
   histogram.name=name_;
   histogram.rebin=rebin_;
   histogram.xmin=xmin_;
   histogram.xmax=xmax_;
-  histogram.setlog=setlog_;
   histogram.option=option_;
   //cout<<" [AddHistogram] to <<histogram.name<<" "<<histogram.rebin<<" "<<histogram.xmin<<" "<<histogram.xmax<<endl;
   directory.histograms.push_back(histogram);
@@ -281,9 +279,9 @@ void SetupDirectoriesAFBAnalyzer(int channel,int year){
     AddHistogram(directory,"lldelR",0,0,0);
     AddHistogram(directory,"lldelphi",0,0,0);
     AddHistogram(directory,"nPV",0,0,0);
-    AddHistogram(directory,"costhetaCS",0,0,0);
-    AddHistogram(directory,"abscosthetaCS",0,0,0);
-    if(region[i].Contains("m60to120")) AddHistogram(directory,"AFB",0,0,0,false,"AFB");
+    AddHistogram(directory,"costhetaCS",0,0,0,"noleg");
+    AddHistogram(directory,"abscosthetaCS",0,0,0,"noleg");
+    if(region[i].Contains("m60to120")) AddHistogram(directory,"AFB",0,0,0,"AFB");
     directories.push_back(directory);
   }
   cout<<endl;
@@ -403,8 +401,8 @@ TH1* GetHMC(const vector<TH1*>& hists,TString option=""){
 }
 TH1* GetHMC(THStack* hstack){
   TList* list=hstack->GetHists();
-  TH1* hist=(TH1*)list->At(0)->Clone("hmc");
-  for(int i=1;i<list->GetSize();i++){
+  TH1* hist=(TH1*)list->At(list->GetSize()-1)->Clone("hmc");
+  for(int i=0;i<list->GetSize()-1;i++){
     hist->Add((TH1*)list->At(i));
   }
   return hist;
@@ -427,10 +425,12 @@ TH1* GetHData(const vector<TH1*>& hists,TString option=""){
   }
   else return (TH1*)hists.at(0)->Clone();
 }
-TLegend* GetLegend(const vector<TH1*>& hists,TString option=""){
+TLegend* GetLegend(const vector<TH1*>& hists,TString option){
   int histssize=hists.size();
   if(option.Contains("BGSub")) histssize=2;
-  TLegend* legend=new TLegend(0.67,0.88-histssize*0.07,0.89,0.88);
+  double horizontalshift=0;
+  if(option.Contains("leftleg")) horizontalshift=-0.53;
+  TLegend* legend=new TLegend(0.67+horizontalshift,0.88-histssize*0.07,0.89+horizontalshift,0.88);
   for(int i=0;i<histssize;i++){
     TString att="f";
     if(i==0) att="lp";
@@ -439,7 +439,7 @@ TLegend* GetLegend(const vector<TH1*>& hists,TString option=""){
   legend->SetBorderSize(0);
   return legend;
 }
-TLegend* GetLegend(TH1* h1,TH1* h2){
+TLegend* GetLegend(TH1* h1,TH1* h2,TString option){
   vector<TH1*> hists;
   hists.push_back(h1);
   if(strstr(h2->ClassName(),"THStack")){
@@ -448,7 +448,7 @@ TLegend* GetLegend(TH1* h1,TH1* h2){
       hists.push_back((TH1*)list->At(i));
     }
   }else hists.push_back(h2);
-  return GetLegend(hists,"");
+  return GetLegend(hists,option);
 }
 TH1* GetEnvelope(TH1* central,const vector<TH1*>& variations){
   if(strstr(central->ClassName(),"THStack")) central=GetHMC((THStack*)central);
@@ -516,7 +516,7 @@ int AddError(TH1* hist,TH1* sys){
   }
   return 1;
 }
-TCanvas* GetCompare(TH1* h1,TH1* h1sys,TH1* h2,TH1* h2sys,int rebin,double xmin,double xmax,bool setlog){
+TCanvas* GetCompare(TH1* h1,TH1* h1sys,TH1* h2,TH1* h2sys,int rebin,double xmin,double xmax,TString option){
   THStack *hstack=NULL;
   if(strstr(h2->ClassName(),"THStack")!=NULL){
     hstack=(THStack*)h2;
@@ -568,22 +568,26 @@ TCanvas* GetCompare(TH1* h1,TH1* h1sys,TH1* h2,TH1* h2sys,int rebin,double xmin,
 
   if(hstack){
     hstack->Draw("same");
-    h2total->SetFillColor(4);
-  }
-  h2total->SetFillStyle(3002);
+    if(h2sys) h2->SetFillColor(4);
+  }else if(h2sys) h2->SetFillStyle(3001);
+  h2total->SetFillStyle(3001);
   h2total->Draw("same e2");
-  if(h2sys) h2->Draw("same e2");
+  if(h2sys){
+    h2total->SetFillColor(4);
+    h2->Draw("same e2");
+  }
 
-  TLegend* legend=GetLegend(h1,hstack?(TH1*)hstack:h2);
-  legend->Draw();
+  TLegend* legend=GetLegend(h1,hstack?(TH1*)hstack:h2,option);
+  if(!option.Contains("noleg")) legend->Draw();
 
-  if(setlog){
+  if(option.Contains("logy")){
     gPad->SetLogy();
   }else{
     double maximum=h1total->GetMaximum()>h2total->GetMaximum()?h1total->GetMaximum():h2total->GetMaximum();
     double minimum=h1total->GetMinimum()<h2total->GetMinimum()?h1total->GetMinimum():h2total->GetMinimum();
     double range=fabs(maximum-minimum);
-    h1total->GetYaxis()->SetRangeUser(minimum?minimum-0.1*range:0,maximum+0.1*range);
+    cout<<minimum<<endl;
+    h1total->GetYaxis()->SetRangeUser(minimum<0?minimum-0.1*range:0,maximum+0.1*range);
   }
   h1total->Draw("same a e");
 
@@ -596,34 +600,46 @@ TCanvas* GetCompare(TH1* h1,TH1* h1sys,TH1* h2,TH1* h2sys,int rebin,double xmin,
   TH1* ratio=(TH1*)h1->Clone("ratio");
   ratio->SetTitle("");
   ratio->SetStats(0);
-  ratio->Divide(h2);
-  ratio->Draw();
-  ratio->GetYaxis()->SetTitle("Data/Simulation");
+  double defaultval=1.;
+  if(option.Contains("diff")){
+    defaultval=0.;
+    ratio->Add(h2,-1);
+    ratio->GetYaxis()->SetTitle("Data - Simulation");
+    ratio->GetYaxis()->SetRangeUser(-0.02,0.02);
+    ratio->GetYaxis()->SetLabelSize(0.06);
+  }else{
+    defaultval=1.;
+    ratio->Divide(h2);
+    ratio->GetYaxis()->SetTitle("Data/Simulation");
+    ratio->GetYaxis()->SetRangeUser(0.8,1.2);
+    ratio->GetYaxis()->SetLabelSize(0.1);
+  }
   ratio->GetYaxis()->SetTitleSize(0.1);
   ratio->GetYaxis()->SetTitleOffset(0.5);
-  ratio->GetYaxis()->SetRangeUser(0.8,1.2);
-  ratio->GetYaxis()->SetLabelSize(0.1);
   ratio->GetXaxis()->SetTitle(h2->GetTitle());
-  ratio->GetXaxis()->SetTitleSize(0.1);
-  ratio->GetXaxis()->SetLabelSize(0.1);
-  TLine *line=new TLine(xmin?xmin:ratio->GetXaxis()->GetXmin(),1,xmax?xmax:ratio->GetXaxis()->GetXmax(),1);
+  ratio->GetXaxis()->SetTitleSize(0.09);
+  ratio->GetXaxis()->SetLabelSize(0.09);
+  ratio->Draw();
+  TLine *line=new TLine(xmin?xmin:ratio->GetXaxis()->GetXmin(),defaultval,xmax?xmax:ratio->GetXaxis()->GetXmax(),defaultval);
   line->SetLineColor(2);
   line->Draw();
   if(h1sys||h2sys){
     TH1* ratiosys=(TH1*)h2->Clone("ratiosys");
     for(int i=1;i<ratiosys->GetNbinsX()+1;i++){
       double yh1sys=h1sys?h1sys->GetBinContent(i):0;
-      double eyh1sys=(yh1sys==0)?0:h1sys->GetBinError(i)/yh1sys;
+      double eyh1sys=(yh1sys==0)?0:h1sys->GetBinError(i);
       double yh2sys=h2sys?h2sys->GetBinContent(i):0;
-      double eyh2sys=yh2sys==0?0:h2sys->GetBinError(i)/yh2sys;
-      ratiosys->SetBinContent(i,1);
-      ratiosys->SetBinError(i,sqrt(eyh1sys*eyh1sys+eyh2sys*eyh2sys));  
+      double eyh2sys=yh2sys==0?0:h2sys->GetBinError(i);
+      ratiosys->SetBinContent(i,defaultval);
+      if(option.Contains("diff")) ratiosys->SetBinError(i,sqrt(pow(eyh1sys,2)+pow(eyh2sys,2)));  
+      else ratiosys->SetBinError(i,sqrt(pow(eyh1sys/yh1sys,2)+pow(eyh2sys/yh2sys,2)));  
     }
     ratiosys->SetFillStyle(3002);
     ratiosys->SetFillColor(4);
     ratiosys->Draw("same p e2");
     TLegend* syslegend=new TLegend(0.6,0.75,0.89,0.95);
-    syslegend->AddEntry(ratio,"Data/Simulation (Stat.)","lp");
+    if(option.Contains("diff")) syslegend->AddEntry(ratio,"Data - Simulation (Stat.)","lp");
+    else syslegend->AddEntry(ratio,"Data/Simulation (Stat.)","lp");
     syslegend->AddEntry(ratiosys,"Syst.","f");
     syslegend->Draw();
   }
@@ -631,8 +647,8 @@ TCanvas* GetCompare(TH1* h1,TH1* h1sys,TH1* h2,TH1* h2sys,int rebin,double xmin,
 
   return c1;
 }
-TCanvas* GetCompare(TString histname,int sysbit=0,int rebin=0,double xmin=0,double xmax=0,bool setlog=false,TString option=""){
-  if(option.Contains("AFB")) option+=" BGSub";
+TCanvas* GetCompare(TString histname,int sysbit=0,int rebin=0,double xmin=0,double xmax=0,TString option=""){
+  if(option.Contains("AFB")) option+=" BGSub diff leftleg";
   vector<TH1*> hists_central=GetHists(histname,histname,histname,option);
   TH1* hdata_central=GetHData(hists_central,option);
   TH1* hmc_central=GetHMC(hists_central,option);
@@ -687,10 +703,7 @@ TCanvas* GetCompare(TString histname,int sysbit=0,int rebin=0,double xmin=0,doub
       delete hdata_syss.at(i);delete hmc_syss.at(i);
     }
   }
-  TCanvas* c1=GetCompare(hdata_central,hdata_sys,hstack_central?(TH1*)hstack_central:hmc_central,hmc_sys,rebin,xmin,xmax,setlog);
-  if(option.Contains("AFB")){
-    ((TH1*)c1->GetPad(2)->GetPrimitive("ratio"))->GetYaxis()->SetRangeUser(0,2);
-  }
+  TCanvas* c1=GetCompare(hdata_central,hdata_sys,hstack_central?(TH1*)hstack_central:hmc_central,hmc_sys,rebin,xmin,xmax,option);
   return c1;
 }
 
@@ -705,7 +718,7 @@ void SaveAll(TString outputdir="plot"){
     for(int ih=0;ih<hmax;ih++){
       Histogram *histogram=&(directories[id].histograms[ih]);
       TString this_histname=directories[id].name+histogram->name;
-      c=GetCompare(this_histname,0,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
+      c=GetCompare(this_histname,0,histogram->rebin,histogram->xmin,histogram->xmax,histogram->option);
       c->SaveAs(outputdir+"/"+this_histname+".png");
       delete c;      
     }
@@ -715,7 +728,7 @@ void SaveAll(TString outputdir="plot"){
       for(int ih=0;ih<hmax;ih++){
 	Histogram *histogram=&(directories[id].histograms[ih]);
 	TString this_histname=directories[id].name+histogram->name;
-	c=GetCompare(this_histname,systematics[is].sysbit,histogram->rebin,histogram->xmin,histogram->xmax,histogram->setlog,histogram->option);
+	c=GetCompare(this_histname,systematics[is].sysbit,histogram->rebin,histogram->xmin,histogram->xmax,histogram->option);
 	c->SaveAs(outputdir+"/"+this_histname(0,this_histname.Last('/')+1)+systematics[is].name+this_histname(this_histname.Last('/'),this_histname.Length())+".png");
 	delete c;
       }
