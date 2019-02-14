@@ -6,7 +6,6 @@ import datetime
 from CheckJobStatus import *
 from TimeTools import *
 import random
-import subprocess
 
 parser = argparse.ArgumentParser(description='SKFlat Command')
 parser.add_argument('-a', dest='Analyzer', default="")
@@ -70,23 +69,19 @@ IsUI10 = ("ui10.sdfarm.kr" in HOSTNAME)
 IsUI20 = ("ui20.sdfarm.kr" in HOSTNAME)
 IsSNU = ("snu" in HOSTNAME)
 IsKNU = ("knu" in HOSTNAME)
-IsTAMSA2 = ("tamsa2" in HOSTNAME)
 if IsKISTI:
   HOSTNAME = "KISTI"
 if IsSNU:
   HOSTNAME = "SNU"
 if IsKNU:
   HOSTNAME = "KNU"
-if IsTAMSA2:
-  HOSTNAME = "TAMSA2"
 
 ## Is Skim run?
 IsSkimTree = "SkimTree" in args.Analyzer
 if IsSkimTree:
-  if not (IsSNU or IsTAMSA2):
+  if not IsSNU:
     print "Skimming only possible in SNU"
     exit()
-  NJobMax=args.NJobs
   args.NJobs = 999999
 
 ## Machine-dependent variables
@@ -446,11 +441,7 @@ void {2}(){{
       ## /data7/DATA/SKFlat/v949cand2_2/2017/DATA/SingleMuon/periodB/181107_231447/0000
       ## /data7/DATA/SKFlat/v949cand2_2/2017/MC/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/181108_152345/0000/SKFlatNtuple_2017_MC_100.root
       dir1 = '/data7/DATA/SKFlat/'+SKFlatV+'/'+args.Year+'/'
-      if args.Outputdir!='':
-        dir2 = args.Outputdir+'/SKFlat/'+SKFlatV+'/'+args.Year+'/'
-      else:
-        dir2 = dir1
-    
+      dir2 = dir1
       if IsDATA:
         dir1 += "DATA/"
         dir2 += "DATA_"+args.Analyzer+"/"
@@ -495,29 +486,6 @@ root -l -b -q run.C
       cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' -wd '+thisjob_dir+' commands.sh '
 
       if not args.no_exec:
-        cwd = os.getcwd()
-        os.chdir(thisjob_dir)
-        os.system(cmd+' > submitlog.log')
-        os.chdir(cwd)
-      sublog = open(thisjob_dir+'/submitlog.log','a')
-      sublog.write('\nSubmission command was : '+cmd+'\n')
-      sublog.close()
-
-    if IsTAMSA2:
-      run_commands = open(thisjob_dir+'commands.sh','w')
-      print>>run_commands,'''cd {0}
-echo "[SKFlat.py] Okay, let's run the analysis"r
-root -l -b -q run.C 1>stdout.log 2>stderr.log
-'''.format(thisjob_dir)
-      run_commands.close()
-
-      jobname = 'job_'+str(it_job)+'_'+args.Analyzer
-      cmd = 'qsub -V -N '+jobname+' commands.sh '
-
-      if not args.no_exec:
-        if IsSkimTree:
-          while int(subprocess.check_output("qstat|grep $USER|wc -l",shell=True))  > NJobMax:
-            time.sleep(60)
         cwd = os.getcwd()
         os.chdir(thisjob_dir)
         os.system(cmd+' > submitlog.log')
@@ -885,7 +853,7 @@ Job started at {0}
 Job finished at {1}
 '''.format(string_JobStartTime,string_ThisTime)
 
-if IsSNU or IsKNU or IsTAMSA2:
+if IsSNU or IsKNU:
   JobFinishEmail += 'Queue = '+args.Queue+'\n'
 
 EmailTitle = '['+HOSTNAME+']'+' Job Summary'

@@ -42,21 +42,20 @@ source SMPValidationSubmit.sh
 ```
 
 ### SMPValidation plotting
-Edit TString filedir in plot.cc  
 Draw a plot
 ```bash
+source setup.sh //if you haven't
 root -l
 .L plot.cc
-Setup("electron2017")
-GetCompareStack("electron2017/OS_Z/dimass",0,0,80,100)
+Setup(Channel::ELECTRON,2017)
+GetCompare("electron2017/OS_Z/dirap")
 ```
-Save plots
+Save all plots
 ```bash
+source setup.sh //if you haven't
 root -b
 .L plot.cc
-Setup("electron2017")
-SaveAll()
-Setup("muon2017")
+Setup(Channel::ELECTRON,2017)
 SaveAll()
 ```
 
@@ -64,15 +63,11 @@ SaveAll()
 ```bash
 cd script/MakeCycleSkeleton/
 ```
-Edit MakeCycleSkeleton.py :
-```bash
-cyclename = "" # <- put new Analyzer name
-```
 Then, run
 ```bash
-python MakeCycleSkeleton.py
+python MakeCycleSkeleton.py NewAnalyzer # <- put new analyzer name
 ```
-It will print below lines :
+It will print below lines (execute the lines) :
 ```bash
 mv NewAnalyzer.h $SKFlat_WD/Analyzers/include/
 mv NewAnalyzer.C $SKFlat_WD/Analyzers/src/
