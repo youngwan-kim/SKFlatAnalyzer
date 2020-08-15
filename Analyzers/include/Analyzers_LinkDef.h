@@ -15,5 +15,8 @@
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class SkimTree_HNFake+;
 #pragma link C++ class MeasureJetTaggingEfficiency+;
+#pragma link C++ class ttbar_test+;
+#pragma link C++ class cr_study+;
+#pragma link C++ class test+;
 
 #endif
