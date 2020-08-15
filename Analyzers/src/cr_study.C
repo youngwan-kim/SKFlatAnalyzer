@@ -1,0 +1,325 @@
+#include "cr_study.h"
+
+void cr_study::initializeAnalyzer(){
+
+  Triggers_POGTight_Muon.clear();
+  Triggers_POGHighPt_Muon.clear();
+
+  //==== DATA 
+  
+  if(IsDATA){
+
+    if(DataStream == "DoubleMuon"){
+
+      if(HasFlag("BF") || HasFlag("G")) Triggers_POGTight_Muon = { 
+
+        "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
+        "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
+        "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+        "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v" 
+
+      };
+
+      // DZ triggers were prescaled for period H
+      if(HasFlag("H")) Triggers_POGTight_Muon = { 
+
+        "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+        "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v" 
+
+      };
+
+//  TriggerNameForSF_POGTight_Muon = ""; 
+    TriggerSafePt_POGTight_Muon = 26.;
+
+    }
+
+    if(DataStream == "SingleMuon"){
+
+      Triggers_POGHighPt_Muon = { "HLT_Mu50_v", "HLT_TkMu50_v" };
+      TriggerNameForSF_POGHighPt_Muon = "Mu50";
+      TriggerSafePt_POGHighPt_Muon = 52.;
+
+    } 
+
+  }
+
+  //==== MC
+
+  if(!IsDATA){
+
+    Triggers_POGTight_Muon = {
+
+      "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
+      "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
+      "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+      "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"
+
+    };
+
+    TriggerNameForSF_POGTight_Muon = "";
+    TriggerSafePt_POGTight_Muon = 26.;
+
+    Triggers_POGHighPt_Muon = { "HLT_Mu50_v", "HLT_TkMu50_v" };
+    TriggerNameForSF_POGHighPt_Muon = "Mu50";
+    TriggerSafePt_POGHighPt_Muon = 52.;
+
+  }
+
+  //==== B-Tagging 
+  std::vector<JetTagging::Parameters> jtps;
+  jtps.push_back( JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::incl, JetTagging::comb));
+  mcCorr->SetJetTaggingParameters(jtps);
+
+}
+
+void cr_study::executeEvent(){
+
+  weight_Prefire = GetPrefireWeight(0);
+
+  AnalyzerParameter param;
+ 
+  //==== POG Tight ==== ( dimuon )
+
+  if(DataStream=="DoubleMuon"){
+
+    param.Clear();
+    param.Name = "POGTight";
+    param.Muon_ID_SF_Key = "";
+    param.Muon_ISO_SF_Key = "";
+    param.Muon_Trigger_SF_Key = "";
+
+    param.Jet_ID = "tight";  
+
+    executeEventFromParameter(param); 
+  }
+
+  //==== POG HighPt ==== ( single muon )
+
+  if(DataStream=="SingleMuon"){
+
+    param.Clear();
+    param.Name = "POGHighPt";
+    param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_genTracks";
+    param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
+    param.Muon_Trigger_SF_Key = "POGHighPtLooseTrkIso";
+    param.Jet_ID = "tight";
+
+    executeEventFromParameter(param);
+  
+  }
+
+  if(!IsDATA){
+
+    param.Clear();
+    param.Name = "POGTight";
+    param.Muon_Tight_ID = "";
+    param.Muon_ID_SF_Key = "";
+    param.Muon_ISO_SF_Key = "";
+    param.Muon_Trigger_SF_Key = "";
+
+    param.Jet_ID = "tight";
+
+    executeEventFromParameter(param);
+
+    param.Clear();
+    param.Name = "POGHighPt";
+
+    param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_genTracks";
+    param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
+    param.Muon_Trigger_SF_Key = "POGHighPtLooseTrkIso";
+    param.Jet_ID = "tight";
+
+    executeEventFromParameter(param);
+
+  }
+
+
+}
+
+void cr_study::executeEventFromParameter(AnalyzerParameter param){
+
+  if(!PassMETFilter()) return;
+
+  Event ev = GetEvent();
+  Particle METv = ev.GetMETVector();
+
+  TString TriggerNameForSF_Electron, TriggerNameForSF_Muon;
+  double TriggerSafePt_Electron, TriggerSafePt_Muon;
+  double MinLeptonPt = 20 ;
+
+  if(param.Name=="POGTight"){
+
+    TriggerNameForSF_Muon = TriggerNameForSF_POGTight_Muon;
+    TriggerSafePt_Muon = TriggerSafePt_POGTight_Muon;
+    
+    if(!ev.PassTrigger(Triggers_POGTight_Muon)) return;
+
+  }
+
+  if(param.Name=="POGHighPt"){
+
+//  TriggerNameForSF_Muon = TriggerNameForSF_POGHighPt_Muon
+
+    TriggerSafePt_Muon = TriggerSafePt_POGHighPt_Muon;
+
+    if(!ev.PassTrigger(Triggers_POGHighPt_Muon)) return;
+
+  }
+
+  std::vector<Jet> jets = GetJets("tight",20,2.7);
+  std::vector<Muon> veto_muons = GetMuons("POGLoose", MinLeptonPt, 2.4);
+  std::vector<Electron> veto_electrons = GetElectrons("passVetoID", MinLeptonPt, 2.5);
+  std::vector<Jet> cleaned_jets = JetsVetoLeptonInside(GetJets(jets,veto_electrons,muons);
+  std::vector<Jet> bjets;
+
+  double HT=0;
+
+  JetTagging::Parameters jtp_DeepCSV_Medium = JetTagging::Parameters(JetTagging::DeepCSV,JetTagging::Medium,JetTagging::incl, JetTagging::comb);
+  double btagweight_1a = mcCorr->GetBTaggingReweight_1a(cleaned_jets,jtp_DeepCSV_Medium);
+
+  for(unsigned int i=0; i<cleaned_jets.size(); i++){
+  
+    Jet this_jet = cleaned_jets.at(i);
+    HT += this_jet.Pt();
+
+    double this_discr = this_jet.GetTaggerResult(JetTagging::DeepCSV);
+
+    if( this_discr > mcCorr->GetJetTaggingCutValue(JetTagging::DeepCSV, JetTagging::Medium)){
+      cleaned_bjets.push_back(this_jet);
+    }
+  }
+
+  std::sort(muons.begin(),muons.end(),PtComparing);
+  std::sort(bjets.begin(),bjets.end(),PtComparing);
+  std::sort(myjets.begin(),myjets.end(),PtComparing); 
+
+  //==================
+  //==== Cut Flow ====
+  //==================
+
+  FillHist("CutFlow",0.,1.,5,0,5); // No Cut , cut number is temporary
+
+  //=========================
+  //==== Event Selection ====
+  // cms101.snu.ac.kr:8080/Heavy+Neutrino/200814_014357/HN_20200813.pdf
+  //=========================  
+
+  if(muons.size()!=2) return; // dimuon cut (exactly 2)
+//  FillHist("CutFlow",1, );
+
+  Particle Cand = muons.at(0)+muons.at(1);
+
+  if(muons.at(0).Charge()*muons.at(1).Charge()>0) return; // OS cut
+//  FillHist("CutFlow",2, );
+
+  if(Cand.M()<=50) return; // m(ll)>50GeV
+//  FillHist("CutFlow",3, );
+  
+  if(param.Name=="POG"){
+
+    if(muons.at(0)<=20 || muons.at(1)<=10) return;
+//    FillHist("CutFlow",4, );
+
+  }
+  
+  if(param.Name=="POGHighPt"){
+
+    if(muons.at(0)<=50 || muons.at(1)<=50) return;
+//    FillHist("CutFlow",4, );
+
+  }
+
+  if(HasFlag("DY")){
+  // no bjet / m(ll) [80,100] / no jet cleaning required
+  }
+
+  if(HasFlag("TT")){
+
+    if(METv.Pt()<=40) return;
+    FillHist("CutFlow",5,);
+  // at least 2jets / at least 1 bjets / MET > 40 GeV
+  }
+
+     
+
+  //======================
+  //==== MC Weighting ====
+  //======================
+
+  double weight = 1.;
+  if(!IsDATA){
+    
+    weight *= weight_norm_1invpb*ev.GetTriggerLumi("Full");
+    weight *= ev.MCweight();
+    weight *= weight_Prefire;
+
+    for(unsigned int i=0; i<muons.size(); i++){    
+  
+      double this_pt = muons.at(i).MiniAODPt();
+      double this_eta = muons.at(i).Eta();
+
+      double this_idsf  = mcCorr->MuonID_SF (param.Muon_ID_SF_Key,  this_eta, this_pt);
+      double this_isosf = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, this_eta, this_pt);
+
+      if(param.Name=="POGHighPt"){
+
+        double this_trigsf = mcCorr->MuonTrigger_SF(param.Muon_Trigger_SF_Key, TriggerNameForSF_Muon, muons);
+
+      } 
+
+      if(param.Name=="POGTight"){
+
+        if(i==0) double this_trigsf = mcCorr->MuonTrigger_SF(param.Muon_Trigger_SF_Key,"Lead17", muons);
+
+        if(i==1) double this_trigsf = mcCorr->MuonTrigger_SF(param.Muon_Trigger_SF_Key, "Tail8", muons);
+
+      }
+
+      weight *= this_idsf*this_isosf*this_trigsf;
+
+    }
+
+  }
+
+  //=========================
+  //==== Fill Histograms ====
+  //=========================
+
+  // MET
+  FillHist("METv_"+param.Name,METv.Pt(),weight,25,0,250);
+  FillHist("MET_Phi_"+param.Name,METv.Phi(),weight,60,-3,3);
+  
+  // Jets
+  FillHist("HT_"+param.Name,HT,weight,50,0,500);
+  FillHist("NJets_"+param.Name,myjets.size(),weight,10,0,10);
+  FillHist("LeadingJet_Pt_"+param.Name,myjets.at(0).Pt(),weight,30,0,450);
+  FillHist("LeadingJet_Eta_"+param.Name,myjets.at(0).Eta(),weight,30,-3,3);
+  FillHist("NBJets_noSF_"+param.Name,bjets.size(),weight,10,0,10);
+  FillHist("NBJets_SF1a_"+param.Name,bjets.size(),weight*btagweight_1a,10,0,10);
+  FillHist("LeadingBJet_Pt_"+param.Name,bjets.at(0).Pt(),weight,30,0,450);
+  
+  // Muons ( index 0 leading muon )
+ 
+  for(unsigned int i=0;i<muons.size();i++){
+
+    TString index = TString::Itoa(i,10); 
+    FillHist("Muon"+index+"_Pt_"+param.Name,muons.at(i).Pt(),weight,25,0,250);
+    FillHist("Muon"+index+"_Eta_"+param.Name,muons.at(i).Eta(),weight,30,-3.,3.);
+    FillHist("Muon"+index+"_Phi_"+param.Name,muons.at(i).Phi(),weight,35,-3.5,3.5);
+
+  }
+
+  // M(ll) plot
+  FillHist("M(ll)_"+param.Name,Cand.M(),weight,20,50,250);
+
+}
+
+cr_study::cr_study(){
+
+}
+
+cr_study::~cr_study(){
+
+}
+
+
