@@ -84,9 +84,13 @@ void cr_study::executeEvent(){
 
     param.Clear();
     param.Name = "POGTight";
-    param.Muon_ID_SF_Key = "";
-    param.Muon_ISO_SF_Key = "";
-    param.Muon_Trigger_SF_Key = "";
+
+    if(HasFlag("BF")) param.Muon_Trigger_SF_Key = "POGTight_BCDEF";
+    if(HasFlag("G")||HasFlag("H")) param.Muon_Trigger_SF_Key = "POGTight_GH";
+
+    param.Muon_ID_SF_Key = "NUM_TightID_DEN_genTracks";
+    param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
+//  param.Muon_Trigger_SF_Key = "";
 
     param.Jet_ID = "tight";  
 
