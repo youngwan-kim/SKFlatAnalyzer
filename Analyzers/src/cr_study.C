@@ -283,6 +283,9 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
     weight *= ev.MCweight();
     weight *= weight_Prefire;
 
+    cout << "[MCweight] (weight_norm_1invpb,TriggerLumi,MCweight,Prefire)=(" << weight_norm_1invpb << "," << ev.GetTriggerLumi("Full") <<"," << ev.MCweight() << "," << weight_Prefire <<")\n" ;
+    cout << "[MCweight] norm*TriggerLumi*MCWeight*Prefire = " << weight << "\n";
+
     for(unsigned int i=0; i<muons.size(); i++){    
   
       double this_pt = muons.at(i).MiniAODPt();
@@ -329,11 +332,11 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
   FillHist("HT_"+param.Name,HT,weight,50,0,500);
   FillHist("NJets_"+param.Name,jets.size(),weight,10,0,10);
-//  FillHist("LeadingJet_Pt_"+param.Name,jets.at(0).Pt(),weight,30,0,450);
-//  FillHist("LeadingJet_Eta_"+param.Name,jets.at(0).Eta(),weight,30,-3,3);
+  FillHist("LeadingJet_Pt_"+param.Name,jets.at(0).Pt(),weight,30,0,450);
+  FillHist("LeadingJet_Eta_"+param.Name,jets.at(0).Eta(),weight,30,-3,3);
   FillHist("NBJets_noSF_"+param.Name,bjets.size(),weight,10,0,10);
   FillHist("NBJets_SF1a_"+param.Name,bjets.size(),weight*btagweight_1a,10,0,10);
-//  FillHist("LeadingBJet_Pt_"+param.Name,bjets.at(0).Pt(),weight,30,0,450);
+  if(HasFlag("TT")) FillHist("LeadingBJet_Pt_"+param.Name,bjets.at(0).Pt(),weight,30,0,450);
   
   // Muons ( index 0 leading muon )
  

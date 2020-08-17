@@ -409,7 +409,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
 
   TString histkey = "Trigger_Eff_DATA_"+trig+"_"+ID;
   if(DataOrMC==1) histkey = "Trigger_Eff_MC_"+trig+"_"+ID;
-  cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
   TH2F *this_hist = map_hist_Muon[histkey];
   if(!this_hist){
     if(IgnoreNoHist) return 1.;
