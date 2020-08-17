@@ -331,15 +331,15 @@ double MCCorrection::MuonISO_SF(TString ID, double eta, double pt, int sys){
 
 double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, double eta, double pt, int sys){
 
-  //cout << "[MCCorrection::MuonTrigger_Eff] Called" << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] Called" << endl;
 
   if(ID=="Default") return 1.;
   if(trig=="Default") return 1.;
 
-  //cout << "[MCCorrection::MuonTrigger_Eff] DataYear = " << DataYear << endl;
-  //cout << "[MCCorrection::MuonTrigger_Eff] ID = " << ID << "\t" << "trig = " << trig << endl;
-  //cout << "[MCCorrection::MuonTrigger_Eff] DataOrMC = " << DataOrMC << endl;
-  //cout << "[MCCorrection::MuonTrigger_Eff] eta = " << eta << ", pt = " << pt << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] DataYear = " << DataYear << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] ID = " << ID << "\t" << "trig = " << trig << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] DataOrMC = " << DataOrMC << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] eta = " << eta << ", pt = " << pt << endl;
 
   double value = 1.;
   double error = 0.;
@@ -409,7 +409,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
 
   TString histkey = "Trigger_Eff_DATA_"+trig+"_"+ID;
   if(DataOrMC==1) histkey = "Trigger_Eff_MC_"+trig+"_"+ID;
-  //cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
+  cout << "[MCCorrection::MuonTrigger_Eff] histkey = " << histkey << endl;
   TH2F *this_hist = map_hist_Muon[histkey];
   if(!this_hist){
     if(IgnoreNoHist) return 1.;
@@ -420,11 +420,13 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   }
 
   int this_bin = this_hist->FindBin(pt,eta);
+  
+  if(trig=="Lead17"||trig=="Tail8") this_bin = this_hist->FindBin(eta,pt);
 
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
 
-  //cout << "[MCCorrection::MuonTrigger_Eff] value = " << value << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] value = " << value << endl;
 
   return value+double(sys)*error;
 
@@ -437,8 +439,8 @@ double MCCorrection::MuonTrigger_SF(TString ID, TString trig, const std::vector<
   if(trig=="Default") return 1.;
 
   double value = 1.;
-
-  if(trig=="IsoMu24" || trig=="IsoMu27" || trig=="Mu50"){
+  //TODO 
+  if(trig=="IsoMu24" || trig=="IsoMu27" || trig=="Mu50" || trig=="Lead17" || trig=="Tail8"){
 
     double eff_DATA = 1.;
     double eff_MC = 1.;

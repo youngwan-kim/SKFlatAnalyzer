@@ -39,6 +39,8 @@ void cr_study::initializeAnalyzer(){
       TriggerNameForSF_POGHighPt_Muon = "Mu50";
       TriggerSafePt_POGHighPt_Muon = 52.;
 
+      cout << "[init] SingleMuon, Data, POGHighPt \n" ;
+
     } 
 
   }
@@ -69,6 +71,7 @@ void cr_study::initializeAnalyzer(){
   jtps.push_back( JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::incl, JetTagging::comb));
   mcCorr->SetJetTaggingParameters(jtps);
 
+  cout << "[init] B Tagging init \n";
 }
 
 void cr_study::executeEvent(){
@@ -93,7 +96,8 @@ void cr_study::executeEvent(){
 
     param.Jet_ID = "tight";  
 
-    executeEventFromParameter(param); 
+    executeEventFromParameter(param);
+
   }
 
   //==== POG HighPt ==== ( single muon )
@@ -111,7 +115,7 @@ void cr_study::executeEvent(){
     param.Jet_ID = "tight";
 
     executeEventFromParameter(param);
-  
+
   }
 
   if(!IsDATA){
@@ -121,7 +125,7 @@ void cr_study::executeEvent(){
     param.Muon_Tight_ID =  "POGTightWithTightIso";
     param.Muon_ID_SF_Key = "NUM_TightID_DEN_genTracks";
     param.Muon_ISO_SF_Key = "NUM_TightRelIso_DEN_TightIDandIPCut";
-    param.Muon_Trigger_SF_Key = "";
+    param.Muon_Trigger_SF_Key = "POGTight_BCDEF"; //TODO ??
     param.Jet_ID = "tight";
 
     executeEventFromParameter(param);
@@ -164,8 +168,7 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
   if(param.Name=="POGHighPt"){
 
-//  TriggerNameForSF_Muon = TriggerNameForSF_POGHighPt_Muon
-
+    TriggerNameForSF_Muon = TriggerNameForSF_POGHighPt_Muon;
     TriggerSafePt_Muon = TriggerSafePt_POGHighPt_Muon;
 
     if(!ev.PassTrigger(Triggers_POGHighPt_Muon)) return;
@@ -195,7 +198,7 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
   JetTagging::Parameters jtp_DeepCSV_Medium = JetTagging::Parameters(JetTagging::DeepCSV,JetTagging::Medium,JetTagging::incl, JetTagging::comb);
   double btagweight_1a = mcCorr->GetBTaggingReweight_1a(jets,jtp_DeepCSV_Medium);
 
-/*  for(unsigned int i=0; i<jets.size(); i++){
+  for(unsigned int i=0; i<jets.size(); i++){
   
     Jet this_jet = jets.at(i);
     HT += this_jet.Pt();
@@ -205,11 +208,11 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
     if( this_discr > mcCorr->GetJetTaggingCutValue(JetTagging::DeepCSV, JetTagging::Medium)){
       bjets.push_back(this_jet);
     }
-  }*/
+  }
   cout<<"jetsize "<< jets.size() << "\n" ;
 
   std::sort(muons.begin(),muons.end(),PtComparing);
-//std::sort(bjets.begin(),bjets.end(),PtComparing);
+  std::sort(bjets.begin(),bjets.end(),PtComparing);
   std::sort(jets.begin(),jets.end(),PtComparing); 
 
   //==================
@@ -289,6 +292,8 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
       double this_isosf = mcCorr->MuonISO_SF(param.Muon_ISO_SF_Key, this_eta, this_pt);
       double this_trigsf = 1.;
 
+      cout << "[MCweight] " << param.Name << "\n";
+
       if(param.Name=="POGHighPt"){
 
         this_trigsf = mcCorr->MuonTrigger_SF(param.Muon_Trigger_SF_Key, TriggerNameForSF_Muon, muons);
@@ -303,7 +308,9 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
       }
 
+      cout << "[MCweight] (id,iso,trig)=(" << this_idsf << "," << this_isosf << "," << this_trigsf << ")\n";
       weight *= this_idsf*this_isosf*this_trigsf;
+      cout << "[MCweight] weight : " << weight << "\n";
 
     }
 
@@ -322,11 +329,11 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
   FillHist("HT_"+param.Name,HT,weight,50,0,500);
   FillHist("NJets_"+param.Name,jets.size(),weight,10,0,10);
-  FillHist("LeadingJet_Pt_"+param.Name,jets.at(0).Pt(),weight,30,0,450);
-  FillHist("LeadingJet_Eta_"+param.Name,jets.at(0).Eta(),weight,30,-3,3);
+//  FillHist("LeadingJet_Pt_"+param.Name,jets.at(0).Pt(),weight,30,0,450);
+//  FillHist("LeadingJet_Eta_"+param.Name,jets.at(0).Eta(),weight,30,-3,3);
   FillHist("NBJets_noSF_"+param.Name,bjets.size(),weight,10,0,10);
   FillHist("NBJets_SF1a_"+param.Name,bjets.size(),weight*btagweight_1a,10,0,10);
-  FillHist("LeadingBJet_Pt_"+param.Name,bjets.at(0).Pt(),weight,30,0,450);
+//  FillHist("LeadingBJet_Pt_"+param.Name,bjets.at(0).Pt(),weight,30,0,450);
   
   // Muons ( index 0 leading muon )
  
