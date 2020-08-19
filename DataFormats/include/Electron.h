@@ -130,6 +130,8 @@ public:
   bool PassID(TString ID) const;
   bool Pass_TESTID() const;
 
+  bool pass_HNType1_CutBasedVeto() const;
+
   bool Pass_CutBasedLooseNoIso() const;
   bool Pass_CutBasedVetoNoIso() const;
   bool Pass_CutBasedLoose() const;

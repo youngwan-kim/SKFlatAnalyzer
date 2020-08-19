@@ -30,11 +30,36 @@ public:
 
   double weight_Prefire;
 
+  std::vector<TString> dimuon_trigger_BG = {
+
+    "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
+    "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
+    "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+    "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"
+
+  };
+
+  std::vector<TString> dimuon_trigger_H = {
+
+    "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+    "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"
+
+  };
+
+  std::vector<Muon> muons, muons_tight, muons_loose, muons_veto;
+  std::vector<Electron> electrons, electrons_veto;
+  std::vector<Jet> jets,bjets;
+
+
+  void DrawHists(TString path, const vector<Muon>& muons, const double& weight);
+//  void cr_study::DrawHists(TString path, const vector<Electron>& electrons, const double& weight);
+  void DrawHists(TString path, const vector<Jet>& jets, const double& weight);
+  void DrawHists(TString path, const Particle& METv, const double& weight);
+
   cr_study();
   ~cr_study();
 
 };
-
 
 
 #endif

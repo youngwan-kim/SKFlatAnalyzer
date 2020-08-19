@@ -107,6 +107,13 @@ bool Muon::PassID(TString ID) const {
   //==== Customized
   if(ID=="TEST") return Pass_TESTID();
 
+  if (ID=="HNType1_POGTight") return Pass_HNType1_POGTight();
+  if (ID=="HNType1_POGLoose") return Pass_HNType1_POGLoose();
+  if (ID=="HNType1_POGVeto") return Pass_HNType1_POGVeto();
+  if (ID=="HNType1_HighPtTight") return Pass_HNType1_HighPtTight();
+  if (ID=="HNType1_HighPtLoose") return Pass_HNType1_HighPtLoose();
+  if (ID=="HNType1_HighPtVeto") return Pass_HNType1_HighPtVeto();
+
   //==== No cut
   if(ID=="NOCUT") return true;
 
@@ -130,6 +137,38 @@ bool Muon::Pass_POGHighPtWithLooseTrkIso() const {
 //==== TEST ID
 
 bool Muon::Pass_TESTID() const {
+  return true;
+}
+
+bool Muon::Pass_HNType1_POGTight() const {
+  if (! isPOGTight()) return false;
+  if (! (RelIso() < 0.1)) return false;
+  return true;
+}
+bool Muon::Pass_HNType1_POGLoose() const {
+  if (! isPOGLoose()) return false;
+  if (! (RelIso() < 0.3)) return false;
+  return true;
+}
+bool Muon::Pass_HNType1_POGVeto() const {
+  if (! isPOGLoose()) return false;
+  if (! (RelIso() < 0.4)) return false;
+  return true;
+}
+
+bool Muon::Pass_HNType1_HighPtTight() const {
+  if (! isPOGHighPt()) return false;
+  if (! (TrkIso() < 0.15)) return false;
+  return true;
+}
+bool Muon::Pass_HNType1_HighPtLoose() const {
+  if (! isPOGHighPt()) return false;
+  if (! (TrkIso() < 0.4)) return false;
+  return true;
+}
+bool Muon::Pass_HNType1_HighPtVeto() const {
+  if (! isPOGHighPt()) return false;
+  if (! (TrkIso() < 0.6)) return false;
   return true;
 }
 

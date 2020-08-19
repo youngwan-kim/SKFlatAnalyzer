@@ -164,6 +164,8 @@ bool Electron::PassID(TString ID) const{
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
 
+  if (ID=="HNType1_CutBasedVeto") return pass_HNType1_CutBasedVeto();
+
   cout << "[Electron::PassID] No id : " << ID << endl;
   exit(EXIT_FAILURE);
 
@@ -248,7 +250,6 @@ bool Electron::Pass_SUSYLoose() const{
 }
 
 //==== TEST ID
-
 bool Electron::Pass_TESTID() const{
   return true;
 }
@@ -382,6 +383,15 @@ bool Electron::Pass_CutBasedVeto() const{
   }
 
 }
+
+bool Electron::pass_HNType1_CutBasedVeto() const {
+	if (! passVetoID()) return false;
+	if (! (RelIso() < 0.6)) return false;
+	if (! (fabs(dXY() < 0.2))) return false;
+	if (! (fabs(dZ() < 0.5))) return false;
+	return true;
+}
+
 
 void Electron::SetRho(double r){
   j_Rho = r;
