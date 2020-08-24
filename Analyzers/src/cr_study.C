@@ -222,7 +222,6 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
   if(muons.size()!=2) return; // dimuon cut (exactly 2)
   FillHist(param.Name+"/CutFlow", 3., 1., 10, 0., 10.);
-  FillHist("CutFlow",1,1.,8,0,8);
 
   Particle Cand = muons.at(0)+muons.at(1);
 
