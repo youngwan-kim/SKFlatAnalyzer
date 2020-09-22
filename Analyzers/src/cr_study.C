@@ -11,8 +11,9 @@ void cr_study::initializeAnalyzer(){
 
     if(DataStream == "DoubleMuon"){
 
-      if(HasFlag("BF") || HasFlag("G")) Triggers_POGTight_Muon = dimuon_trigger_BG;
-      if(HasFlag("H")) Triggers_POGTight_Muon = dimuon_trigger_H;
+      Triggers_POGTight_Muon = dimuon_trigger;
+//      if(HasFlag("BF") || HasFlag("G")) Triggers_POGTight_Muon = dimuon_trigger_BG;
+//      if(HasFlag("H")) Triggers_POGTight_Muon = dimuon_trigger_H;
 
 //  TriggerNameForSF_POGTight_Muon = ""; 
     TriggerSafePt_POGTight_Muon = 26.;
@@ -35,14 +36,8 @@ void cr_study::initializeAnalyzer(){
 
   if(!IsDATA){
 
-    Triggers_POGTight_Muon = {
-
-      "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
-      "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
-      "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
-      "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"
-
-    };
+    Triggers_POGTight_Muon = dimuon_trigger;
+   
     TriggerNameForSF_POGTight_Muon = ""; // TODO MC trigger sf... 
     TriggerSafePt_POGTight_Muon = 26.;
 
@@ -164,8 +159,13 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
   }
 
-  // Muons 
-  std::vector<Muon> muons = GetMuons(param.Muon_Tight_ID, MinLeptonPt, 2.4); 
+  // clear objects
+  muons.clear(); muons_tight.clear(); muons_loose.clear(); muons_veto.clear();
+  electrons.clear(); electrons_veto.clear();
+  jets.clear(); bjets.clear(); 
+
+
+  // Muons  
 
   muons = GetAllMuons();
   electrons = GetAllElectrons();
@@ -189,8 +189,10 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
   // Jets ( DY needs no cleaning, TT needs lepton cleaning
 
-  if(HasFlag("DY")) jets = GetJets(param.Jet_ID,20,2.7);  
-  if(HasFlag("TT")) jets = JetsVetoLeptonInside(GetJets("tight",20,2.7),electrons_veto,muons_veto);
+  if(HasFlag("DY")) jets = GetJets(param.Jet_ID,20,2.4);  
+  if(HasFlag("TT")) jets = JetsVetoLeptonInside(GetJets("tight",20,2.4),electrons_veto,muons_veto);
+
+//  bjets.Clear();  
 
   for(unsigned int i=0; i<jets.size(); i++){
   
@@ -226,6 +228,7 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
   Particle Cand = muons.at(0)+muons.at(1);
 
   if(muons.at(0).Charge()*muons.at(1).Charge()>0) return; // OS cut
+  if(electrons_veto.size()>0 && muons_veto.size()>2) return;
   FillHist(param.Name+"/CutFlow",4,1,10,0,10);
 
   if(Cand.M()<=50) return; // m(ll)>50GeV
@@ -271,25 +274,37 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
   //======================
 
   double weight = 1.;
+  double w_gen = 1.;
+  double w_pile = 1.; 
+
   if(!IsDATA){
-    
-    weight *= weight_norm_1invpb;
-    weight *= ev.MCweight();
+   
+    w_gen *= ev.MCweight()*weight_norm_1invpb;
+    w_pile *= GetPileUpWeight(nPileUp,0);
     weight *= weight_Prefire;
+    weight *= w_gen;
+    weight *= w_pile;
+    
+    if(w_gen==1) cerr << "w_gen error" << endl;
 
     double trigger_lumi = 0.;
  
     if(ev.PassTrigger(dimuon_trigger_BG)) trigger_lumi += 27267.591;
     if(ev.PassTrigger(dimuon_trigger_H)) trigger_lumi += 8650.628;
-    else trigger_lumi *= ev.GetTriggerLumi("Full");
+    if(!ev.PassTrigger(dimuon_trigger_BG) && !ev.PassTrigger(dimuon_trigger_H)) trigger_lumi = ev.GetTriggerLumi("Full");
+
+//    cout << "trigger lumi : " << trigger_lumi << endl;
+    if(trigger_lumi==0) cerr << "w_lumi error , " << param.Name << endl;
 
     weight *= trigger_lumi;
 
     double this_idsf=1; double this_isosf=1; double this_trigsf=1;
+    JetTagging::Parameters jtp_DeepCSV_Medium = JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
+    double btagweight_1a = mcCorr->GetBTaggingReweight_1a(jets, jtp_DeepCSV_Medium);
 
     for(unsigned int i=0; i<muons.size(); i++){    
   
-      double this_pt = muons.at(i).MiniAODPt();
+      double this_pt = fabs(muons.at(i).MiniAODPt());
       double this_eta = muons.at(i).Eta();
 
       this_idsf  = mcCorr->MuonID_SF (param.Muon_ID_SF_Key,  this_eta, this_pt);
@@ -309,64 +324,43 @@ void cr_study::executeEventFromParameter(AnalyzerParameter param){
 
       }
 
-      JetTagging::Parameters jtp_DeepCSV_Medium = JetTagging::Parameters(JetTagging::DeepCSV, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
-      double btagweight_1a = mcCorr->GetBTaggingReweight_1a(jets, jtp_DeepCSV_Medium);
-      weight *= this_idsf*this_isosf*this_trigsf*btagweight_1a;
+/*      cout << "trigsf : " << this_trigsf << "\t" << param.Name << endl;
+      if(this_idsf==1 || this_idsf > 10 || this_idsf< .5 ) cerr << "idsf error : " << this_idsf  <<endl;
+      if(this_trigsf==1 || this_trigsf > 10 || this_trigsf < .5) cerr << "trigsf error : " << this_trigsf << " , " << param.Name << " , " << i <<  endl;
+      if(this_isosf==1 || this_isosf > 10 || this_isosf < .5 ) cerr << "isosf error : " <<this_isosf  << endl; */
 
+      weight *= this_idsf*this_isosf*this_trigsf*btagweight_1a;
+     // cout << "weight : " << weight << " , " << param.Name << endl ;
     }
+
+      TString path = param.Name+"/";
+
+      DrawHists(path + "muons_tight/", muons_tight, weight);
+      DrawHists(path + "muons_loose/", muons_loose, weight);
+      DrawHists(path + "jets/", jets, weight);
+      DrawHists(path + "bjets/", bjets, weight);
+      DrawHists(path + "METv_xyCorr/", METv, weight);
+      FillHist(path + "m(ll)",Cand.M(),weight,200,50,250);
 
   }
 
   //=========================
   //==== Fill Histograms ====
   //=========================
-  TString path = param.Name+"/";
-  DrawHists(path + "muons_tight/", muons_tight, weight);
-  DrawHists(path + "muons_loose/", muons_loose, weight);
-  DrawHists(path + "jets", jets, weight);
-  DrawHists(path + "bjets/", bjets, weight);
-  DrawHists(path + "METv_xyCorr/", METv, weight);
-  FillHist(path + "m(ll)",Cand.M(),weight,20,50,250);
 
+  if(IsDATA){
+
+    TString path = param.Name+"/";
+
+    DrawHists(path + "muons_tight/", muons_tight, weight);
+    DrawHists(path + "muons_loose/", muons_loose, weight);
+    DrawHists(path + "jets/", jets, weight);
+    DrawHists(path + "bjets/", bjets, weight);
+    DrawHists(path + "METv_xyCorr/", METv, weight);
+    FillHist(path + "m(ll)",Cand.M(),weight,200,50,250);
+
+  }
 }
-/*  // MET
-
-  FillHist("METv_"+param.Name,METv.Pt(),weight,25,0,250);
-  FillHist("MET_Phi_"+param.Name,METv.Phi(),weight,60,-3,3);
-  
-  
-  
-  // Jets
-
-  FillHist("HT_"+param.Name,HT,weight,50,0,500);
-  FillHist("NJets_"+param.Name,jets.size(),weight,10,0,10);
-
-  if(jets.size()!=0){
-
-    FillHist("LeadingJet_Pt_"+param.Name,jets.at(0).Pt(),weight,30,0,450);
-    FillHist("LeadingJet_Eta_"+param.Name,jets.at(0).Eta(),weight,30,-3,3);
-
-  }
-
-  FillHist("NBJets_noSF_"+param.Name,bjets.size(),weight,10,0,10);
-  FillHist("NBJets_SF1a_"+param.Name,bjets.size(),weight*btagweight_1a,10,0,10);
-  if(HasFlag("TT")) FillHist("LeadingBJet_Pt_"+param.Name,bjets.at(0).Pt(),weight,30,0,450);
-  
-  // Muons ( index 0 leading muon )
- 
-  for(unsigned int i=0;i<muons.size();i++){
-
-    TString index = TString::Itoa(i,10); 
-    FillHist("Muon"+index+"_Pt_"+param.Name,muons.at(i).Pt(),weight,25,0,250);
-    FillHist("Muon"+index+"_Eta_"+param.Name,muons.at(i).Eta(),weight,30,-3.,3.);
-    FillHist("Muon"+index+"_Phi_"+param.Name,muons.at(i).Phi(),weight,35,-3.5,3.5);
-
-  }
-
-  // M(ll) plot
-  FillHist("M(ll)_"+param.Name,Cand.M(),weight,20,50,250);
-
-}*/
 
 void cr_study::DrawHists(TString path, const vector<Muon>& muons, const double& weight) {
   

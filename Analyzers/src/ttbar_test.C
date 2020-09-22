@@ -233,7 +233,7 @@ void ttbar_test::executeEventFromParameter(AnalyzerParameter param){
 	}
 	
 	weight *= this_idsf*this_isosf*this_trigsf; 
-//	cout << "[weight2::]" << weight << "\n" ;
+	cout << "[weight2::]" << weight << "\n" ;
       }
 
   }

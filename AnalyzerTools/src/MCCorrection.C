@@ -355,10 +355,14 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
       if(pt>500.) pt = 499.;
     }
     else if(trig=="Mu50"){
-      if(pt<52.) return 1.; //FIXME
+      if(pt<50.) return 1.; //FIXME
       if(eta>=2.4) eta = 2.39;
 
       if(pt>1000.) pt = 999.;
+    }
+    else if(trig=="Lead17" || trig=="Tail8"){
+      if(pt>=120) pt = 119.9;
+      if(eta>=2.4) eta = 2.39;
     }
     else{
 
@@ -426,7 +430,7 @@ double MCCorrection::MuonTrigger_Eff(TString ID, TString trig, int DataOrMC, dou
   value = this_hist->GetBinContent(this_bin);
   error = this_hist->GetBinError(this_bin);
 
-//  cout << "[MCCorrection::MuonTrigger_Eff] value = " << value << endl;
+//  cout << "[MCCorrection::MuonTrigger_Eff] value(" << eta << " , " << pt << ")= " << value   << endl;
 
   return value+double(sys)*error;
 
@@ -458,12 +462,16 @@ double MCCorrection::MuonTrigger_SF(TString ID, TString trig, const std::vector<
 /*
     if(eff_DATA==0||eff_MC==0){
       cout << "==== Zero Trigger Eff ====" << endl;
+      cout << "eff_DATA,eff_MC = (" << eff_DATA << " , " << eff_MC << ")" <<endl; 
       for(unsigned int i=0;i<muons.size();i++){
-        cout << muons.at(i).MiniAODPt() << "\t" << muons.at(i).Pt() << endl;
-      }
+        cout << muons.at(i).MiniAODPt() << "\t" << muons.at(i).Pt() << "\t" << muons.at(i).Eta() << endl;
+     }
     }
-*/
 
+    if(value==1){
+      cout << "==== Trigger SF 1 ====" << endl;
+      cout << "eff_DATA,eff_MC = (" << eff_DATA << " , " << eff_MC << ")" <<endl; 
+    }*/
   }
 
   return value;

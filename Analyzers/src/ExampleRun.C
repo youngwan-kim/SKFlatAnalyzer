@@ -260,8 +260,8 @@ void ExampleRun::executeEventFromParameter(AnalyzerParameter param){
 
   vector<Muon> this_AllMuons = AllMuons;
   vector<Jet> this_AllJets = AllJets;
-  Gen gen = GetGens();
-  gen.Print();
+//  Gen gen = GetGens();
+//  gen.Print();
 
   //==== Then, for each systematic sources
   //==== 1) Smear or scale them

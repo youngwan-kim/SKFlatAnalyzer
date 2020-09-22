@@ -30,12 +30,21 @@ public:
 
   double weight_Prefire;
 
-  std::vector<TString> dimuon_trigger_BG = {
+  std::vector<TString> dimuon_trigger = {
 
     "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
     "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
     "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
     "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"
+
+  };
+
+  std::vector<TString> dimuon_trigger_BG = {
+
+    "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
+    "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
+  //  "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+  //  "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"
 
   };
 
