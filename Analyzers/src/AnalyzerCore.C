@@ -34,18 +34,20 @@ AnalyzerCore::~AnalyzerCore(){
   
   //==== output rootfile
 
-  if(outfile) outfile->Close();
-  delete outfile;
+  if(outfile){
+    outfile->Close();
+    delete outfile;
+  }
 
   //==== Tools
 
-  delete mcCorr;
-  delete puppiCorr;
-  delete fakeEst;
-  delete cfEst;
-  delete pdfReweight;
-  delete muonGE;
-  delete muonGEScaleSyst;
+  if(mcCorr) delete mcCorr;
+  if(puppiCorr) delete puppiCorr;
+  if(fakeEst) delete fakeEst;
+  if(cfEst) delete cfEst;
+  if(pdfReweight) delete pdfReweight;
+  if(muonGE) delete muonGE;
+  if(muonGEScaleSyst) delete muonGEScaleSyst;
 
 }
 
@@ -78,11 +80,10 @@ void AnalyzerCore::SetOutfilePath(TString outname){
 Event AnalyzerCore::GetEvent(){
 
   Event ev;
-  if(!IsDATA) ev.SetMCweight(gen_weight);
   ev.SetTrigger(*HLT_TriggerName);
   ev.SetMET(pfMET_Type1_pt,pfMET_Type1_phi);
   ev.SetnPV(nPV);
-  ev.SetDataYear(DataYear);
+  ev.SetEra(GetEra());
 
   return ev;
 
@@ -91,6 +92,7 @@ Event AnalyzerCore::GetEvent(){
 std::vector<Muon> AnalyzerCore::GetAllMuons(){
 
   std::vector<Muon> out;
+  if(!muon_pt) return out;
   for(unsigned int i=0; i<muon_pt->size(); i++){
 
     Muon mu;
@@ -117,6 +119,7 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetTypeBit(muon_TypeBit->at(i));
     mu.SetIDBit(muon_IDBit->at(i));
     mu.SetisPOGHighPt(muon_ishighpt->at(i));
+    mu.SetPOGMediumHIP(muon_ismedium_hip->at(i),muon_ismedium_nohip->at(i));
     mu.SetChi2(muon_normchi->at(i));
     mu.SetIso(muon_PfChargedHadronIsoR04->at(i),muon_PfNeutralHadronIsoR04->at(i),muon_PfGammaIsoR04->at(i),muon_PFSumPUIsoR04->at(i),muon_trkiso->at(i));
     mu.SetTrackerLayers(muon_trackerLayers->at(i));
@@ -130,6 +133,9 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
       Rho,
       mu.EA()
     );
+
+    mu.SetFilterBits(muon_filterbits->at(i));
+    mu.SetPathBits(muon_pathbits->at(i));
 
     out.push_back(mu);
 
@@ -164,6 +170,7 @@ std::vector<Muon> AnalyzerCore::GetMuons(TString id, double ptmin, double fetama
 std::vector<Electron> AnalyzerCore::GetAllElectrons(){
 
   std::vector<Electron> out;
+  if(!electron_Energy) return out;
   for(unsigned int i=0; i<electron_Energy->size(); i++){
 
     Electron el;
@@ -187,6 +194,8 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
     el.SetNMissingHits(electron_mHits->at(i));
     el.SetRho(Rho);
     el.SetIsGsfCtfScPixChargeConsistent(electron_isGsfCtfScPixChargeConsistent->at(i));
+    el.SetR9(electron_r9->at(i));
+    el.SetL1Et(electron_l1et->at(i));
 
     el.SetCutBasedIDVariables(
       electron_Full5x5_SigmaIEtaIEta->at(i),
@@ -224,6 +233,9 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
       el.EA()
     );
 
+    el.SetFilterBits(electron_filterbits->at(i));
+    el.SetPathBits(electron_pathbits->at(i));
+
     out.push_back(el);
 
   }
@@ -231,7 +243,7 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
 
 }
 
-std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, double fetamax){
+std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, double fetamax, bool vetoHEM){
 
   std::vector<Electron> electrons = GetAllElectrons();
   std::vector<Electron> out;
@@ -248,11 +260,65 @@ std::vector<Electron> AnalyzerCore::GetElectrons(TString id, double ptmin, doubl
       //cout << "Fail ID" << endl;
       continue;
     }
+    if(vetoHEM){
+      if ( FindHEMElectron (electrons.at(i)) ){
+        continue;
+      }
+    }
+
     out.push_back( electrons.at(i) );
   }
   return out;
 
 }
+
+
+std::vector<Tau> AnalyzerCore::GetAllTaus(){
+
+  std::vector<Tau> out;
+  if(!tau_pt) return out;
+  for(unsigned int i=0; i<tau_pt->size(); i++){
+
+    Tau tau;
+    tau.SetCharge(tau_charge->at(i));
+    tau.SetPtEtaPhiM(tau_pt->at(i), tau_eta->at(i), tau_phi->at(i), tau_mass->at(i));
+    tau.SetDecayMode(tau_decaymode->at(i));
+    tau.SetdXY(tau_dxy->at(i),0.);
+    tau.SetdZ(tau_dz->at(i),0.);
+    tau.SetDecayModeNewDM(tau_idDecayModeNewDMs->at(i));
+    tau.SetIDBit(tau_IDBit->at(i));
+
+    out.push_back(tau);
+
+  }
+  return out;
+
+}
+
+
+
+std::vector<Tau> AnalyzerCore::GetTaus(TString id, double ptmin, double fetamax){
+
+  std::vector<Tau> taus = GetAllTaus();
+  std::vector<Tau> out;
+
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(!( taus.at(i).Pt()>ptmin )){
+      continue;
+    }
+    if(!( fabs(taus.at(i).Eta())<fetamax )){
+      continue;
+    }
+    if(!( taus.at(i).PassID(id) )){
+      continue;
+    }
+    out.push_back( taus.at(i) );
+  }
+  return out;
+
+}
+
+
 
 std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(const std::vector<Muon>& muons, double TightIso, bool UseMini){
 
@@ -373,24 +439,21 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     if(!IsDATA){
       jet *= jet_smearedRes->at(i);
       jet.SetResShift( jet_smearedResUp->at(i)/jet_smearedRes->at(i), jet_smearedResDown->at(i)/jet_smearedRes->at(i) );
+      jet.SetGenFlavours(jet_partonFlavour->at(i), jet_hadronFlavour->at(i));
+      jet.SetGenHFHadronMatcher(jet_GenHFHadronMatcher_flavour->at(i),jet_GenHFHadronMatcher_origin->at(i));
     }
+    jet.SetBJetNNCorrection(jet_bJetNN_corr->at(i),jet_bJetNN_res->at(i));
+    jet.SetCJetNNCorrection(jet_cJetNN_corr->at(i),jet_cJetNN_res->at(i));
     jet.SetCharge(jet_charge->at(i));
 
     jet.SetArea(jet_area->at(i));
-    jet.SetGenFlavours(jet_partonFlavour->at(i), jet_hadronFlavour->at(i));
     std::vector<double> tvs = {
-      jet_CSVv2->at(i),
       jet_DeepCSV->at(i),
-      jet_DeepCvsL->at(i),
-      jet_DeepCvsB->at(i),
-      jet_DeepFlavour_b->at(i),
-      jet_DeepFlavour_bb->at(i),
-      jet_DeepFlavour_lepb->at(i),
-      jet_DeepFlavour_c->at(i),
-      jet_DeepFlavour_uds->at(i),
-      jet_DeepFlavour_g->at(i),
-      jet_CvsL->at(i),
-      jet_CvsB->at(i),
+      jet_DeepCSV_CvsL->at(i),
+      jet_DeepCSV_CvsB->at(i),
+      jet_DeepJet->at(i),
+      jet_DeepJet_CvsL->at(i),
+      jet_DeepJet_CvsB->at(i),
     };
     jet.SetTaggerResults(tvs);
     jet.SetEnergyFractions(jet_chargedHadronEnergyFraction->at(i), jet_neutralHadronEnergyFraction->at(i), jet_neutralEmEnergyFraction->at(i), jet_chargedEmEnergyFraction->at(i), jet_muonEnergyFraction->at(i));
@@ -445,18 +508,20 @@ std::vector<FatJet> AnalyzerCore::GetAllFatJets(){
     jet.SetArea(fatjet_area->at(i));
     jet.SetGenFlavours(fatjet_partonFlavour->at(i), fatjet_hadronFlavour->at(i));
     std::vector<double> tvs = {
-      fatjet_CSVv2->at(i),
       fatjet_DeepCSV->at(i),
-      fatjet_DeepCvsL->at(i),
-      fatjet_DeepCvsB->at(i),
-      fatjet_DeepFlavour_b->at(i),
-      fatjet_DeepFlavour_bb->at(i),
-      fatjet_DeepFlavour_lepb->at(i),
-      fatjet_DeepFlavour_c->at(i),
-      fatjet_DeepFlavour_uds->at(i),
-      fatjet_DeepFlavour_g->at(i),
-      fatjet_CvsL->at(i),
-      fatjet_CvsB->at(i),
+      fatjet_DeepCSV_CvsL->at(i),
+      fatjet_DeepCSV_CvsB->at(i),
+      fatjet_particleNet_TvsQCD->at(i),
+      fatjet_particleNet_WvsQCD->at(i),
+      fatjet_particleNet_ZvsQCD->at(i),
+      fatjet_particleNet_HbbvsQCD->at(i),
+      fatjet_particleNet_HccvsQCD->at(i),
+      fatjet_particleNet_H4qvsQCD->at(i),
+      fatjet_particleNet_QCD->at(i),
+      fatjet_particleNetMD_Xbb->at(i),
+      fatjet_particleNetMD_Xcc->at(i),
+      fatjet_particleNetMD_Xqq->at(i),
+      fatjet_particleNetMD_QCD->at(i),
     };
     jet.SetTaggerResults(tvs);
     jet.SetEnergyFractions(fatjet_chargedHadronEnergyFraction->at(i), fatjet_neutralHadronEnergyFraction->at(i), fatjet_neutralEmEnergyFraction->at(i), fatjet_chargedEmEnergyFraction->at(i), fatjet_muonEnergyFraction->at(i));
@@ -664,7 +729,7 @@ std::vector<Muon> AnalyzerCore::SelectMuons(const std::vector<Muon>& muons, TStr
 
 }
 
-std::vector<Electron> AnalyzerCore::SelectElectrons(const std::vector<Electron>& electrons, TString id, double ptmin, double fetamax){
+std::vector<Electron> AnalyzerCore::SelectElectrons(const std::vector<Electron>& electrons, TString id, double ptmin, double fetamax, bool vetoHEM){
 
   std::vector<Electron> out;
   for(unsigned int i=0; i<electrons.size(); i++){
@@ -680,7 +745,35 @@ std::vector<Electron> AnalyzerCore::SelectElectrons(const std::vector<Electron>&
       //cout << "Fail ID" << endl;
       continue;
     }
+    if(vetoHEM){
+      if ( FindHEMElectron (electrons.at(i)) ){
+        continue;
+      }
+    }
+
     out.push_back(electrons.at(i));
+  }
+  return out;
+
+}
+
+
+std::vector<Tau> AnalyzerCore::SelectTaus(const std::vector<Tau>& taus, TString id, double ptmin, double fetamax){
+
+  std::vector<Tau> out;
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(!( taus.at(i).Pt()>ptmin )){
+
+      continue;
+    }
+    if(!( fabs(taus.at(i).Eta())<fetamax )){
+
+      continue;
+    }
+    if(!( taus.at(i).PassID(id) )){
+      continue;
+    }
+    out.push_back( taus.at(i) );
   }
   return out;
 
@@ -760,6 +853,18 @@ std::vector<Electron> AnalyzerCore::SmearElectrons(const std::vector<Electron>& 
   }
 
   return out;
+
+}
+
+bool AnalyzerCore::FindHEMElectron(Electron electron){
+
+    if (DataYear != 2018) return false;
+
+    if (electron.Eta() < -1.25){
+        if((electron.Phi() < -0.82) && (electron.Phi() > -1.62)) return true;
+    }
+
+    return false;
 
 }
 
@@ -878,7 +983,7 @@ std::vector<FatJet> AnalyzerCore::SmearSDMassFatJets(const std::vector<FatJet>& 
 
 bool AnalyzerCore::PassMETFilter(){
 
-  //==== https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#Moriond_2018
+  //==== https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#UL_data
 
   if(!Flag_goodVertices) return false;
   if(!IsFastSim){
@@ -888,11 +993,10 @@ bool AnalyzerCore::PassMETFilter(){
   if(!Flag_HBHENoiseIsoFilter) return false;
   if(!Flag_EcalDeadCellTriggerPrimitiveFilter) return false;
   if(!Flag_BadPFMuonFilter) return false;
-  //if(!Flag_BadChargedCandidateFilter) return false; // TODO 19/05/04 twiki says this is under review, and not recommended
-  if(IsDATA && !Flag_eeBadScFilter) return false;
-
+  if(!Flag_BadPFMuonDzFilter) return false;
+  if(!Flag_eeBadScFilter) return false;
   if(DataYear>=2017){
-    if(!Flag_ecalBadCalibReducedMINIAODFilter) return false;
+    if(!Flag_ecalBadCalibFilter) return false;
   }
 
   return true;
@@ -903,7 +1007,7 @@ void AnalyzerCore::initializeAnalyzerTools(){
 
   //==== MCCorrection
   mcCorr->SetMCSample(MCSample);
-  mcCorr->SetDataYear(DataYear);
+  mcCorr->SetEra(GetEra());
   mcCorr->SetIsDATA(IsDATA);
   mcCorr->SetEventInfo(run, lumi, event);
   mcCorr->SetIsFastSim(IsFastSim);
@@ -912,35 +1016,55 @@ void AnalyzerCore::initializeAnalyzerTools(){
     mcCorr->SetupJetTagging();
   }
 
-  puppiCorr->SetDataYear(DataYear);
+  puppiCorr->SetEra(GetEra());
   puppiCorr->ReadHistograms();
 
   //==== FakeBackgroundEstimator
-  fakeEst->SetDataYear(DataYear);
+  fakeEst->SetEra(GetEra());
   fakeEst->ReadHistograms();
 
   //==== CFBackgroundEstimator
-  cfEst->SetDataYear(DataYear);
+  cfEst->SetEra(GetEra());
   cfEst->ReadHistograms();
 
+}
+
+double AnalyzerCore::MCweight(bool usesign, bool norm_1invpb) const {
+
+  if(IsDATA) return 1.;
+  double weight=gen_weight;
+
+  //MiNNLO sample has some events with unphysically large weight
+  if(MCSample.Contains("DYJets")&&MCSample.Contains("MiNNLO")){
+    double maxweight=2358.0700*5.;
+    if(abs(weight)>maxweight){
+      weight=weight>0. ? maxweight : -1.0*maxweight;
+    }
+  }
+  //Sherpa sample needs weighted events
+  if(MCSample.Contains("WJets") && MCSample.Contains("Sherpa")){
+    usesign = false;
+  }
+
+  if(usesign){
+    if(weight>0) weight=1.0;
+    else if(weight<0) weight=-1.0;
+    else weight=0.0;
+  }
+  if(norm_1invpb){
+    if(usesign) weight*=xsec/sumSign;
+    else weight*=xsec/sumW;
+  }
+  return weight;
 }
 
 double AnalyzerCore::GetPrefireWeight(int sys){
 
   if(IsDATA) return 1.;
   else{
-
-    if(DataYear>2017) return 1.;
-    else{
-
-      if(sys==0) return L1PrefireReweight_Central;
-      else if(sys>0) return L1PrefireReweight_Up;
-      else return L1PrefireReweight_Down;
-
-      //return mcCorr->GetPrefireWeight(photons, jets, sys);
-
-    }
-
+    if(sys==0) return L1PrefireReweight_Central;
+    else if(sys>0) return L1PrefireReweight_Up;
+    else return L1PrefireReweight_Down;
   }
 
   cout << "[AnalyzerCore::GetPrefireWeight] wtf" << endl;
@@ -950,28 +1074,8 @@ double AnalyzerCore::GetPrefireWeight(int sys){
 }
 
 double AnalyzerCore::GetPileUpWeight(int N_pileup, int syst){
-
   if(IsDATA) return 1.;
-  else{
-
-    if(DataYear==2016){
-      return mcCorr->GetPileUpWeight(N_pileup, syst);
-    }
-    else if(DataYear==2017){
-      return mcCorr->GetPileUpWeightBySampleName(N_pileup, syst);
-    }
-    else if(DataYear==2018){
-      //==== TODO 2018 not yet added
-      return 1.;
-    }
-    else{
-      cout << "[AnalyzerCore::GetPileUpWeight] Wrong year : " << DataYear << endl;
-      exit(EXIT_FAILURE);
-      return 1.;
-    }
-
-  }
-
+  else return mcCorr->GetPileUpWeight(N_pileup, syst);
 }
 
 double AnalyzerCore::GetPDFWeight(LHAPDF::PDF* pdf_){
@@ -1910,9 +2014,9 @@ void AnalyzerCore::FillHist(TString histname,
 void AnalyzerCore::FillHist(TString histname,
           double value_x, double value_y, double value_z,
           double weight,
-          int n_binx, double *xbins,
-          int n_biny, double *ybins,
-          int n_binz, double *zbins){
+          int n_binx, const double *xbins,
+          int n_biny, const double *ybins,
+          int n_binz, const double *zbins){
   
   TH3D *this_hist = GetHist3D(histname);
   if( !this_hist ){
