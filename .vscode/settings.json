@@ -3,6 +3,11 @@
         "HNL_TriLep.C": "cpp",
         "Electron.C": "cpp",
         "Muon.C": "cpp",
-        "Tau.C": "cpp"
+        "Tau.C": "cpp",
+        "LepTauJJ.C": "cpp",
+        "AnalyzerCore.C": "cpp",
+        "ExampleRun.C": "cpp",
+        "MCCorrection.C": "cpp",
+        "Lepton.C": "cpp"
     }
 }

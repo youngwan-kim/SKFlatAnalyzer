@@ -202,17 +202,34 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
     }
   }
 
+  // Select b-jets before loose lepton cleaning 
+  // FO Lepton cleaning + 1a method reweighting
+  vector<Lepton *> FOLeps = CombineLeptonPointerVector(electrons_FO,muons_FO);
+  vector<Jet> AllJets_tmp = AllJets;
+  for(unsigned int i=0; i<AllJets_tmp.size(); i++){
+    for(unsigned int j=0; j<FOLeps.size(); j++){
+      if(AllJets_tmp.at(i).DeltaR(*FOLeps.at(j))<0.4){
+        AllJets_tmp.erase(AllJets_tmp.begin()+i);
+        break;
+      }
+    }
+  }
+
+  JetTagging::Parameters jtps = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Loose, JetTagging::incl, JetTagging::mujets);
+  vector<Jet> jets_tmp = SelectJets(AllJets_tmp, param.Jet_ID, 25., 2.4) ;
+  vector<Jet> BJets = GetBJets(jets_tmp,jtps);
+
   // Loose Lepton Clean AllJets
   for(unsigned int i=0; i<AllJets.size(); i++){
-    for(unsigned int j=0; j<AllLeptons.size(); j++){
-      if(AllTaus.at(i).DeltaR(*AllLeptons.at(j))<0.4){
+    for(unsigned int j=0; j<LooseLeps.size(); j++){
+      if(AllJets.at(i).DeltaR(*LooseLeps.at(j))<0.4){
         AllJets.erase(AllJets.begin()+i);
         break;
       }
     }
   }
 
-
+  // Tau & Jet Collection
   vector<Tau> this_AllTaus = AllTaus;
   vector<Jet> this_AllJets = AllJets;
 
@@ -224,7 +241,7 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   vector<Lepton *> FOLeptons = CombineLeptonPointerVector(electrons_FO,muons_FO);
   std::sort(TightLeptons.begin(),TightLeptons.end(),PtComparingPtr);
 
-  // Event Selection
+  // Baseline Selection
   // 1. 3 tight leptons
   if(!( TightLeptons.size() == 3)) return;
   FillHist("CutFlow",1.,weight,0.,10.,10);
@@ -237,7 +254,29 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   if(TightLeptons.at(0)->Charge() == TightLeptons.at(1)->Charge() && TightLeptons.at(1)->Charge() == TightLeptons.at(2)->Charge()) return;
   FillHist("CutFlow",3.,weight,0.,10.,10);
 
+  // 4. b-jet veto
+  if(BJets.size()>0) return;
+  FillHist("CutFlow",4.,weight,0.,10.,10);
 
+  // 5. pT cut
+  if(!( TightLeptons.at(0)->Pt() > 15 && TightLeptons.at(1)->Pt() > 10 && TightLeptons.at(2)->Pt() > 10 )) return;
+  FillHist("CutFlow",5.,weight,0.,10.,10);
+
+  // 6. OSSF mZ 15GeV window cut (for all OSSF pairs) + mOSSF > 5
+  for(unsigned int i=0; i<TightLeptons.size(); i++){
+    for(unsigned int j=0; j<TightLeptons.size(); j++){
+      if(i>=j) continue;
+      else{
+        Particle OSSF = *TightLeptons.at(i) + *TightLeptons.at(j);
+        double mOSSF = OSSF.M();
+        if((TightLeptons.at(i)->LeptonFlavour() == TightLeptons.at(j)->LeptonFlavour()) 
+            && (TightLeptons.at(i)->Charge()*TightLeptons.at(j)->Charge() < 0)
+            && !(mOSSF<M_Z-15 || mOSSF>M_Z+15) 
+            && !(mOSSF>5)) return;
+      }
+    }
+  }
+  FillHist("CutFlow",6.,weight,0.,10.,10);
 
 }
 
