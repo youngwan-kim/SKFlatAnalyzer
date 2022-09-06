@@ -164,6 +164,10 @@ bool Electron::PassID(TString ID) const{
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
 
+  if(ID=="TriLepEleLoose") return Pass_TriLepEleLoose();
+  if(ID=="TriLepEleFO") return Pass_TriLepEleFO();
+  if(ID=="TriLepEleTight") return Pass_TriLepEleTight();
+
   if(ID=="HNLoosest") return Pass_HNLoosest(); // OR of VETO IDs
 
   
@@ -385,6 +389,36 @@ bool Electron::Pass_CutBasedVeto() const{
 
   }
 
+}
+
+
+bool Electron::Pass_TriLepEleLoose() const{
+  if(!( fabs(dXY())<0.05 && fabs(dZ())<0.1 )) return false;
+  if(!( MiniRelIso()<0.4 )) return false;
+  if(!( NMissingHits()<2 )) return false;
+  if(!( IP3D()<8 )) return false;
+  return true;
+}
+
+bool Electron::Pass_TriLepEleFO() const{
+  if(!( Pass_TriLepEleLoose() )) return false;
+  if(!( HoverE()>0.1 )) return false;
+  if(!( InvEminusInvP()<-0.04 )) return false;
+  if(!PassConversionVeto()) return false;
+  if(!( scEta()<1.4789 && Full5x5_sigmaIetaIeta()<0.011 )) return false;
+  if(!( scEta()>1.4789 && Full5x5_sigmaIetaIeta()<0.03 )) return false;
+  return true;
+}
+
+bool Electron::Pass_TriLepEleTight() const{
+  if(!( Pass_TriLepEleLoose() )) return false;
+  if(!( HoverE()>0.1 )) return false;
+  if(!( InvEminusInvP()<-0.04 )) return false;
+  if(!PassConversionVeto()) return false;
+  if(!( scEta()<1.4789 && Full5x5_sigmaIetaIeta()<0.011 )) return false;
+  if(!( scEta()>1.4789 && Full5x5_sigmaIetaIeta()<0.03 )) return false;
+  if(!( MVAIso()>0.4 )) return false;
+  return true;
 }
 
 

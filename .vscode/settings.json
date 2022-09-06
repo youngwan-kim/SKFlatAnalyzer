@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "HNL_TriLep.C": "cpp",
+        "Electron.C": "cpp",
+        "Muon.C": "cpp",
+        "Tau.C": "cpp"
+    }
+}

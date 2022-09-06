@@ -117,10 +117,13 @@ bool Muon::PassID(TString ID) const {
   //==== No cut
   if(ID=="NOCUT") return true;
 
-
   if(ID=="HNLoosest") return Pass_HNVeto();
 
+  //==== EXO-22-011 with ditau+lep
 
+  if(ID=="TriLepMuLoose") return Pass_TriLepMuLoose();
+  if(ID=="TriLepMuFO") return Pass_TriLepMuFO();
+  if(ID=="TriLepMuTight") return Pass_TriLepMuTight();
 
   cout << "[Electron::PassID] No id : " << ID << endl;
   exit(ENODATA);
@@ -146,6 +149,27 @@ bool Muon::Pass_HNVeto() const {
   if(!( Chi2()<50. )) return false;
   return true;
 }
+
+//==== EXO-22-011
+bool Muon::Pass_TriLepMuLoose() const{
+  if(!( isPOGMedium() )) return false;
+  if(!( fabs(dXY())<0.05 && fabs(dZ())<0.1 )) return false;
+  if(!( MiniRelIso()<0.4 )) return false;
+  if(!( IP3D()<8 )) return false;
+  return true;
+}
+
+bool Muon::Pass_TriLepMuFO() const{
+  if(!(Pass_TriLepMuLoose())) return false;
+  return true;
+}
+
+bool Muon::Pass_TriLepMuTight() const{
+  if(!(Pass_TriLepMuLoose())) return false;
+  if(!(MVA()>0.4)) return false;
+  return true;
+}
+
 
 //==== TEST ID
 

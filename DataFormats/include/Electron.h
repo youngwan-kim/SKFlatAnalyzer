@@ -130,6 +130,10 @@ public:
   bool PassID(TString ID) const;
   bool Pass_TESTID() const;
 
+  bool Pass_TriLepEleLoose() const;
+  bool Pass_TriLepEleFO() const;
+  bool Pass_TriLepEleTight() const;
+
   bool Pass_CutBasedLooseNoIso() const;
   bool Pass_CutBasedVetoNoIso() const;
   bool Pass_CutBasedLoose() const;

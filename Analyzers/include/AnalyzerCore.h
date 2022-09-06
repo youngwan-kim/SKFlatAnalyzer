@@ -80,9 +80,11 @@ public:
   //==== If UseMini is true, Lepton::RelIso() returns MiniRelIso
   std::vector<Lepton *> MakeLeptonPointerVector(const std::vector<Muon>& muons, double TightIso=-999, bool UseMini=false);
   std::vector<Lepton *> MakeLeptonPointerVector(const std::vector<Electron>& electrons, double TightIso=-999, bool UseMini=false);
+  std::vector<Lepton *> CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons);
 
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin, double fetamax);
+  std::vector<Jet> GetBJets(vector<Jet> jetColl, JetTagging::Parameters jtp);
 
   std::vector<FatJet> GetAllFatJets();
   std::vector<FatJet> GetFatJets(TString id, double ptmin, double fetamax);
@@ -187,6 +189,8 @@ public:
   std::vector<FatJet> FatJetsVetoLeptonInside(const std::vector<FatJet>& jets, const std::vector<Electron>& els, const std::vector<Muon>& mus, double dR=0.8);
   std::vector<Jet> JetsAwayFromPhoton(const std::vector<Jet>& jets, const std::vector<Photon>& photons, double mindr);
   Particle AddFatJetAndLepton(const FatJet& fatjet, const Lepton& lep);
+  Jet GetClosestJet(const std::vector<Jet>& jets, const Muon& muon);
+  Jet GetClosestJet(const std::vector<Jet>& jets, const Electron& electron);
 
   //==== GenMatching
 

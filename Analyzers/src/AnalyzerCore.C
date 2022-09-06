@@ -366,6 +366,19 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(const std::vector<El
 }
 
 
+std::vector<Lepton *> AnalyzerCore::CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons){
+
+  std::vector<Lepton *> out;
+  std::vector<Lepton *> lep1 = MakeLeptonPointerVector(electrons);
+  std::vector<Lepton *> lep2 = MakeLeptonPointerVector(muons);
+  out.reserve(lep1.size()+lep2.size());
+  out.insert(out.end(),lep1.begin(),lep1.end());
+  out.insert(out.end(),lep2.begin(),lep2.end());
+  
+  return out;
+
+}
+
 
 std::vector<Photon> AnalyzerCore::GetAllPhotons(){
 
@@ -489,6 +502,19 @@ std::vector<Jet> AnalyzerCore::GetJets(TString id, double ptmin, double fetamax)
     out.push_back( jets.at(i) );
   }
   return out;
+
+}
+
+std::vector<Jet> AnalyzerCore::GetBJets(vector<Jet> jetColl, JetTagging::Parameters jtp){
+
+  vector<Jet> output_jets;
+
+  for(unsigned int ijet =0; ijet < jetColl.size(); ijet++){
+    if( jetColl[ijet].GetTaggerResult(jtp.j_Tagger) <= mcCorr->GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP) ) continue;  
+    output_jets.push_back( jetColl.at(ijet) );
+  }
+  std::sort(output_jets.begin(), output_jets.end(), PtComparing);
+  return output_jets;
 
 }
 
@@ -2263,6 +2289,34 @@ void AnalyzerCore::FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatje
     FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31_"+this_region, fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
     FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32_"+this_region, fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
   }
+
+}
+
+Jet AnalyzerCore::GetClosestJet(const std::vector<Jet>& jets, const Muon& muon){
+  
+  std::vector<double> dRJet;
+  
+  for(unsigned int i=0; i<jets.size() ; i++){
+    dRJet.push_back(muon.DeltaR(jets.at(i)));
+  }
+
+  int closestJetIndex = min_element(dRJet.begin(),dRJet.end())-dRJet.begin();
+  
+  return jets.at(closestJetIndex);
+
+}
+
+Jet AnalyzerCore::GetClosestJet(const std::vector<Jet>& jets, const Electron& electron){
+
+  std::vector<double> dRJet;
+  
+  for(unsigned int i=0; i<jets.size() ; i++){
+    dRJet.push_back(electron.DeltaR(jets.at(i)));
+  }
+
+  int closestJetIndex = min_element(dRJet.begin(),dRJet.end())-dRJet.begin();
+  
+  return jets.at(closestJetIndex);
 
 }
 

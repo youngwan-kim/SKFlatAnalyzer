@@ -67,6 +67,7 @@ public:
 
   inline bool PassSelector( unsigned int s ) const { return (j_IDBit & s)==s; }
 
+  inline bool passVVVLIDvJet()  const {return PassSelector(DeepTau2017v2p1VSJet_VVVLoose); }
   inline bool passVVLIDvJet()   const {return PassSelector(DeepTau2017v2p1VSJet_VVLoose); }
   inline bool passVLIDvJet()    const {return PassSelector(DeepTau2017v2p1VSJet_VLoose); }
   inline bool passLIDvJet()     const {return PassSelector(DeepTau2017v2p1VSJet_Loose); }
