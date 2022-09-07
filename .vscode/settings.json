@@ -8,6 +8,7 @@
         "AnalyzerCore.C": "cpp",
         "ExampleRun.C": "cpp",
         "MCCorrection.C": "cpp",
-        "Lepton.C": "cpp"
+        "Lepton.C": "cpp",
+        "SkimTree_Dilepton.C": "cpp"
     }
 }

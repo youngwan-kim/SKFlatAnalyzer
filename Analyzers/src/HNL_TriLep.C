@@ -269,22 +269,22 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   // Baseline Selection
   // 1. 3 tight leptons
   if(!( TightLeptons.size() == 3)) return;
-  FillHist("CutFlow",1.,weight,0.,10.,10);
+  FillHist("CutFlow",1.,weight,10.,0.,10);
   if(HasFlag("debug")) cout << "[DEBUG] TightTriLepCut" << endl;
 
   // 2. 4th FO lepton veto
   if(FOLeptons.size() == 4) return;
-  FillHist("CutFlow",2.,weight,0.,10.,10);
+  FillHist("CutFlow",2.,weight,10.,0.,10);
   if(HasFlag("debug")) cout << "[DEBUG] FourthFOVeto" << endl;
 
   // 3. same sign veto
   if(TightLeptons.at(0)->Charge() == TightLeptons.at(1)->Charge() && TightLeptons.at(1)->Charge() == TightLeptons.at(2)->Charge()) return;
-  FillHist("CutFlow",3.,weight,0.,10.,10);
+  FillHist("CutFlow",3.,weight,10.,0.,10);
   if(HasFlag("debug")) cout << "[DEBUG] SameSignVeto" << endl;
 
   // 4. b-jet veto
   if(BJets.size()>0) return;
-  FillHist("CutFlow",4.,weight,0.,10.,10);
+  FillHist("CutFlow",4.,weight,10.,0.,10);
   if(HasFlag("debug")) cout << "[DEBUG] BJetVeto" << endl;
 
   // 5. pT cut
@@ -306,7 +306,7 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
       }
     }
   }
-  FillHist("CutFlow",6.,weight,0.,10.,10);
+  FillHist("CutFlow",6.,weight,10.,0.,10);
   if(HasFlag("debug")) cout << "[DEBUG] mOSSF" << endl;
 
 }
