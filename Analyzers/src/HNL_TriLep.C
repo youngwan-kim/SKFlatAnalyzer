@@ -261,7 +261,7 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   vector<Tau> taus_loose = SelectTaus(this_AllTaus, "TriLepLoose", 20., 2.3);
   vector<Jet> jets = SelectJets(this_AllJets, param.Jet_ID, 25., 2.4) ;
 
-  vector<Lepton *> TightLeptons = CombineLeptonPointerVector(electrons,muons);
+  vector<Lepton *> TightLeptons = CombineLeptonPointerVector(electrons,muons,taus);
   vector<Lepton *> FOLeptons = CombineLeptonPointerVector(electrons_FO,muons_FO);
   std::sort(TightLeptons.begin(),TightLeptons.end(),PtComparingPtr);
   if(HasFlag("debug")) cout << "[DEBUG] TightLepton" << endl;
@@ -269,27 +269,27 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   // Baseline Selection
   // 1. 3 tight leptons
   if(!( TightLeptons.size() == 3)) return;
-  FillHist("CutFlow",1.,weight,10.,0.,10);
+  FillHist("CutFlow",1.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] TightTriLepCut" << endl;
 
   // 2. 4th FO lepton veto
   if(FOLeptons.size() == 4) return;
-  FillHist("CutFlow",2.,weight,10.,0.,10);
+  FillHist("CutFlow",2.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] FourthFOVeto" << endl;
 
   // 3. same sign veto
   if(TightLeptons.at(0)->Charge() == TightLeptons.at(1)->Charge() && TightLeptons.at(1)->Charge() == TightLeptons.at(2)->Charge()) return;
-  FillHist("CutFlow",3.,weight,10.,0.,10);
+  FillHist("CutFlow",3.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] SameSignVeto" << endl;
 
   // 4. b-jet veto
   if(BJets.size()>0) return;
-  FillHist("CutFlow",4.,weight,10.,0.,10);
+  FillHist("CutFlow",4.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] BJetVeto" << endl;
 
   // 5. pT cut
   if(!( TightLeptons.at(0)->Pt() > 15 && TightLeptons.at(1)->Pt() > 10 && TightLeptons.at(2)->Pt() > 10 )) return;
-  FillHist("CutFlow",5.,weight,0.,10.,10);
+  FillHist("CutFlow",5.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] pTCut" << endl;
 
   // 6. OSSF mZ 15GeV window cut (for all OSSF pairs) + mOSSF > 5
@@ -299,15 +299,44 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
       else{
         Particle OSSF = *TightLeptons.at(i) + *TightLeptons.at(j);
         double mOSSF = OSSF.M();
-        if((TightLeptons.at(i)->LeptonFlavour() == TightLeptons.at(j)->LeptonFlavour()) 
-            && (TightLeptons.at(i)->Charge()*TightLeptons.at(j)->Charge() < 0)
-            && !(mOSSF<M_Z-15 || mOSSF>M_Z+15) 
-            && !(mOSSF>5)) return;
+        if((TightLeptons.at(i)->LeptonFlavour() == TightLeptons.at(j)->LeptonFlavour()) && (TightLeptons.at(i)->Charge()*TightLeptons.at(j)->Charge() < 0)){
+            if(!(mOSSF<M_Z-15 || mOSSF>M_Z+15) && !(mOSSF>5)) return;
+        }    
       }
     }
   }
-  FillHist("CutFlow",6.,weight,10.,0.,10);
+  FillHist("CutFlow",6.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] mOSSF" << endl;
+
+
+  // Low Mass Selection (will only focus on dilep+tau final state)
+  if(!( TightLeptons.at(0)->Pt()<55 )) return;
+  FillHist("LowMass/CutFlow",1.,weight,5,0.,5.);
+
+  if(!( METv.Pt()<75 )) return;
+  FillHist("LowMass/CutFlow",2.,weight,5,0.,5.);
+
+  Particle Trilepton = *TightLeptons.at(0) + *TightLeptons.at(1) + *TightLeptons.at(2);
+  if(!( Trilepton.M()<80 )) return;
+  FillHist("LowMass/CutFlow",3.,weight,5,0.,5.);
+
+
+  // Finally select tau involved (dilep+tau) categories (Cat1,2 in Table18 from AN)
+  if(taus.size()>2 || TightLeptons.at(2)->LeptonFlavour() == Lepton::TAU) return;
+  FillHist("LowMass/DilepTau/LeadingLeptonPt",TightLeptons.at(0)->Pt(),weight,10,10.,60.);
+  vector<double> mOS2l_v;
+  for(unsigned int i=0; i<TightLeptons.size(); i++){
+    for(unsigned int j=0; j<TightLeptons.size(); j++){
+      if(i>=j) continue;
+      else{
+        Particle OS2l = *TightLeptons.at(i) + *TightLeptons.at(j);
+        double mOS2l = OS2l.M();
+        if(TightLeptons.at(i)->Charge()*TightLeptons.at(j)->Charge() < 0) mOS2l_v.push_back(mOS2l);
+      }
+    }
+  }
+  double mOS2lmin = *min_element(mOS2l_v.begin(),mOS2l_v.end());
+  FillHist("LowMass/DilepTau/minOS2lMass",mOS2lmin,weight,12,0.,60.);
 
 }
 

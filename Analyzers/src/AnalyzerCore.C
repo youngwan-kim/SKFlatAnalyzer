@@ -365,6 +365,29 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(const std::vector<El
 
 }
 
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(const std::vector<Tau>& taus, double TightIso, bool UseMini){
+
+  std::vector<Lepton *> out;
+  for(unsigned int i=0; i<taus.size(); i++){
+    Lepton *l = (Lepton *)(&taus.at(i));
+    if( !(l->LeptonFlavour() == Lepton::TAU) ){
+      cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<Tau>& taus)] Not tau.." << endl;
+      exit(EXIT_FAILURE);
+    }
+    if(TightIso>0){
+
+      double this_RelIso = l->RelIso();
+      if(UseMini) this_RelIso = l->MiniRelIso();
+      double ptcone = l->CalcPtCone(this_RelIso, TightIso);
+      l->SetPtCone( ptcone );
+
+    }
+    out.push_back(l);
+  }
+  return out;
+
+}
+
 
 std::vector<Lepton *> AnalyzerCore::CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons){
 
@@ -375,6 +398,21 @@ std::vector<Lepton *> AnalyzerCore::CombineLeptonPointerVector(const std::vector
   out.insert(out.end(),lep1.begin(),lep1.end());
   out.insert(out.end(),lep2.begin(),lep2.end());
   
+  return out;
+
+}
+
+std::vector<Lepton *> AnalyzerCore::CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons, const std::vector<Tau>& taus){
+
+  std::vector<Lepton *> out;
+  std::vector<Lepton *> lep1 = MakeLeptonPointerVector(electrons);
+  std::vector<Lepton *> lep2 = MakeLeptonPointerVector(muons);
+  std::vector<Lepton *> lep3 = MakeLeptonPointerVector(taus);
+  out.reserve(lep1.size()+lep2.size()+lep3.size());
+  out.insert(out.end(),lep1.begin(),lep1.end());
+  out.insert(out.end(),lep2.begin(),lep2.end());
+  out.insert(out.end(),lep3.begin(),lep3.end());
+
   return out;
 
 }
