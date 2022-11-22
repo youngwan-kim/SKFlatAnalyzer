@@ -413,6 +413,9 @@ public:
 
   // JH functions 
 
+  double GetCFratesFromFunction(TString id, double pt, double eta);
+  double GetCFratesFromHistograms(TString era, double pt, double eta);
+
   // HEM code                                                                                                                                                
 
   bool IsHEMIssueRun();

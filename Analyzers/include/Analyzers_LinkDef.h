@@ -27,6 +27,7 @@
 #pragma link C++ class HNL_SignalRegionPlotter17028+;
 #pragma link C++ class HNL_SignalRegionPlotter21003+;
 #pragma link C++ class HNL_SignalEfficiency+;
+#pragma link C++ class HNL_ChargeFlip+;
 #pragma link C++ class GetEffLumi+;
 #pragma link C++ class ExampleRun+;
 #pragma link C++ class SKFlatValidation+;
