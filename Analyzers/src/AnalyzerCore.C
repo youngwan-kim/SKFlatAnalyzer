@@ -181,7 +181,6 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
 }
 
 
-
 std::vector<Muon> AnalyzerCore::GetMuons(TString id, double ptmin, double fetamax){
 
   std::vector<Muon> muons = GetAllMuons();
@@ -3521,3 +3520,147 @@ void AnalyzerCore::FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatje
 
 }
 
+// TODO update params for UL
+double AnalyzerCore::GetCFratesFromFunction(TString id, double pt, double eta){
+
+  eta = fabs(eta);
+  double x = 1./pt;
+  double a, b, c;
+  double rate;
+
+  if(id == "HNTightV1"){
+      if(eta < 0.8){
+        if(x < 0.004){ a = -6.19041e+00; b = -7.38711e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.038){ a = 1.45276e-06; b = 7.72346e-03; c = -1.45076e-05; rate = a/(x+b)+c; }
+        else{ a = 9.71303e-05; b = -0.00208995; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.004){ a = -4.73210e+00; b = -4.98697e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.036){ a = 1.08024e-05; b = 4.03858e-03; c = -8.32696e-05; rate = a/(x+b)+c; }
+        else{ a = 0.000740277; b = -0.0154686; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 4.98784e-05; b = 9.81612e-04; c = 7.38347e-04; rate = a/(x+b)+c;
+      }
+  }
+
+  return rate;
+
+  /*if(DataYear==2016 && DataEra == "2016preVFP"){ // UL MIGRATED
+    if(id == "HNTightV1"){
+      if(eta < 0.8){
+        if(x < 0.004){ a = -6.19041e+00; b = -7.38711e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.038){ a = 1.45276e-06; b = 7.72346e-03; c = -1.45076e-05; rate = a/(x+b)+c; }
+        else{ a = 9.71303e-05; b = -0.00208995; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.004){ a = -4.73210e+00; b = -4.98697e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.036){ a = 1.08024e-05; b = 4.03858e-03; c = -8.32696e-05; rate = a/(x+b)+c; }
+        else{ a = 0.000740277; b = -0.0154686; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 4.98784e-05; b = 9.81612e-04; c = 7.38347e-04; rate = a/(x+b)+c;
+      }
+    }
+  }
+
+  if(DataYear==2016 && DataEra == "2016postVFP"){ // UL MIGRATED
+    if(id == "HNTightV1"){
+      if(eta < 0.8){
+        if(x < 0.004){ a = -6.19041e+00; b = -7.38711e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.038){ a = 1.45276e-06; b = 7.72346e-03; c = -1.45076e-05; rate = a/(x+b)+c; }
+        else{ a = 9.71303e-05; b = -0.00208995; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.004){ a = -4.73210e+00; b = -4.98697e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.036){ a = 1.08024e-05; b = 4.03858e-03; c = -8.32696e-05; rate = a/(x+b)+c; }
+        else{ a = 0.000740277; b = -0.0154686; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 4.98784e-05; b = 9.81612e-04; c = 7.38347e-04; rate = a/(x+b)+c;
+      }
+    }
+  }
+
+  else if(DataYear==2017){ //UL MIGRATED
+    if(id == "HNTightV1"){
+      if(eta < 0.8){ 
+        if(x < 0.005){ a = -7.22000e+00; b = -5.33015e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.005 && x<0.026){ a = 1.10019e-06; b = 1.18823e-02; c = -1.42907e-05; rate = a/(x+b)+c; }
+        else{ a = 2.75658e-05; b = -0.000474064; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){ 
+        if(x < 0.003){ a = -4.91451e+00; b = -7.42761e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.003 && x<0.038){ a = 1.80793e-06; b = -6.77147e-04; c = 1.71392e-05; rate = a/(x+b)+c; }
+        else{ a = 0.000168233; b = -0.0031416; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 1.62402e-05; b = -6.70062e-04; c = 1.76648e-04; rate = a/(x+b)+c;
+      }
+    }
+  }
+  else if(DataYear==2018){ // UL MIGRATED
+    if(id == "HNTightV1"){
+      if(eta < 0.8){
+        if(x < 0.002){ a = -5.76641e+00; b = -1.26075e+03; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.002 && x<0.022){ a =  1.99408e-07; b = -1.17637e-03 ; c = 1.08080e-05 ; rate = a/(x+b)+c; }
+        else{ a = 3.77309e-05; b = -0.00074217; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.002){ a = -4.50327e+00; b = -1.05479e+03; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.002 && x<0.035){ a = 2.06600e-06; b =  -4.78723e-04; c = 9.32339e-06; rate = a/(x+b)+c; }
+        else{ a = 0.000152406; b = -0.00257028; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 2.06824e-05; b = 4.25589e-04; c = 1.37998e-06; rate = a/(x+b)+c;
+      }
+    }
+  }
+
+  if(rate < 0.) rate = 0.;
+  return rate;*/
+
+}
+
+double AnalyzerCore::GetCFratesFromHistograms(TString era, double pt, double eta){
+
+  eta = fabs(eta);
+  double x = 1/pt; double rate;
+  double denom; double num; 
+  TString region = "";
+  TDirectory* origDir = gDirectory;
+
+  if(eta<0.8) region = "1";
+  else if(eta>=0.8 && eta<1.479) region = "2";
+  else region = "3";
+  if( era == "2016preVFP" || era == "2016postVFP") era = "2016";
+
+  TFile *file = new TFile("/data9/Users/youngwan/SKFlatOutput/Run2UltraLegacy_v3/ChargeFlip/"+era+"/CFrate__/ChargeFlip_All.root ");
+  TH1D *hist_denom = (TH1D *)file->Get("HNTightV1/CFrate/EtaRegion"+region+"_Denom")->Clone();
+  TH1D *hist_num = (TH1D *)file->Get("HNTightV1/CFrate/EtaRegion"+region+"_Num")->Clone();
+
+  int binnum = int(x/0.001)+1;
+  denom = hist_denom->GetBinContent(binnum); num = hist_num->GetBinContent(binnum);
+  rate = num/denom;
+
+  file->Close();
+  delete file;
+  origDir->cd();
+  return rate;
+
+}

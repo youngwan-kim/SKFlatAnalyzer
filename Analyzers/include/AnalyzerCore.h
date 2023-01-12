@@ -2,7 +2,9 @@
 #define AnalyzerCore_h
 
 #include "TLorentzVector.h"
+#include "TFile.h"
 #include "TString.h"
+#include "TH1D.h"
 #include "TMath.h"
 #include "TH3.h"
 #include <sstream>      
@@ -345,9 +347,13 @@ public:
 
   virtual void WriteHist();
 
+  double GetCFratesFromFunction(TString id, double pt, double eta);
+  double GetCFratesFromHistograms(TString era, double pt, double eta);
+
   //==== Quick Plotters
   void FillLeptonPlots(std::vector<Lepton *> leps, TString this_region, double weight);
   void FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatjets, TString this_region, double weight);
+
 
   //==== Output rootfile
   void SwitchToTempDir();

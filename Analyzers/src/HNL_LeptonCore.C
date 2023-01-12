@@ -232,6 +232,7 @@ bool HNL_LeptonCore::PassTriggerSelection(HNL_LeptonCore::Channel channel,Event 
     for(auto ilep : leps) {
       if(ilep->LeptonFlavour() == Lepton::MUON) leps_muon.push_back(ilep);
     }
+    
     if(selection == "Dilep"){
       
       // Check It passes DiMu Trigger
@@ -281,6 +282,7 @@ bool HNL_LeptonCore::PassTriggerSelection(HNL_LeptonCore::Channel channel,Event 
       if(ilep->LeptonFlavour() == Lepton::ELECTRON) leps_eg.push_back(ilep);
     }
     
+    
     if(selection == "Dilep"){
       
       PassTrigger = PassTriggerAndCheckStream(ev,TrigList_HNL_DblEG);
@@ -318,6 +320,7 @@ bool HNL_LeptonCore::PassTriggerSelection(HNL_LeptonCore::Channel channel,Event 
 
 
   if (channel == EMu){
+    
     
     if(selection == "Dilep"){
       
@@ -392,6 +395,23 @@ AnalyzerParameter HNL_LeptonCore::InitialiseHNLParameter(TString s_setup, TStrin
   param.Electron_Veto_ID = "HNVeto2016";
 
   param.Tau_Veto_ID = "HNVeto";
+
+  if (s_setup=="MuonCFStudy"){
+
+    param.CFMethod   = "MC";
+
+    param.Muon_Tight_ID = "HNTightMuonCF";
+    
+    param.Electron_Tight_ID = "HNTightV2";
+
+
+    if(RunFake){
+      param.Muon_Tight_ID = "HNLooseV1";
+      param.Electron_Tight_ID = "HNLooseV4";
+    }
+    return param;
+
+  }
 
 
   if (s_setup=="SignalStudy"){
@@ -1888,8 +1908,6 @@ TString HNL_LeptonCore::QToString(HNL_LeptonCore::ChargeType q){
   
 }
 
-
-
 vector<Gen> HNL_LeptonCore::GetGenLepronsSignal(){
 
   bool isDYVBF=false;
@@ -1900,7 +1918,7 @@ vector<Gen> HNL_LeptonCore::GetGenLepronsSignal(){
   for (auto i : gens){ Gen gen = i; if(gen.PID() == 9900012 || gen.PID() == 9900014) isDYVBF=true; }
 
   if(isDYVBF){
-
+    
     for(unsigned int i=2; i<gens.size(); i++){
 
       Gen gen = gens.at(i);

@@ -1,0 +1,54 @@
+
+Processing Fit.C...
+//////////////////// Now fitting on EtaRegion1 ... ////////////////////
+ FCN=3.55352 FROM MIGRAD    STATUS=CONVERGED      50 CALLS          51 TOTAL
+                     EDM=1.15764e-07    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant    -5.65665e+00   1.59390e-01   4.67689e-05   1.04828e-02
+   2  Slope       -9.84685e+02   8.45448e+01   2.48099e-02   1.77791e-05
+ FCN=31.5516 FROM MIGRAD    STATUS=CONVERGED     246 CALLS         247 TOTAL
+                     EDM=1.81474e-10    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  p0           5.90777e-07   7.54945e-08   2.74692e-11  -7.87124e+02
+   2  p1           4.33118e-04   6.12327e-04   3.87497e-07   7.29008e-02
+   3  p2           8.42712e-06   3.05239e-06   1.89113e-09  -1.10732e+01
+
+****************************************
+Minimizer is Linear / Migrad
+Chi2                      =      5.52441
+NDf                       =            8
+p0                        =  6.30983e-05   +/-   1.34546e-05 
+p1                        =  -0.00126319   +/-   0.000383479 
+
+//////////////////// Now fitting on EtaRegion2 ... ////////////////////
+ FCN=0.0658781 FROM MIGRAD    STATUS=CONVERGED      46 CALLS          47 TOTAL
+                     EDM=1.81016e-11    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Constant    -4.05081e+00   8.48901e-02   1.17759e-05   8.76402e-05
+   2  Slope       -8.05999e+02   4.21796e+01   5.85114e-03   3.54356e-08
+ FCN=119.063 FROM MIGRAD    STATUS=CONVERGED     273 CALLS         274 TOTAL
+                     EDM=4.60192e-12    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  p0           9.16218e-06   3.97469e-07   2.37131e-10   1.92385e+01
+   2  p1           2.38794e-03   3.03443e-04   3.21285e-07   6.52356e-03
+   3  p2          -5.08191e-05   1.16517e-05   1.21347e-08   6.76974e-01
+
+****************************************
+Minimizer is Linear / Migrad
+Chi2                      =  3.37333e-24
+NDf                       =            0
+p0                        =  0.000942129   +/-   0.000774511 
+p1                        =   -0.0202009   +/-   0.0198496   
+
+//////////////////// Now fitting on EtaRegion3 ... ////////////////////
+ FCN=190.229 FROM MIGRAD    STATUS=CONVERGED     245 CALLS         246 TOTAL
+                     EDM=3.75381e-12    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  p0           4.98784e-05   6.64112e-07   8.23485e-10  -6.55549e+00
+   2  p1           9.81612e-04   6.97753e-05   1.53026e-07   9.17604e-02
+   3  p2           7.38347e-04   2.43744e-05   4.73824e-08   3.06172e-02

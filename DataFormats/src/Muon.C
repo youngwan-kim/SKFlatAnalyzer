@@ -163,6 +163,7 @@ bool Muon::PassID(TString ID) const {
 
   if(ID=="HNTightV1") return Pass_HNTight(0.07, 0.02, 0.05, 3.);
   if(ID=="HNTightV2") return Pass_HNTight(0.07, 0.05, 0.1, 3.);
+  if(ID=="HNTightMuonCF") return Pass_HNTight(0.15, 0.01, 0.1, 3.);
 
 
 

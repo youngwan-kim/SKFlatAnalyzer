@@ -16,8 +16,12 @@
 #pragma link C++ class HNL_SR3KinVar+;
 #pragma link C++ class HNL_ControlRegionPlotter+;
 #pragma link C++ class HNL_SignalRegionPlotter+;
+#pragma link C++ class HNL_SignalSampleValidation+;
+#pragma link C++ class HNL_Test+;
+#pragma link C++ class HNL_ChargeFlip+;
 #pragma link C++ class GetEffLumi+;
 #pragma link C++ class ExampleRun+;
+#pragma link C++ class LepTauJJ+;
 #pragma link C++ class SKFlatValidation+;
 #pragma link C++ class SkimTree_SS2lOR3l+;
 #pragma link C++ class SkimTree_AK8+;

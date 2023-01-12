@@ -1,0 +1,94 @@
+import ROOT as rt
+rt.gROOT.LoadMacro('./histFitter.C+')
+#rt.gROOT.LoadMacro('./RooCBExGaussShape.cc+')
+#rt.gROOT.LoadMacro('./RooCMSShape.cc+')
+from ROOT import tnpFitter
+import time
+import os
+
+channels = ["BB","EE","BE2"]
+
+for channel in channels:
+
+  #fileName = "DYJets_MG_All"
+  fileName = "DYJets_MG_All"
+  os.system("mkdir -p "+fileName)
+  fileTruth  = rt.TFile("/home/youngwan/data9/SKFlatOutput/Run2UltraLegacy_v2/ChargeFlip/2018/ScaleFactor__/ChargeFlip_"+fileName+".root",'read')
+
+  funcs = [
+      "Gaussian::sigResPass(x,meanOS,sigmaOS)",
+      "Gaussian::sigResFail(x,meanSS,sigmaSS)",
+      "RooCMSShape::bkgPass(x, acmsOS, betaOS, gammaOS, peakOS)",
+      "RooCMSShape::bkgFail(x, acmsSS, betaSS, gammaSS, peakSS)",
+      ]
+ 
+  if fileTruth.GetName() == "ChargeFlip_DYJets_MG_all.root" and channel == "BB":
+    pars = [
+        "meanOS[-0.0,-5.0,5.0]","sigmaOS[0.9,0.5,5.0]",
+        "meanSS[-0.0,-5.0,5.0]","sigmaSS[0.9,0.5,5.0]",
+        "acmsOS[60.,50.,80.]","betaOS[0.05,0.01,0.08]","gammaOS[0.1, -2, 2]","peakOS[90.0]",
+        "acmsSS[60.,50.,80.]","betaSS[0.05,0.01,0.08]","gammaSS[0., -2, 0.04]","peakSS[90.0]",
+        ]
+  elif fileTruth.GetName() == "CFSF_test_DYJets_All.root" and channel == "EE":
+    pars = [
+        "meanOS[-0.0,-5.0,5.0]","sigmaOS[0.9,0.5,5.0]",
+        "meanSS[-0.0,-5.0,5.0]","sigmaSS[0.9,0.5,5.0]",
+        "acmsOS[60.,50.,80.]","betaOS[0.05,0.01,0.08]","gammaOS[0.1, -2, 0.2]","peakOS[90.0]",
+        "acmsSS[60.,50.,80.]","betaSS[0.05,0.01,0.08]","gammaSS[0., -2, 0.04]","peakSS[90.0]",
+        ]
+  elif fileTruth.GetName() == "ChargeFlip_DYJets_MG_all.root" and channel == "BB":
+    pars = [
+        "meanOS[-0.0,-5.0,5.0]","sigmaOS[0.9,0.5,5.0]",
+        "meanSS[-0.0,-5.0,5.0]","sigmaSS[0.9,0.5,5.0]",
+        "acmsOS[60.,50.,80.]","betaOS[0.04,0.01,0.07]","gammaOS[0.1, 0.08, 2]","peakOS[90.0]",
+        "acmsSS[60.,50.,80.]","betaSS[0.05,0.01,0.08]","gammaSS[0.1, -2, 2]","peakSS[90.0]",
+        ]
+  elif fileTruth.GetName() == "ChargeFlip_DYJets_MG_all.root" and channel == "EE":
+    pars = [
+        "meanOS[-0.0,-5.0,5.0]","sigmaOS[0.9,0.5,5.0]",
+        "meanSS[-0.0,-5.0,5.0]","sigmaSS[0.9,0.5,5.0]",
+        "acmsOS[60.,50.,80.]","betaOS[0.04,0.01,0.07]","gammaOS[0.1, 0.08, 2]","peakOS[90.0]",
+        "acmsSS[60.,50.,80.]","betaSS[0.02,0.01,0.06]","gammaSS[0.1, -2, 2]","peakSS[90.0]",
+        ]
+  else:
+    pars = [
+        "meanOS[-0.0,-5.0,5.0]","sigmaOS[0.9,0.5,5.0]",
+        "meanSS[-0.0,-5.0,5.0]","sigmaSS[0.9,0.5,5.0]",
+        "acmsOS[60.,50.,80.]","betaOS[0.05,0.01,0.08]","gammaOS[0.1, -2, 2]","peakOS[90.0,80.0,100.0]",
+        "acmsSS[60.,50.,80.]","betaSS[0.05,0.01,0.08]","gammaSS[0.1, -2, 2]","peakSS[90.0,80.0,100.0]",
+        ]
+  
+  this_workspace = []
+  this_workspace.extend(pars)
+  this_workspace.extend(funcs)
+  
+  infile = rt.TFile("/home/youngwan/data9/SKFlatOutput/Run2UltraLegacy_v2/ChargeFlip/2018/ScaleFactor__/DATA/ChargeFlip_EGamma.root", "read")
+  if channel == "BE":
+    hOS = infile.Get("HNTightV1/ScaleFactor/"+channel+"_ZMass_OS_MET50")
+  else:
+    hOS = infile.Get("HNTightV1/ScaleFactor/"+channel+"_ZMass_OS_MET50")
+  hSS = infile.Get("HNTightV1/ScaleFactor/"+channel+"_ZMass_SS_MET50")
+  fitter = tnpFitter( hOS, hSS, fileName, "myhist_MET50_"+channel )
+  infile.Close()
+  
+  fitter.useMinos()
+  rootfile = rt.TFile("newfit_"+fileName+".root",'update')
+  fitter.setOutputFile( rootfile )
+  
+  if channel == "BE":
+    histZLineShapeOS = fileTruth.Get("HNTightV1/ScaleFactor/"+channel+"_ZMass_OS_MET50")
+  else:
+    histZLineShapeOS = fileTruth.Get("HNTightV1/ScaleFactor/"+channel+"_ZMass_OS_MET50")
+  histZLineShapeSS = fileTruth.Get("HNTightV1/ScaleFactor/"+channel+"_ZMass_SS_MET50")
+  fitter.setZLineShapes(histZLineShapeOS,histZLineShapeSS)
+  
+  fileTruth.Close()
+  
+  workspace = rt.vector("string")()
+  for i in this_workspace:
+    workspace.push_back(i)
+  fitter.setWorkspace( workspace )
+  
+  title = "mytitle_"+channel
+  fitter.fits(False,title)
+  rootfile.Close()
