@@ -652,7 +652,7 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 output = job_$(Process).log
 error = job_$(Process).err
-request_memory = 12000
+request_memory = 24000
 accounting_group=group_cms
 +SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el6:latest"
 +SingularityBind = "/cvmfs, /cms, /share"
@@ -706,6 +706,7 @@ queue {0}
       runCfileFullPath = thisjob_dir+'run.C'
 
     IncludeLine = 'R__LOAD_LIBRARY(/cvmfs/cms.cern.ch/slc7_amd64_gcc900/external/lhapdf/6.2.3/lib/libLHAPDF.so)\n'
+    IncludeLine = IncludeLine+'R__LOAD_LIBRARY(/cvmfs/cms.cern.ch/slc7_amd64_gcc900/cms/cmssw/CMSSW_11_3_0/external/slc7_amd64_gcc900/lib/libTMVA.so)\n'
 
     out = open(runCfileFullPath, 'w')
     print>>out,'''{3}
@@ -722,10 +723,13 @@ void {2}(){{
     if IsDATA:
       out.write('  m.IsDATA = true;\n')
       out.write('  m.DataStream = "'+InputSample+'";\n')
+      out.write('  m.Analyzer = "'+args.Analyzer+'";\n');
+
       if args.EventComparison:
         out.write('  m.timestamp = "'+timestamp+'";\n')
 
     else:
+      out.write('  m.Analyzer = "'+args.Analyzer+'";\n');
       out.write('  m.MCSample = "'+InputSample+'";\n');
       out.write('  m.IsDATA = false;\n')
       out.write('  m.xsec = '+str(this_xsec)+';\n')

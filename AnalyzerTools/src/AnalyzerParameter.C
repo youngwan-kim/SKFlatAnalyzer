@@ -8,6 +8,8 @@ void AnalyzerParameter::Clear(){
   MCCorrrectionIgnoreNoHist = false;
   DEBUG = false;
 
+  WriteOutVerbose = 0;
+  SRConfig="";
   Electron_Tight_ID = "Default";
   Electron_Loose_ID = "Default";
   Electron_Veto_ID = "Default";
@@ -17,6 +19,9 @@ void AnalyzerParameter::Clear(){
 
   Electron_FR_ID = "Default";
   Electron_FR_Key = "Default";
+  Electron_PR_Key = "Default";
+  
+  
   Electron_CF_ID = "Default";
   Electron_CF_Key = "Default";
   Electron_Tight_RelIso = 999.;
@@ -43,6 +48,7 @@ void AnalyzerParameter::Clear(){
   Muon_Trigger_SF_Key = "Default";
   Muon_FR_ID = "Default";
   Muon_FR_Key = "Default";
+  Muon_PR_Key = "Default";
   Muon_CF_ID = "Default";
   Muon_CF_Key = "Default";
   Muon_Tight_RelIso = 999.;
@@ -59,7 +65,8 @@ void AnalyzerParameter::Clear(){
   ElFakeMethod="MC";
   MuFakeMethod="MC";
   CFMethod="MC";
-
+  ConvMethod="MC";
+  JetPUID="Default";
   Jet_ID = "Default";
   FatJet_ID = "Default";
 
@@ -74,6 +81,9 @@ AnalyzerParameter::AnalyzerParameter(){
 
   MCCorrrectionIgnoreNoHist = false;
   DEBUG = false;
+
+  WriteOutVerbose = 0;
+  SRConfig="";
 
   Electron_Tight_ID = "Default";
   Electron_Loose_ID = "Default";
@@ -104,6 +114,9 @@ AnalyzerParameter::AnalyzerParameter(){
   ElFakeMethod="MC";
   MuFakeMethod="MC";
   CFMethod="MC";
+  ConvMethod="MC";
+
+  JetPUID="Default";
 
   Jet_ID = "Default";
   FatJet_ID = "Default";
@@ -142,6 +155,12 @@ TString AnalyzerParameter::GetSystType(){
     return "PUDown";
   }
 
+  else if(syst_==Syst::JetPUIDUp){
+    return "JetPUIDUp";
+  }
+  else if(syst_==Syst::JetPUIDDown){
+    return "JetPUIDDown";
+  }
   else if(syst_==Syst::JetMassSmearUp){
     return "JetMassSmearUp";
   }
@@ -211,11 +230,17 @@ TString AnalyzerParameter::GetSystType(){
   else if(syst_==Syst::ElectronTriggerSFDown){
     return "ElectronTriggerSFDown";
   }
-  else if(syst_==Syst::BTagUp){
-    return "BTagUp";
+  else if(syst_==Syst::BTagSFHTagUp){
+    return "BTagSFHTagUp";
   }
-  else if(syst_==Syst::BTagDown){
-    return "BTagDown";
+  else if(syst_==Syst::BTagSFHTagDown){
+    return "BTagSFHTagDown";
+  }
+  else if(syst_==Syst::BTagSFLTagUp){
+    return "BTagSFLTagUp";
+  }
+  else if(syst_==Syst::BTagSFLTagDown){
+    return "BTagSFLTagDown";
   }
   else if(syst_==Syst::METUnclUp){
     return "METUnclUp";

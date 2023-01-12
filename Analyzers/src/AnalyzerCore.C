@@ -3,13 +3,50 @@
 AnalyzerCore::AnalyzerCore(){
 
   outfile = NULL;
+
+  
   mcCorr = new MCCorrection();
   puppiCorr = new PuppiSoftdropMassCorr();
+
+
   fakeEst = new FakeBackgroundEstimator();
   cfEst = new CFBackgroundEstimator();
   pdfReweight = new PDFReweight();
+
   muonGE = new GeneralizedEndpoint();
   muonGEScaleSyst = new GEScaleSyst();
+
+  JECSources = {"AbsoluteStat","AbsoluteScale","AbsoluteFlavMap","AbsoluteMPFBias","Fragmentation","SinglePionECAL","SinglePionHCAL","FlavorQCD","TimePtEta","RelativeJEREC1","RelativeJEREC2","RelativeJERHF","RelativePtBB","RelativePtEC1","RelativePtEC2","RelativePtHF","RelativeBal","RelativeSample","RelativeFSR","RelativeStatFSR","RelativeStatEC","RelativeStatHF","PileUpDataMC","PileUpPtRef","PileUpPtBB","PileUpPtEC1","PileUpPtEC2","PileUpPtHF","FlavorZJet","FlavorPhotonJet","FlavorPureGluon","FlavorPureQuark","FlavorPureCharm","FlavorPureBottom","Total"};
+
+
+  TMVA::Tools::Instance();
+  ElectronIDFakeMVAReader = new TMVA::Reader();
+  ElectronIDCFMVAReader = new TMVA::Reader();
+
+  ElectronIDConvMVAReader = new TMVA::Reader();
+  ElectronIDNoPtEtaConvMVAReader = new TMVA::Reader();
+  ElectronIDNoPtConvMVAReader = new TMVA::Reader();
+  MuonIDConvMVAReader = new TMVA::Reader();
+  MuonIDNoPtEtaConvMVAReader = new TMVA::Reader();
+  MuonIDNoPtConvMVAReader = new TMVA::Reader();
+
+
+
+  SetupIDMVAReader(false);
+  SetupIDMVAReader(true);
+
+  
+  /*
+    
+    // In your analyser code add this line to constructor to fill map with JEC source values.
+    for(auto jec_source : JECSources)   SetupJECUncertainty(jec_source, "AK4PFchs");
+
+  }
+    // Then you can get vector of jets with shift calling 
+    std::vector<Jet> AnalyzerCore::ScaleJetsIndividualSource(const std::vector<Jet>& jets, int sys, TString source);
+    vector<Jet> jets_AbsoluteStatUp = ScaleJetsIndividualSource(jets, 1, "AbsoluteStat");
+  */
+  
 
 }
 
@@ -23,6 +60,8 @@ AnalyzerCore::~AnalyzerCore(){
   maphist_TH1D.clear();
 
   for(std::map< TString, TH2D* >::iterator mapit = maphist_TH2D.begin(); mapit!=maphist_TH2D.end(); mapit++){
+
+    //cout << "Deleting TH2D " << mapit->first << endl;
     delete mapit->second;
   }
   maphist_TH2D.clear();
@@ -46,10 +85,40 @@ AnalyzerCore::~AnalyzerCore(){
   if(fakeEst) delete fakeEst;
   if(cfEst) delete cfEst;
   if(pdfReweight) delete pdfReweight;
+  
   if(muonGE) delete muonGE;
   if(muonGEScaleSyst) delete muonGEScaleSyst;
 
+  AK4CHSJECUncMap.clear();
+  AK4PUPPIJECUncMap.clear();
+  AK8CHSJECUncMap.clear();
+  AK8PUPPIJECUncMap.clear();
+
+  delete ElectronIDFakeMVAReader;
+  delete ElectronIDCFMVAReader;
+
+  delete ElectronIDConvMVAReader;
+  delete ElectronIDNoPtConvMVAReader;
+  delete ElectronIDNoPtEtaConvMVAReader;
+  delete MuonIDConvMVAReader;
+  delete MuonIDNoPtConvMVAReader;
+  delete MuonIDNoPtEtaConvMVAReader;
+
+  
+
 }
+
+bool AnalyzerCore::AnalyserRunsFullBkg(){
+
+  // Flag to setup fakeEst/cfEst/pdfReweight
+  vector<TString> AnalyserList = {"HNL_SignalRegionPlotter","HNL_ControlRegionPlotter","HNL_SignalRegionPlotter17028","HNL_SignalRegionPlotter21003","HNL_SignalLeptonOpt", "HNL_SignalRegionOpt", "HNL_SignalStudies","HNL_ObjectStudies"};
+
+  if(std::find(AnalyserList.begin(), AnalyserList.end(), Analyzer) != AnalyserList.end()) {
+    return true;
+  }
+  return false;
+}
+
 
 void AnalyzerCore::FillEventComparisonFile(AnalyzerParameter param,TString label,string date, double w){
 
@@ -86,7 +155,7 @@ void AnalyzerCore::SwitchToTempDir(){
   while (!tempDir) {
     //==== First, let's find a directory name that doesn't exist yet
     std::stringstream dirname;
-    dirname << "AnalyzerCore" << counter;
+    dirname << "Analyzer4Core" << counter;
     if (gROOT->GetDirectory((dirname.str()).c_str())) {
       ++counter;
       continue;
@@ -114,6 +183,174 @@ Event AnalyzerCore::GetEvent(){
 
 }
 
+double AnalyzerCore::GetJECUncertainty(TString source, TString JetType, double eta, double pt, int sys){
+
+  std::map<TString, std::vector<std::map<double, std::vector<double> > > >::iterator mapit;
+  bool NotFound=false;
+  if(JetType=="AK4PFchs") {
+    mapit = AK4CHSJECUncMap.find(source); 
+    if(mapit == AK4CHSJECUncMap.end()) NotFound=true;
+  }
+  if(JetType=="AK4PFPuppi") {
+    mapit = AK4PUPPIJECUncMap.find(source);
+    if(mapit == AK4PUPPIJECUncMap.end()) NotFound=true;
+  }
+  if(JetType=="AK8PFchs"){
+    mapit = AK8CHSJECUncMap.find(source);
+    if(mapit == AK8CHSJECUncMap.end()) NotFound=true;
+  }
+  if(JetType=="AK8PFPuppi") {
+    mapit = AK8PUPPIJECUncMap.find(source);
+    if(mapit == AK8PUPPIJECUncMap.end()) NotFound=true;
+  }
+  if(NotFound) {cout<< "ERROR, " << source  << " not found in JEC Uncertainty MAP for " << JetType << endl; return -999.;}
+
+  
+  double bin_boundary(-999.);
+
+  std::map<double, std::vector<double> > ptmap = mapit->second.at(0);
+
+  std::vector<double> etabins;  
+  for(std::map<double, std::vector<double> >::iterator it = ptmap.begin(); it!= ptmap.end(); it++){
+    etabins.push_back(it->first);
+  }
+
+  
+  for(unsigned int i=0; i < etabins.size()-1 ; i++){
+    if(eta >= etabins.at(i) && eta < etabins.at(i+1)){  bin_boundary = double(etabins.at(i)) ; break;}
+  }
+
+  if(bin_boundary == -999) return 1.;
+  
+  std::vector<double> ptbins;
+  
+
+  for(std::map<double, std::vector<double> >::iterator pit = ptmap.begin();  pit != ptmap.end(); pit++){
+    if(double(pit->first) == double(bin_boundary)) {ptbins = pit->second; }
+  }
+  
+  int ptbin(-999);
+  if(pt >= ptbins.at(ptbins.size() - 1)) ptbin = ptbins.size() - 1;
+  for(unsigned int j = 0 ; j < ptbins.size()-1; j++){
+    if( pt >= ptbins.at(j)  && pt < ptbins.at(j+1)) {ptbin=j; break;}
+  }
+  
+  if(ptbin == -999) return 1.;
+
+
+  std::map<double, std::vector<double> > upmap = mapit->second.at(1); 
+  std::map<double, std::vector<double> > downmap = mapit->second.at(2); 
+  
+  std::map<double, std::vector<double> >::iterator mapit_unc;
+  if(sys> 0) mapit_unc =  mapit->second.at(1).find(bin_boundary);
+  else mapit_unc =  mapit->second.at(2).find(bin_boundary);
+  
+  double unc = (sys> 0) ?   1+ mapit_unc->second.at(ptbin) : 1 - mapit_unc->second.at(ptbin);
+
+  return unc;
+}
+
+void AnalyzerCore::SetupJECUncertainty(TString source , TString JetType){
+
+ 
+  string analysisdir = getenv("DATA_DIR");
+  
+  string file = analysisdir + "/"+string(GetEra()) + "/JEC/Summer19UL16APV_V7_MC_UncertaintySources_AK4PFchs.txt"; 
+  if(GetEra() == "2016postVFP") file = analysisdir + "/"+ string(GetEra())+ "/JEC/Summer19UL16_V7_MC_UncertaintySources_AK4PFchs.txt";
+  if(GetEra() == "2017") file = analysisdir + "/"+ string(GetEra())+ "/JEC/Summer19UL17_V5_MC_UncertaintySources_AK4PFchs.txt";
+  if(GetEra() == "2018") file = analysisdir + "/"+ string(GetEra())+ "/JEC/Summer19UL18_V5_MC_UncertaintySources_AK4PFchs.txt";
+
+
+  string sline;
+  vector<string> SourceLines;
+  bool ExtractLine=false;
+  int nline(0);
+  ifstream jec_file(file.c_str());  
+  while(getline(jec_file,sline) ){
+    if(ExtractLine){
+      if(nline==0){nline++; continue;}
+      if(sline.find("[")!=string::npos) break;
+      if(nline==1)SourceLines.push_back(sline);
+    }
+    if(sline.find(source)!=string::npos) { ExtractLine=true;}
+  }
+
+  jec_file.close();
+
+  cout << "Setting up JEC uncertainty vector for source ["<<source<< "]." << file << endl;
+
+  std::map<double, std::vector<double> > etaptmap, eta_uncupmap, eta_uncdownmap;
+  for(unsigned int ilines =0; ilines <  SourceLines.size(); ilines++){
+
+    string line = SourceLines[ilines];
+    std::istringstream is( line );
+
+    std::string s_eta_min, s_eta_max, s_nBins;
+    is >> s_eta_min; 
+    is >> s_eta_max;  
+    is >> s_nBins;
+
+    double  eta_min = stod(s_eta_min);
+    double  eta_max = stod(s_eta_max);
+    double  nBins = stod(s_nBins);
+
+    bool EtaBinCheck=true;
+    if((ilines == SourceLines.size() -1)){
+      if( eta_min != 5.0) EtaBinCheck=false;
+      if( eta_max != 5.4) EtaBinCheck=false;
+    }
+    if(!EtaBinCheck){
+      cout << "[AnalyzerCore::SetupJECUncertainty] Eta bin set incorrectly ..." << endl;
+      exit(EXIT_FAILURE);      
+    }
+    std::vector<double> ptbin, unc_up, unc_down;
+    bool finalbin(false);
+
+    for(int i=0; i < nBins; i++){
+      std::string  subString;
+      is >> subString;
+      double value_from_string =  stod(subString);
+      if((i %3) == 0) {ptbin.push_back(value_from_string); if( i == nBins-3) finalbin=true; }
+      if((i %3) == 1) {unc_up.push_back(value_from_string);}
+      if((i %3) == 2) {unc_down.push_back(value_from_string);}
+
+      // Check Final bin is last bin in txt file for this eta bin
+      if((i %3) == 2 && finalbin) {
+	string CheckFinalPt; 
+	is >> CheckFinalPt;
+	if(!CheckFinalPt.empty()) {
+	  cout << "[AnalyzerCore::SetupJECUncertainty] Last pt bin of  set incorrectly ..." << endl;
+	  exit(EXIT_FAILURE);
+	}
+      }
+    }
+    etaptmap[eta_min] = ptbin;
+    eta_uncupmap[eta_min] =  unc_up;
+    eta_uncdownmap[eta_min] = unc_down;
+
+    std::vector<double> NULLBin;
+    if(ilines ==  SourceLines.size() -1) etaptmap[eta_max] = NULLBin;
+        
+  }
+  
+  jec_file.close();
+
+  std::vector<std::map<double, std::vector<double> > > vec_unc;
+  vec_unc.push_back(etaptmap);
+  vec_unc.push_back(eta_uncupmap);
+  vec_unc.push_back(eta_uncdownmap);
+
+  if(JetType=="AK4PFchs") AK4CHSJECUncMap[source] = vec_unc;
+  if(JetType=="AK4PFPuppi") AK4PUPPIJECUncMap[source] = vec_unc;
+  if(JetType=="AK8PFchs") AK8CHSJECUncMap[source] = vec_unc;
+  if(JetType=="AK8PFPuppi") AK8PUPPIJECUncMap[source] = vec_unc;
+
+  return;
+  
+}
+
+
+
 std::vector<Muon> AnalyzerCore::GetAllMuons(){
 
   std::vector<Muon> out;
@@ -128,6 +365,11 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
 
     mu.SetJetPtRel(muon_jetPtRel->at(i));
     mu.SetJetPtRatio(muon_jetPtRatio->at(i));
+    if(muon_jetPtRelDef)mu.SetJetPtRelDef(muon_jetPtRelDef->at(i));
+    if(muon_jetPtRatioDef)mu.SetJetPtRatioDef(muon_jetPtRatioDef->at(i));
+
+    if(muon_jetNTracks)mu.SetJetNTracks(muon_jetNTracks->at(i));
+    if(muon_jetNTracksMVA)mu.SetJetNTracksMVA(muon_jetNTracksMVA->at(i));
 
 
     double rc = muon_roch_sf->at(i);
@@ -143,8 +385,8 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetSoftMVA(muon_softMVA->at(i));
     mu.SetMVA(muon_MVA->at(i));
     mu.SetLepMVA( muon_MVA->at(i));
-
-
+    
+    if(muon_segmentCompatibility) mu.SetMuonSegmentCompatibility(muon_segmentCompatibility->at(i));
     mu.SetdXY(muon_dxyVTX->at(i), muon_dxyerrVTX->at(i));
     mu.SetdZ(muon_dzVTX->at(i), muon_dzerrVTX->at(i));
     mu.SetIP3D(muon_3DIPVTX->at(i), muon_3DIPerrVTX->at(i));
@@ -154,6 +396,8 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetPOGMediumHIP(muon_ismedium_hip->at(i),muon_ismedium_nohip->at(i));
     mu.SetChi2(muon_normchi->at(i));
     mu.SetIso(muon_PfChargedHadronIsoR04->at(i),muon_PfNeutralHadronIsoR04->at(i),muon_PfGammaIsoR04->at(i),muon_PFSumPUIsoR04->at(i),muon_trkiso->at(i));
+    mu.SetLepIso(muon_PfChargedHadronIsoR04->at(i),muon_PfNeutralHadronIsoR04->at(i),muon_PfGammaIsoR04->at(i));
+   
     mu.SetTrackerLayers(muon_trackerLayers->at(i));
 
     mu.SetMatchedStations(muon_matchedstations->at(i));
@@ -161,6 +405,7 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetValidMuonHits(muon_validmuonhits->at(i));
 
     //==== Should be set after Eta is set
+
     mu.SetMiniIso(
       muon_PfChargedHadronMiniIso->at(i), 
       muon_PfNeutralHadronMiniIso->at(i), 
@@ -173,10 +418,702 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetFilterBits(muon_filterbits->at(i));
     mu.SetPathBits(muon_pathbits->at(i));
 
+    if(muon_mva_conv)mu.SetHNL_LepMVA(-999.,muon_mva_conv->at(i),-999); 
+    else mu.SetHNL_LepMVA(-999.,GetBDTScoreMuon(mu,AnalyzerCore::Conv,  "BDTG"),-999);
+    
     out.push_back(mu);
 
   }
   return out;
+
+}
+
+void AnalyzerCore::InitializeMuonIDTreeVars(){
+
+  Pt=-1,       Eta=-1;
+  PtRatio=-1,  PtRel=-1 ;
+  CEMFracCJ=-1, NEMFracCJ=-1, CHFracCJ=-1, NHFracCJ=-1, MuFracCJ=-1, JetDiscCJ=-1;
+
+  Dxy=-1,Dz=-1,DxySig=-1, DzSig=-1, RelIso=-1,IP3D=-1,MVA=-1,Chi2=-1, Minireliso=-1;
+
+  RelDxy=-1,RelDz=-1,RelIP3D=-1,RelMVA=-1,RelMVAIso=-1,PileUp=-1;
+
+  MiniIsoChHad=-1,MiniIsoNHad=-1,MiniIsoPhHad=-1,IsoChHad=-1,IsoNHad=-1,IsoPhHad=-1;
+  RelMiniIsoCh=-1,RelMiniIsoN=-1;
+  Pixel_hits=-1,  Validhits=-1,Matched_stations=-1,Tracker_layers=-1;
+
+}
+void AnalyzerCore::InitializeElectronIDTreeVars(){
+
+
+  Pt=-1;
+  Eta=-1;
+  MiniIsoChHad=-1;
+  MiniIsoNHad=-1;
+  MiniIsoPhHad=-1;
+  IsoChHad=-1;
+  IsoNHad=-1 ;
+  IsoPhHad=-1;
+  RelMiniIsoCh=-1;
+  RelMiniIsoN=-1;
+  Dxy=-1;
+  Dz=-1;
+  DxySig=-1;
+  DzSig=-1;
+  RelDxy=-1;
+  RelDz=-1;
+  RelIso=-1;
+  IP3D=-1;
+  RelIP3D=-1;
+  PtRatio=-1;
+  PtRel=-1;
+  CEMFracCJ=-1;
+  NEMFracCJ=-1;
+  CHFracCJ=-1;
+  NHFracCJ=-1;
+  MuFracCJ=-1;
+  JetDiscCJ=-1;
+  MVA=-1;
+  RelMVA=-1;
+  RelMVAIso=-1;
+  MVAIso=-1;
+  Full5x5_sigmaIetaIeta=-1;
+  dEtaSeed=-1;
+  dPhiIn=-1;
+  HoverE=-1;
+  EoverP=-1;
+  FBrem=-1;
+  R9=-1;
+  TrkIso=-1;   //InvEminusInvP=-1;                                                                    
+  dr03TkSumPt=-1;
+  dr03HcalTowerSumEt=-1;
+  dr03HcalDepth1TowerSumEt=-1;
+  dr03EcalRecHitSumEt=-1;
+  e15=-1;
+  e25=-1;
+  e55=-1;
+  e2x5OverE5x5=-1;
+  e1x5OverE5x5=-1;
+  EtaWidth=-1;
+  PhiWidth=-1;
+  ecalPFClusterIso=-1;
+  hcalPFClusterIso=-1;
+  MissingHits=-1;
+  isEcalDriven=-1;
+  PassConversionVeto=-1;
+  IsGsfCtfScPixChargeConsistent=-1;
+  IsGsfScPixChargeConsistent=-1 ;
+  IsGsfCtfChargeConsistent=-1;
+
+}
+
+
+
+double AnalyzerCore::GetBDTScoreMuon(Muon mu ,BkgType bkg, TString BDTTag){
+
+  if(bkg != BkgType::Conv) return -999;
+
+  InitializeMuonIDTreeVars();
+
+  std::vector<Jet>   JetAllColl = GetJets("NoID", 10., 5.0);
+
+  Lepton *lep = (Lepton *)(&mu);
+  SetBDTIDVar(lep);
+  MVA = mu.MVA();
+
+  int IdxMatchJet=-1;
+  float mindR1=999.;
+
+  for(unsigned int ij=0; ij<JetAllColl.size(); ij++){
+    float dR1=lep->DeltaR(JetAllColl.at(ij));
+    if(dR1>0.4) continue;
+    if(dR1<mindR1){ mindR1=dR1; IdxMatchJet=ij; }
+  }
+
+  if(IdxMatchJet!=-1){
+    PtRatio=JetLeptonPtRatioLepAware(mu,false);
+    PtRel=JetLeptonPtRelLepAware(mu,true);
+  }
+
+  else{
+    PtRatio = min(1/(1.+lep->RelIso()), 1.5);
+    PtRel=0, PtRelWithLep=0, PtRelCorr=0;
+  }
+
+  Chi2 = mu.Chi2();
+  Validhits = mu.ValidMuonHits();
+  Matched_stations = mu.MatchedStations();
+  Pixel_hits  = mu.PixelHits();
+  Tracker_layers = mu.TrackerLayers();
+
+  TString EtaRegion = "_EC";
+  if(fabs(mu.Eta()) < 0.8) EtaRegion = "_IB";
+  else   if(fabs(mu.Eta()) < 1.5) EtaRegion = "_OB";
+
+
+  TString MVATagStr = BDTTag;
+  if (bkg == BkgType::Fake) MVATagStr += "_Fake";
+  if (bkg == BkgType::Conv) MVATagStr += "_Conv";
+
+
+
+  if(BDTTag.Contains("_NoPtEta"))  return  MuonIDNoPtEtaConvMVAReader->EvaluateMVA(MVATagStr);
+  else    if(BDTTag.Contains("_NoPt") || BDTTag.Contains("_LowPt"))  return  MuonIDNoPtConvMVAReader->EvaluateMVA(MVATagStr);
+  else  return  MuonIDConvMVAReader->EvaluateMVA(MVATagStr);
+
+
+}
+
+void AnalyzerCore::SetBDTIDVar(Lepton*  lep){
+
+
+  Pt    = (lep->Pt() > 500)  ? 499 : lep->Pt();
+  Eta   = fabs(lep->Eta());
+  MiniIsoChHad = lep->MiniIsoChHad();
+  MiniIsoNHad = lep->MiniIsoNHad();
+  MiniIsoPhHad = lep->MiniIsoPhHad();
+  IsoChHad = lep->IsoChHad();
+  IsoNHad = lep->IsoNHad();
+  IsoPhHad = lep->IsoPhHad();
+  Dxy   = lep->LogdXY();
+  RelDxy   = lep->LogdXY()/lep->Pt();
+  DxySig   = lep->LogdXYSig();
+  Dz   = lep->LogdZ();
+  RelDz   = lep->LogdZ()/lep->Pt();
+  DzSig   = lep->LogdZSig();
+  IP3D    = lep->SIP3D();
+  RelIP3D    = lep->SIP3D()/lep->Pt();
+  RelIso    =  lep->RelIso();
+  Minireliso   = lep->MiniRelIso();
+  RelMiniIsoCh = lep->MiniRelIsoCharged();
+  RelMiniIsoN = lep->MiniRelIsoNeutral();
+
+  //==== Vars for non-prompt lepton bkg                                                               
+
+                                                                                                  
+  int IdxMatchJet=-1;
+  float mindR1=999.;
+  std::vector<Jet>   JetAllColl = GetJets("NoID", 10., 5.0);
+
+  for(unsigned int ij=0; ij<JetAllColl.size(); ij++){
+    float dR1=lep->DeltaR(JetAllColl.at(ij));
+    if(dR1>0.4) continue;
+    if(dR1<mindR1){ mindR1=dR1; IdxMatchJet=ij; }
+  }
+
+  if(IdxMatchJet!=-1){
+
+    CEMFracCJ = JetAllColl.at(IdxMatchJet).ChargedEmEnergyFraction();
+    NEMFracCJ = JetAllColl.at(IdxMatchJet).NeutralEmEnergyFraction();
+    CHFracCJ  = JetAllColl.at(IdxMatchJet).ChargedHadEnergyFraction();
+    NHFracCJ  = JetAllColl.at(IdxMatchJet).NeutralHadEnergyFraction();
+    MuFracCJ  = JetAllColl.at(IdxMatchJet).MuonEnergyFraction();
+    JetDiscCJ = JetAllColl.at(IdxMatchJet).GetTaggerResult(JetTagging::DeepJet);
+  }
+
+  else{
+    CEMFracCJ=0, NEMFracCJ=0., CHFracCJ=0., NHFracCJ=0., MuFracCJ=0., JetDiscCJ=0.;
+  }
+
+  return;
+}
+						\
+
+
+
+void AnalyzerCore::SetupIDMVAReader(bool isMuon){
+
+  if(isMuon) {
+
+    cout << "################ SETUP MUON ID MVA " << endl;
+    InitializeMuonIDTreeVars();
+
+    // Fake                                                                                            
+    // Fake                                                                                            
+    MuonIDConvMVAReader->AddVariable("Pt", &Pt);
+    MuonIDConvMVAReader->AddVariable("Eta", &Eta);
+    MuonIDConvMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    MuonIDConvMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    MuonIDConvMVAReader->AddVariable("IsoChHad", &IsoChHad);
+    MuonIDConvMVAReader->AddVariable("IsoNHad", &IsoNHad);
+    MuonIDConvMVAReader->AddVariable("IsoPhHad", &IsoPhHad);
+    MuonIDConvMVAReader->AddVariable("Dxy",  &Dxy);
+    MuonIDConvMVAReader->AddVariable("DxySig",  &DxySig);
+    MuonIDConvMVAReader->AddVariable("Dz",  &Dz);
+    MuonIDConvMVAReader->AddVariable("DzSig",  &DzSig);
+    MuonIDConvMVAReader->AddVariable("RelIso", &RelIso);
+    MuonIDConvMVAReader->AddVariable("IP3D", &IP3D);
+    MuonIDConvMVAReader->AddVariable("PtRatio",  &PtRatio);
+    MuonIDConvMVAReader->AddVariable("PtRel",  &PtRel);
+    MuonIDConvMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    MuonIDConvMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    MuonIDConvMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    MuonIDConvMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    MuonIDConvMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    MuonIDConvMVAReader->AddVariable("MVA",  &MVA);
+    MuonIDConvMVAReader->AddVariable("MuFracCJ",&MuFracCJ);
+    MuonIDConvMVAReader->AddVariable("Chi2", &Chi2);
+    MuonIDConvMVAReader->AddVariable("Validhits", &Validhits);
+    MuonIDConvMVAReader->AddVariable("Matched_stations", &Matched_stations);
+    MuonIDConvMVAReader->AddVariable("Pixel_hits",  &Pixel_hits);
+    MuonIDConvMVAReader->AddVariable("Minireliso",  &Minireliso);
+    MuonIDConvMVAReader->AddVariable("Tracker_layers",  &Tracker_layers);
+    MuonIDConvMVAReader->AddSpectator("w_tot", &w_tot);
+
+
+
+    MuonIDNoPtEtaConvMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("IsoChHad", &IsoChHad);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("IsoNHad", &IsoNHad);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("IsoPhHad", &IsoPhHad);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Dxy",  &Dxy);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("DxySig",  &DxySig);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Dz",  &Dz);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("DzSig",  &DzSig);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("RelIso", &RelIso);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("IP3D", &IP3D);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("PtRatio",  &PtRatio);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("PtRel",  &PtRel);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("MVA",  &MVA);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("MuFracCJ",&MuFracCJ);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Chi2", &Chi2);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Validhits", &Validhits);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Matched_stations", &Matched_stations);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Pixel_hits",  &Pixel_hits);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Minireliso",  &Minireliso);
+    MuonIDNoPtEtaConvMVAReader->AddVariable("Tracker_layers",  &Tracker_layers);
+    MuonIDNoPtEtaConvMVAReader->AddSpectator("w_tot", &w_tot);
+
+
+
+    MuonIDNoPtConvMVAReader->AddVariable("Eta", &Eta);
+    MuonIDNoPtConvMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    MuonIDNoPtConvMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    MuonIDNoPtConvMVAReader->AddVariable("IsoChHad", &IsoChHad);
+    MuonIDNoPtConvMVAReader->AddVariable("IsoNHad", &IsoNHad);
+    MuonIDNoPtConvMVAReader->AddVariable("IsoPhHad", &IsoPhHad);
+    MuonIDNoPtConvMVAReader->AddVariable("Dxy",  &Dxy);
+    MuonIDNoPtConvMVAReader->AddVariable("DxySig",  &DxySig);
+    MuonIDNoPtConvMVAReader->AddVariable("Dz",  &Dz);
+    MuonIDNoPtConvMVAReader->AddVariable("DzSig",  &DzSig);
+    MuonIDNoPtConvMVAReader->AddVariable("RelIso", &RelIso);
+    MuonIDNoPtConvMVAReader->AddVariable("IP3D", &IP3D);
+    MuonIDNoPtConvMVAReader->AddVariable("PtRatio",  &PtRatio);
+    MuonIDNoPtConvMVAReader->AddVariable("PtRel",  &PtRel);
+    MuonIDNoPtConvMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    MuonIDNoPtConvMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    MuonIDNoPtConvMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    MuonIDNoPtConvMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    MuonIDNoPtConvMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    MuonIDNoPtConvMVAReader->AddVariable("MVA",  &MVA);
+    MuonIDNoPtConvMVAReader->AddVariable("MuFracCJ",&MuFracCJ);
+    MuonIDNoPtConvMVAReader->AddVariable("Chi2", &Chi2);
+    MuonIDNoPtConvMVAReader->AddVariable("Validhits", &Validhits);
+    MuonIDNoPtConvMVAReader->AddVariable("Matched_stations", &Matched_stations);
+    MuonIDNoPtConvMVAReader->AddVariable("Pixel_hits",  &Pixel_hits);
+    MuonIDNoPtConvMVAReader->AddVariable("Minireliso",  &Minireliso);
+    MuonIDNoPtConvMVAReader->AddVariable("Tracker_layers",  &Tracker_layers);
+    MuonIDNoPtConvMVAReader->AddSpectator("w_tot", &w_tot);
+
+
+
+  }
+
+  else{
+
+    InitializeElectronIDTreeVars();
+
+    ElectronIDConvMVAReader->AddVariable("Pt", &Pt);
+    ElectronIDConvMVAReader->AddVariable("Eta", &Eta);
+    ElectronIDConvMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    ElectronIDConvMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    ElectronIDConvMVAReader->AddVariable("IsoChHad", &IsoChHad);
+    ElectronIDConvMVAReader->AddVariable("IsoNHad", &IsoNHad);
+    ElectronIDConvMVAReader->AddVariable("IsoPhHad", &IsoPhHad);
+    ElectronIDConvMVAReader->AddVariable("Dxy",  &Dxy);
+    ElectronIDConvMVAReader->AddVariable("DxySig",  &DxySig);
+    ElectronIDConvMVAReader->AddVariable("Dz",  &Dz);
+    ElectronIDConvMVAReader->AddVariable("DzSig",  &DzSig);
+    ElectronIDConvMVAReader->AddVariable("RelIso", &RelIso);
+    ElectronIDConvMVAReader->AddVariable("IP3D", &IP3D);
+    ElectronIDConvMVAReader->AddVariable("PtRatio",  &PtRatio);
+    ElectronIDConvMVAReader->AddVariable("PtRel",  &PtRel);
+    ElectronIDConvMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    ElectronIDConvMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    ElectronIDConvMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    ElectronIDConvMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    ElectronIDConvMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    ElectronIDConvMVAReader->AddVariable("MVA",  &MVA);
+    ElectronIDConvMVAReader->AddVariable("MVAIso",  &MVAIso);
+    ElectronIDConvMVAReader->AddVariable("Full5x5_sigmaIetaIeta",  &Full5x5_sigmaIetaIeta);
+    ElectronIDConvMVAReader->AddVariable("dEtaSeed",  &dEtaSeed);
+    ElectronIDConvMVAReader->AddVariable("dPhiIn",  &dPhiIn);
+    ElectronIDConvMVAReader->AddVariable("EoverP",  &EoverP);
+    ElectronIDConvMVAReader->AddVariable("FBrem",  &FBrem);
+    ElectronIDConvMVAReader->AddVariable("R9",  &R9);
+    ElectronIDConvMVAReader->AddVariable("TrkIso",  &TrkIso);
+    ElectronIDConvMVAReader->AddVariable("dr03TkSumPt",  &dr03TkSumPt);
+    ElectronIDConvMVAReader->AddVariable("dr03HcalTowerSumEt",  &dr03HcalTowerSumEt);
+    ElectronIDConvMVAReader->AddVariable("EtaWidth",  &EtaWidth);
+    ElectronIDConvMVAReader->AddVariable("PhiWidth",  &PhiWidth);
+    ElectronIDConvMVAReader->AddVariable("InvEminusInvP", &InvEminusInvP);
+    ElectronIDConvMVAReader->AddVariable("ecalPFClusterIso",  &ecalPFClusterIso);
+    ElectronIDConvMVAReader->AddVariable("MissingHits",  &MissingHits);
+    ElectronIDConvMVAReader->AddVariable("isEcalDriven", &isEcalDriven);
+    ElectronIDConvMVAReader->AddVariable("PassConversionVeto",  &PassConversionVeto);
+
+    ElectronIDConvMVAReader->AddVariable("IsGsfCtfScPixChargeConsistent",  &IsGsfCtfScPixChargeConsistent);
+    ElectronIDConvMVAReader->AddVariable("IsGsfScPixChargeConsistent",  &IsGsfScPixChargeConsistent);
+    ElectronIDConvMVAReader->AddVariable("IsGsfCtfChargeConsistent",  &IsGsfCtfChargeConsistent);
+    ElectronIDConvMVAReader->AddSpectator("w_tot", &w_tot);
+
+    
+    
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IsoChHad", &IsoChHad);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IsoNHad", &IsoNHad);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IsoPhHad", &IsoPhHad);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("Dxy",  &Dxy);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("DxySig",  &DxySig);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("Dz",  &Dz);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("DzSig",  &DzSig);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("RelIso", &RelIso);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IP3D", &IP3D);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("PtRatio",  &PtRatio);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("PtRel",  &PtRel);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("MVA",  &MVA);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("MVAIso",  &MVAIso);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("Full5x5_sigmaIetaIeta",  &Full5x5_sigmaIetaIeta);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("dEtaSeed",  &dEtaSeed);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("dPhiIn",  &dPhiIn);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("EoverP",  &EoverP);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("FBrem",  &FBrem);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("R9",  &R9);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("TrkIso",  &TrkIso);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("dr03TkSumPt",  &dr03TkSumPt);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("dr03HcalTowerSumEt",  &dr03HcalTowerSumEt);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("EtaWidth",  &EtaWidth);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("PhiWidth",  &PhiWidth);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("InvEminusInvP", &InvEminusInvP);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("ecalPFClusterIso",  &ecalPFClusterIso);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("MissingHits",  &MissingHits);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("isEcalDriven", &isEcalDriven);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("PassConversionVeto",  &PassConversionVeto);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IsGsfCtfScPixChargeConsistent",  &IsGsfCtfScPixChargeConsistent);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IsGsfScPixChargeConsistent",  &IsGsfScPixChargeConsistent);
+    ElectronIDNoPtEtaConvMVAReader->AddVariable("IsGsfCtfChargeConsistent",  &IsGsfCtfChargeConsistent);
+    ElectronIDNoPtEtaConvMVAReader->AddSpectator("w_tot", &w_tot);
+
+    
+    
+    ElectronIDNoPtConvMVAReader->AddVariable("Eta", &Eta);
+    ElectronIDNoPtConvMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    ElectronIDNoPtConvMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    ElectronIDNoPtConvMVAReader->AddVariable("IsoChHad", &IsoChHad);
+    ElectronIDNoPtConvMVAReader->AddVariable("IsoNHad", &IsoNHad);
+    ElectronIDNoPtConvMVAReader->AddVariable("IsoPhHad", &IsoPhHad);
+    ElectronIDNoPtConvMVAReader->AddVariable("Dxy",  &Dxy);
+    ElectronIDNoPtConvMVAReader->AddVariable("DxySig",  &DxySig);
+    ElectronIDNoPtConvMVAReader->AddVariable("Dz",  &Dz);
+    ElectronIDNoPtConvMVAReader->AddVariable("DzSig",  &DzSig);
+    ElectronIDNoPtConvMVAReader->AddVariable("RelIso", &RelIso);
+    ElectronIDNoPtConvMVAReader->AddVariable("IP3D", &IP3D);
+    ElectronIDNoPtConvMVAReader->AddVariable("PtRatio",  &PtRatio);
+    ElectronIDNoPtConvMVAReader->AddVariable("PtRel",  &PtRel);
+    ElectronIDNoPtConvMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    ElectronIDNoPtConvMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    ElectronIDNoPtConvMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    ElectronIDNoPtConvMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    ElectronIDNoPtConvMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    ElectronIDNoPtConvMVAReader->AddVariable("MVA",  &MVA);
+    ElectronIDNoPtConvMVAReader->AddVariable("MVAIso",  &MVAIso);
+    ElectronIDNoPtConvMVAReader->AddVariable("Full5x5_sigmaIetaIeta",  &Full5x5_sigmaIetaIeta);
+    ElectronIDNoPtConvMVAReader->AddVariable("dEtaSeed",  &dEtaSeed);
+    ElectronIDNoPtConvMVAReader->AddVariable("dPhiIn",  &dPhiIn);
+    ElectronIDNoPtConvMVAReader->AddVariable("EoverP",  &EoverP);
+    ElectronIDNoPtConvMVAReader->AddVariable("FBrem",  &FBrem);
+    ElectronIDNoPtConvMVAReader->AddVariable("R9",  &R9);
+    ElectronIDNoPtConvMVAReader->AddVariable("TrkIso",  &TrkIso);
+    ElectronIDNoPtConvMVAReader->AddVariable("dr03TkSumPt",  &dr03TkSumPt);
+    ElectronIDNoPtConvMVAReader->AddVariable("dr03HcalTowerSumEt",  &dr03HcalTowerSumEt);
+    ElectronIDNoPtConvMVAReader->AddVariable("EtaWidth",  &EtaWidth);
+    ElectronIDNoPtConvMVAReader->AddVariable("PhiWidth",  &PhiWidth);
+    ElectronIDNoPtConvMVAReader->AddVariable("InvEminusInvP", &InvEminusInvP);
+    ElectronIDNoPtConvMVAReader->AddVariable("ecalPFClusterIso",  &ecalPFClusterIso);
+    ElectronIDNoPtConvMVAReader->AddVariable("MissingHits",  &MissingHits);
+    ElectronIDNoPtConvMVAReader->AddVariable("isEcalDriven", &isEcalDriven);
+    ElectronIDNoPtConvMVAReader->AddVariable("PassConversionVeto",  &PassConversionVeto);
+    ElectronIDNoPtConvMVAReader->AddVariable("IsGsfCtfScPixChargeConsistent",  &IsGsfCtfScPixChargeConsistent);
+    ElectronIDNoPtConvMVAReader->AddVariable("IsGsfScPixChargeConsistent",  &IsGsfScPixChargeConsistent);
+    ElectronIDNoPtConvMVAReader->AddVariable("IsGsfCtfChargeConsistent",  &IsGsfCtfChargeConsistent);
+    ElectronIDNoPtConvMVAReader->AddSpectator("w_tot", &w_tot);
+
+
+    ElectronIDCFMVAReader->AddVariable("Pt", &Pt);
+    ElectronIDCFMVAReader->AddVariable("Eta", &Eta);
+    ElectronIDCFMVAReader->AddVariable("Dxy",  &Dxy);
+    ElectronIDCFMVAReader->AddVariable("DxySig",  &DxySig);
+    ElectronIDCFMVAReader->AddVariable("Dz",  &Dz);
+    ElectronIDCFMVAReader->AddVariable("DzSig",  &DzSig);
+    ElectronIDCFMVAReader->AddVariable("IP3D", &IP3D);
+    ElectronIDCFMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    ElectronIDCFMVAReader->AddVariable("MVA",  &MVA);
+    ElectronIDCFMVAReader->AddVariable("Full5x5_sigmaIetaIeta",  &Full5x5_sigmaIetaIeta);
+    ElectronIDCFMVAReader->AddVariable("dPhiIn",  &dPhiIn);
+    ElectronIDCFMVAReader->AddVariable("EoverP",  &EoverP);
+    ElectronIDCFMVAReader->AddVariable("FBrem",  &FBrem);
+    ElectronIDCFMVAReader->AddVariable("R9",  &R9);
+    ElectronIDCFMVAReader->AddVariable("dr03TkSumPt",  &dr03TkSumPt);
+    ElectronIDCFMVAReader->AddVariable("e55",  &e55);
+    ElectronIDCFMVAReader->AddVariable("e2x5OverE5x5",  &e2x5OverE5x5);
+    ElectronIDCFMVAReader->AddVariable("EtaWidth",  &EtaWidth);
+    ElectronIDCFMVAReader->AddVariable("PhiWidth",  &PhiWidth);
+    ElectronIDCFMVAReader->AddVariable("ecalPFClusterIso",  &ecalPFClusterIso);
+    ElectronIDCFMVAReader->AddVariable("PassConversionVeto",  &PassConversionVeto);
+    ElectronIDCFMVAReader->AddVariable("IsGsfCtfScPixChargeConsistent",  &IsGsfCtfScPixChargeConsistent);
+    ElectronIDCFMVAReader->AddVariable("IsGsfScPixChargeConsistent",  &IsGsfScPixChargeConsistent);
+    ElectronIDCFMVAReader->AddVariable("IsGsfCtfChargeConsistent",  &IsGsfCtfChargeConsistent);
+
+    ElectronIDCFMVAReader->AddSpectator("w_tot", &w_tot);
+
+
+    ElectronIDFakeMVAReader->AddVariable("Pt", &Pt);
+    ElectronIDFakeMVAReader->AddVariable("Eta", &Eta);
+    ElectronIDFakeMVAReader->AddVariable("MiniIsoChHad", &MiniIsoChHad);
+    ElectronIDFakeMVAReader->AddVariable("MiniIsoPhHad", &MiniIsoPhHad);
+    ElectronIDFakeMVAReader->AddVariable("MiniIsoNHad", &MiniIsoNHad);
+    ElectronIDFakeMVAReader->AddVariable("RelMiniIsoCh", &RelMiniIsoCh);
+    ElectronIDFakeMVAReader->AddVariable("RelMiniIsoN", &RelMiniIsoN);
+    ElectronIDFakeMVAReader->AddVariable("Dxy",  &Dxy);
+    ElectronIDFakeMVAReader->AddVariable("Dz",  &Dz);
+    ElectronIDFakeMVAReader->AddVariable("RelIso", &RelIso);
+    ElectronIDFakeMVAReader->AddVariable("IP3D", &IP3D);
+    ElectronIDFakeMVAReader->AddVariable("PtRatio",  &PtRatio);
+    ElectronIDFakeMVAReader->AddVariable("PtRel",  &PtRel);
+    ElectronIDFakeMVAReader->AddVariable("NEMFracCJ",&NEMFracCJ);
+    ElectronIDFakeMVAReader->AddVariable("CHFracCJ",&CHFracCJ);
+    ElectronIDFakeMVAReader->AddVariable("JetDiscCJ",&JetDiscCJ);
+    ElectronIDFakeMVAReader->AddVariable("NHFracCJ",&NHFracCJ);
+    ElectronIDFakeMVAReader->AddVariable("CEMFracCJ",&CEMFracCJ);
+    ElectronIDFakeMVAReader->AddVariable("MVA",  &MVA);
+    ElectronIDFakeMVAReader->AddVariable("MVAIso",  &MVAIso);
+    ElectronIDFakeMVAReader->AddSpectator("w_tot", &w_tot);
+
+  }
+
+  TString AnalyzerPath=std::getenv("SKFlat_WD");
+  TString MVAPathFake="/data6/Users/jalmond/BDTOutput/Run2UltraLegacy_v3/runIDBDT_HNtypeIV2/Default/"+GetYearString()+"/dataset/weights/";
+  TString MVAPathConv="/data6/Users/jalmond/BDTOutput/Run2UltraLegacy_v3/runIDBDT_HNtypeIConv/Default/"+GetYearString()+"/dataset/weights/";
+  TString MVAPathCF="/data6/Users/jalmond/BDTOutput/Run2UltraLegacy_v3/runIDBDT_HNtypeICF/Default/"+GetYearString()+"/dataset/weights/";
+
+  if(isMuon){
+    
+    /// XML file picked with BEST AUC && GOF > 0.1
+    TString BDTG_Conv = "";
+    if(GetYear() == 2016) BDTG_Conv = "BDTG_ConvSignalConvTypeI_MuMu_SignalConv_2016_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_3_nCuts_300_Shrinkage_0.05_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_Conv = "BDTG_ConvSignalConvTypeI_MuMu_SignalConv_2017_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_Conv = "BDTG_ConvSignalConvTypeI_MuMu_SignalConv_2018_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.8_Seed_100_BDT";
+    
+    
+    vector<pair<TString,TString> > BDTInput =     {
+      make_pair("BDTG_Conv", BDTG_Conv)      
+    };
+    
+    for (auto ibdt : BDTInput)   MuonIDConvMVAReader->BookMVA(ibdt.first,MVAPathConv+ibdt.second+"_TMVAClassification_BDTG.weights.xml");
+
+  }
+  else{
+    
+
+    TString BDTG_Fake = "";
+    if(GetYear() == 2016) BDTG_Fake = "BDTG_FakeSignalTypeI_EE_Signal_2016_NTrees1000_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_3_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_Fake = "BDTG_FakeSignalTypeI_EE_Signal_2017_NTrees1000_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_4_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_Fake = "BDTG_FakeSignalTypeI_EE_Signal_2018_NTrees2000_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_3_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+
+    TString BDTG_BB_Fake = "";
+    if(GetYear() == 2016) BDTG_BB_Fake = "BDTG_FakeSignalHNLTopTypeI_EE_SignalHNLTop_2016_NTrees500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.5_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_BB_Fake = "BDTG_FakeSignalHNLTopTypeI_EE_SignalHNLTop_2017_NTrees2100_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_3_nCuts_301_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_BB_Fake = "BDTG_FakeSignalHNLTopTypeI_EE_SignalHNLTop_2018_NTrees1100_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_5_nCuts_500_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    
+
+    TString BDTG_EC_Fake = "";
+    if(GetYear() == 2016) BDTG_EC_Fake = "BDTG_FakeSignalHNLTopECTypeI_EE_SignalHNLTopEC_2016_NTrees2100_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_EC_Fake = "BDTG_FakeSignalHNLTopECTypeI_EE_SignalHNLTopEC_2017_NTrees2100_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_EC_Fake = "BDTG_FakeSignalHNLTopECTypeI_EE_SignalHNLTopEC_2018_NTrees2100_NormMode_EqualNumEvents_MinNodeSize_5.0_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+
+    
+
+    TString BDTG_Conv = "";
+    if(GetYear() == 2016) BDTG_Conv = "BDTG_ConvSignalConvTypeI_EE_SignalConv_2016_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_Conv = "BDTG_ConvSignalConvTypeI_EE_SignalConv_2017_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_Conv = "BDTG_ConvSignalConvTypeI_EE_SignalConv_2018_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+
+    TString BDTG_BB_Conv = "";
+    if(GetYear() == 2016) BDTG_BB_Conv = "BDTG_ConvSignalHNLTopConv_BBTypeI_EE_SignalHNLTopConv_BB_2016_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_BB_Conv = "BDTG_ConvSignalHNLTopConv_BBTypeI_EE_SignalHNLTopConv_BB_2017_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_BB_Conv = "BDTG_ConvSignalHNLTopConv_BBTypeI_EE_SignalHNLTopConv_BB_2018_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+
+
+    TString BDTG_EC_Conv = "";
+    if(GetYear() == 2016) BDTG_EC_Conv = "BDTG_ConvSignalHNLTopConv_ECTypeI_EE_SignalHNLTopConv_EC_2016_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_3_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_EC_Conv = "BDTG_ConvSignalHNLTopConv_ECTypeI_EE_SignalHNLTopConv_EC_2017_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_EC_Conv = "BDTG_ConvSignalHNLTopConv_ECTypeI_EE_SignalHNLTopConv_EC_2018_NTrees1500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_2_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+
+
+    TString BDTG_BB_CF= "";
+    if(GetYear() == 2016) BDTG_BB_CF= "BDTG_CFSignalCFTypeI_EE_SignalCF_2016_NTrees1000_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_BB_CF= "BDTG_CFSignalCFTypeI_EE_SignalCF_2017_NTrees500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_BB_CF= "BDTG_CFSignalCFTypeI_EE_SignalCF_2018_NTrees500_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    
+    TString BDTG_EC_CF= "";
+    if(GetYear() == 2016) BDTG_EC_CF= "BDTG_CFSignalCFECTypeI_EE_SignalCFEC_2016_NTrees300_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+    if(GetYear() == 2017) BDTG_EC_CF= "BDTG_CFSignalCFECTypeI_EE_SignalCFEC_2017_NTrees1000_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_5_nCuts_300_Shrinkage_0.05_BaggedFrac_0.5_Seed_100_BDT";
+    if(GetYear() == 2018) BDTG_EC_CF= "BDTG_CFSignalCFECTypeI_EE_SignalCFEC_2018_NTrees300_NormMode_EqualNumEvents_MinNodeSize_2.5_MaxDepth_4_nCuts_300_Shrinkage_0.5_BaggedFrac_0.8_Seed_100_BDT";
+
+
+    vector<pair<TString,TString> > BDTInput =     {
+
+      make_pair("BDTG_Fake", BDTG_Fake),
+      make_pair("BDTG_BB_Fake", BDTG_BB_Fake),
+      make_pair("BDTG_EC_Fake", BDTG_EC_Fake),
+      make_pair("BDTG_BB_CF",BDTG_BB_CF),
+      make_pair("BDTG_EC_CF",BDTG_EC_CF),
+      make_pair("BDTG_Conv",BDTG_Conv),
+      make_pair("BDTG_BB_Conv",BDTG_BB_Conv),
+      make_pair("BDTG_EC_Conv",BDTG_EC_Conv),
+
+    };
+
+    for (auto ibdt : BDTInput)  {
+      cout <<  ibdt.first << " " << ibdt.second << endl;
+      if(ibdt.first.Contains("_CF"))    ElectronIDCFMVAReader->BookMVA(ibdt.first,MVAPathCF+ibdt.second+"_TMVAClassification_BDTG.weights.xml");
+      
+      else if(ibdt.first.Contains("_Conv")) ElectronIDConvMVAReader->BookMVA(ibdt.first,MVAPathConv+ibdt.second+"_TMVAClassification_BDTG.weights.xml");
+      else  ElectronIDFakeMVAReader->BookMVA(ibdt.first,MVAPathFake+ibdt.second+"_TMVAClassification_BDTG.weights.xml");
+    }
+
+  }
+
+
+  return;
+
+
+}
+
+
+
+
+
+
+
+
+
+double AnalyzerCore::GetBDTScoreEl(Electron el ,BkgType bkg, TString BDTTag){
+
+  InitializeElectronIDTreeVars();
+
+  std::vector<Jet>   JetAllColl = GetJets("NoID", 10., 5.0);
+
+  Lepton *lep = (Lepton *)(&el);
+  SetBDTIDVar(lep);
+
+  MVA    = el.MVANoIsoResponse();
+  MVAIso    = el.MVAIsoResponse();
+  RelMVA    = el.MVANoIsoResponse()/lep->Pt();
+  RelMVAIso    = el.MVAIsoResponse()/lep->Pt();
+  MissingHits = el.NMissingHits();
+  Full5x5_sigmaIetaIeta  = el.Full5x5_sigmaIetaIeta();  //sigmaIetaIeta  = el.sigmaIetaIeta();                                                                                                                                                
+  dEtaSeed  = el.dEtaSeed();
+  dPhiIn  = el.dPhiIn();//  dEtaIn  = el.dEtaIn();                                                                                                                                                                                            
+  EtaWidth = el.EtaWidth();
+  PhiWidth = el.PhiWidth();
+  e2x5OverE5x5 = el.e2x5OverE5x5();
+  e1x5OverE5x5= el.e1x5OverE5x5();
+  e15= el.e15();
+  e25= el.e25();
+  e55= el.e55();
+  dr03EcalRecHitSumEt= el.dr03EcalRecHitSumEt()/el.UncorrPt();
+  dr03HcalDepth1TowerSumEt= el.dr03HcalDepth1TowerSumEt()/el.UncorrPt();
+  dr03HcalTowerSumEt= el.dr03HcalTowerSumEt()/el.UncorrPt();
+  dr03TkSumPt= el.dr03TkSumPt()/el.UncorrPt();
+  R9= el.R9();
+  HoverE  = el.HoverE();
+  TrkIso  = el.TrkIso()/el.UncorrPt();  //InvEminusInvP = fabs(el.InvEminusInvP());                                                                                                                                                           
+  ecalPFClusterIso = el.ecalPFClusterIso()/el.UncorrPt();
+  hcalPFClusterIso = el.hcalPFClusterIso()/el.UncorrPt();
+  isEcalDriven = el.isEcalDriven();
+  EoverP = log(el.EOverP());
+  FBrem = el.FBrem();
+  PassConversionVeto  = (el.PassConversionVeto()) ? 1 : 0;
+  IsGsfCtfScPixChargeConsistent  = (el.IsGsfCtfScPixChargeConsistent()) ? 1 : 0;
+  IsGsfScPixChargeConsistent  = (el.IsGsfScPixChargeConsistent()) ? 1 : 0;
+  IsGsfCtfChargeConsistent  = (el.IsGsfCtfChargeConsistent()) ? 1 : 0;
+
+
+  //==== Vars for non-prompt lepton bkg                                                                                                                                                                                                       
+  int IdxMatchJet=-1;
+  float mindR1=999.;
+
+  for(unsigned int ij=0; ij<JetAllColl.size(); ij++){
+    float dR1=lep->DeltaR(JetAllColl.at(ij));
+    if(dR1>0.4) continue;
+    if(dR1<mindR1){ mindR1=dR1; IdxMatchJet=ij; }
+  }
+
+
+
+  if(IdxMatchJet!=-1){
+    PtRatio=JetLeptonPtRatioLepAware(el,false);
+    PtRel=JetLeptonPtRelLepAware(el,true);
+  }
+
+  else{
+    PtRatio = min(1/(1.+lep->RelIso()), 1.5);
+    PtRel=0, PtRelWithLep=0, PtRelCorr=0;
+  }
+
+  TString MVATagStr="";
+  if(BDTTag.Contains("v2")){
+
+    MVATagStr = BDTTag;
+    MVATagStr=MVATagStr.ReplaceAll("v2","");
+    
+    if(fabs(el.Eta()) < 1.5)    MVATagStr += "_BB";
+    else  MVATagStr += "_EC";
+
+    if (bkg == BkgType::Fake) MVATagStr += "_Fake";
+    if (bkg == BkgType::Conv) MVATagStr += "_Conv";
+
+  }
+  else{
+    MVATagStr = BDTTag;
+    if (bkg == BkgType::Fake) MVATagStr += "_Fake";
+    if (bkg == BkgType::Conv) MVATagStr += "_Conv";
+    if (bkg == BkgType::CF){
+      if(fabs(el.Eta()) < 1.5)    MVATagStr += "_BB";
+      else     MVATagStr += "_EC";
+      MVATagStr += "_CF";
+    }
+  }
+
+
+  if(MVATagStr.Contains("CF"))     return  ElectronIDCFMVAReader->EvaluateMVA(MVATagStr);
+  
+  if(MVATagStr.Contains("Conv"))   return  ElectronIDConvMVAReader->EvaluateMVA(MVATagStr);
+
+  return  ElectronIDFakeMVAReader->EvaluateMVA(MVATagStr);
 
 }
 
@@ -271,10 +1208,30 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
     el.SetdZ(electron_dzVTX->at(i), electron_dzerrVTX->at(i));
     el.SetIP3D(electron_3DIPVTX->at(i), electron_3DIPerrVTX->at(i));
     el.SetMVA(electron_MVAIso->at(i), electron_MVANoIso->at(i));
+    el.SetLepMVA( electron_MVANoIso->at(i));
     el.SetPassConversionVeto(electron_passConversionVeto->at(i));
     el.SetNMissingHits(electron_mHits->at(i));
     el.SetRho(Rho);
-    el.SetIsGsfCtfScPixChargeConsistent(electron_isGsfCtfScPixChargeConsistent->at(i));
+    el.SetIsGsfCtfScPixChargeConsistent(electron_isGsfCtfScPixChargeConsistent->at(i),   electron_isGsfScPixChargeConsistent->at(i),electron_isGsfCtfChargeConsistent->at(i));
+
+    if(electron_jetPtRel)el.SetJetPtRel(electron_jetPtRel->at(i));
+    if(electron_jetPtRatio)el.SetJetPtRatio(electron_jetPtRatio->at(i));
+    if(electron_jetNTracks)el.SetJetNTracks(electron_jetNTracks->at(i));
+    if(electron_jetNTracksMVA)el.SetJetNTracksMVA(electron_jetNTracksMVA->at(i));
+
+    if(electron_conv_ntracks) el.SetConvNTracks(electron_conv_ntracks->at(i));
+    if(electron_conv_fitprob)	el.SetConvFitProb(electron_conv_fitprob->at(i));
+    if(electron_conv_lxy)	el.SetConvLxy(electron_conv_lxy->at(i));
+    if(electron_conv_nHitsBeforeVtxMax)	el.SetConvNHits(electron_conv_nHitsBeforeVtxMax->at(i));
+    if(electron_conv_log_e_over_p)	el.SetLogEoverP(electron_conv_log_e_over_p->at(i));
+    if(electron_conv_log_abs_cot_theta)	el.SetLogCotTheta(electron_conv_log_abs_cot_theta->at(i));
+    if(electron_conv_pairMass)	el.SetPairMass(electron_conv_pairMass->at(i));
+    if(electron_conv_log_abs_delta_phi)	el.SetLogDphi(electron_conv_log_abs_delta_phi->at(i));
+    if(electron_conv_log_chi2_max_pt)	el.SetLogChi2Max(electron_conv_log_chi2_max_pt->at(i));
+    if(electron_conv_log_chi2_min_pt)	el.SetLogChi2Min(electron_conv_log_chi2_min_pt->at(i));
+
+
+
     el.SetR9(electron_r9->at(i));
     el.SetL1Et(electron_l1et->at(i));
 
@@ -313,9 +1270,31 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
       Rho,
       el.EA()
     );
+    el.SetEtaWidth(electron_etaWidth->at(i));
+    el.SetPhiWidth(electron_phiWidth->at(i));
+    el.SetFBrem(electron_fbrem->at(i));
+    el.SetEOverP(electron_eOverP->at(i));
+    el.SetDetaIn(electron_dEtaIn->at(i));
+    el.SetSigmaIEtaIE(electron_sigmaIEtaIEta->at(i));
+    el.SetLepIso(electron_chIso03->at(i),electron_nhIso03->at(i),electron_phIso03->at(i));
+    
+    el.SetE15(electron_E15->at(i));
+    el.SetE25(electron_E25->at(i));
+    el.SetE55(electron_E55->at(i));
+
 
     el.SetFilterBits(electron_filterbits->at(i));
     el.SetPathBits(electron_pathbits->at(i));
+
+
+    //if(electron_mva_conv) el.SetHNL_LepMVA(electron_mva_fake->at(i),electron_mva_conv->at(i),electron_mva_cf->at(i));
+    //cout << "GetBDTScoreEl(el,AnalyzerCore::Fake,  BDTG) " <<  GetBDTScoreEl(el,AnalyzerCore::Fake,  "BDTG") << " " << electron_mva_fake->at(i)<< endl;
+    //cout << "GetBDTScoreEl(el,AnalyzerCore::Conv,  BDTG) " <<  GetBDTScoreEl(el,AnalyzerCore::Conv,  "BDTG") << " " << electron_mva_conv->at(i)<< endl;
+    //cout << "GetBDTScoreEl(el,AnalyzerCore::CF,  BDTG) " <<  GetBDTScoreEl(el,AnalyzerCore::CF,  "BDTG") << electron_mva_cf->at(i) << endl;
+
+    //if(AnalyserRunsFullBkg()) el.SetHNL_LepMVA(GetBDTScoreEl(el,AnalyzerCore::Fake,  "BDTG"),GetBDTScoreEl(el,AnalyzerCore::Conv,  "BDTG"),GetBDTScoreEl(el,AnalyzerCore::CF,  "BDTG"));
+    if(electron_mva_fake)el.SetHNL_LepMVA(electron_mva_fake->at(i), electron_mva_conv->at(i), electron_mva_cf->at(i));
+    else el.SetHNL_LepMVA(GetBDTScoreEl(el,AnalyzerCore::Fake,  "BDTG"),GetBDTScoreEl(el,AnalyzerCore::Conv,  "BDTG"),GetBDTScoreEl(el,AnalyzerCore::CF,  "BDTG"));    
 
     out.push_back(el);
 
@@ -338,10 +1317,10 @@ std::vector<Electron> AnalyzerCore::GetElectrons(AnalyzerParameter param, TStrin
   else if(param.syst_ == AnalyzerParameter::ElectronEnUp)    electrons = ScaleElectrons( this_AllElectrons, +1 );
   else if(param.syst_ == AnalyzerParameter::ElectronEnDown)    electrons = ScaleElectrons( this_AllElectrons, -1 );
   else electrons = this_AllElectrons;
-
-
+  
   std::vector<Electron> out;
   for(unsigned int i=0; i<electrons.size(); i++){
+
     if(!( electrons.at(i).Pt()> ptmin )){
       continue;
     }
@@ -349,27 +1328,26 @@ std::vector<Electron> AnalyzerCore::GetElectrons(AnalyzerParameter param, TStrin
       continue;
     }
     if(!( electrons.at(i).PassID(id) )){
+      //cout << "Fail " << id << endl;
       continue;
     }
     if(vetoHEM){
+      
       if ( FindHEMElectron (electrons.at(i)) ){
         continue;
       }
     }
 
-
     if(run_fake){
-
+     
       double isocut_el = GetIsoFromID("Electron",param.Electron_Tight_ID,electrons.at(i).Eta(), electrons.at(i).Pt());   
       Electron this_electron = electrons.at(i);
       this_electron.SetPtEtaPhiM( electrons.at(i).CalcPtCone(electrons.at(i).RelIso(), isocut_el), electrons.at(i).Eta(), electrons.at(i).Phi(), electrons.at(i).M() );
-
       out.push_back( this_electron);
-      
     }
     else   out.push_back( electrons.at(i) );
-    
   }
+  
   return out;
 
 }
@@ -425,6 +1403,19 @@ std::vector<Tau> AnalyzerCore::GetAllTaus(){
 }
 
 
+std::vector<Tau> AnalyzerCore::GetTaus(std::vector<Lepton* > leps,TString id, double ptmin, double fetamax){
+
+  std::vector<Tau> Taus = GetTaus(id, ptmin, fetamax);
+  std::vector<Tau> out;
+  for(auto tau : Taus){
+    for(auto lep : leps){
+      if(lep->DeltaR(tau) > 0.4)  out.push_back(tau);
+    }
+  }
+  std::sort(out.begin(),       out.end(),        PtComparing);
+
+  return out;
+}
 
 std::vector<Tau> AnalyzerCore::GetTaus(TString id, double ptmin, double fetamax){
 
@@ -447,28 +1438,101 @@ std::vector<Tau> AnalyzerCore::GetTaus(TString id, double ptmin, double fetamax)
 
 }
 
+
 double AnalyzerCore::GetIsoFromID(TString  lep_type, TString id, double eta, double pt){
 
   if (lep_type == "Muon") {
+    
+    if (id.Contains("MuOpt")){
+
+      TString ID_sub = id;
+      ID_sub = ID_sub.ReplaceAll("_"," ");
+      string sID_sub = string(ID_sub);
+
+      vector<TString> subStrings;
+      istringstream ID_subs(sID_sub);
+      do {
+	string subs;
+	ID_subs >> subs;
+	subStrings.push_back(TString(subs));
+      } while (ID_subs);
+
+      TString iso_string="";
+      for(unsigned int i=0; i < subStrings.size(); i++){
+	if (subStrings[i].Contains("ISO")) iso_string = subStrings[i];
+      }
+      TString iso_cut = iso_string.ReplaceAll("ISOB","");
+      iso_cut = iso_cut.ReplaceAll("ISOEC","");
+      iso_cut = iso_cut.ReplaceAll("p",".");
+
+      std::string iso_s = std::string(iso_cut);
+      std::string::size_type sz;  
+      
+      double iso_d = std::stod (iso_s,&sz);
+      return iso_d;
+      
+    }
+
     if (id == "HNTight_17028") return 0.07;
     if (id == "HNTightV1") return 0.07;
     if (id == "HNTightV2") return 0.07;
 
     if (id == "POGTightPFIsoVeryVeryTight") return 0.05;
     if (id == "HNTight_Iso07_dxy_02_ip_3")  return 0.07;
-    if (id == "POGTightPFIsoVeryTight") return 0.1;
-    if (id == "POGTightPFIsoTight") return 0.15;
-    if (id == "POGTightWithTightIso") return 0.15;
-    if (id == "POGTightStandardPFIsoTight") return 0.15;
-    if (id == "POGTightPFIsoMedium") return 0.2;
-    if (id == "POGTightPFIsoLoose") return 0.25;
-    if (id == "POGTightPFIsoVeto") return 0.4;
+    if (id.Contains("TightPFIsoVeryVeryTight")) return 0.05;
+    if (id.Contains("TightPFIsoVeryTight")) return 0.1;
+    if (id.Contains("TightPFIsoTight")) return 0.15;
+    if (id.Contains("TightWithTightIso")) return 0.15;
+    if (id.Contains("TightStandardPFIsoTight")) return 0.15;
+    if (id.Contains("PFIsoMedium")) return 0.2;
+    if (id.Contains("PFIsoLoose")) return 0.25;
+    if (id.Contains("PFIsoVeto")) return 0.4;
+
+    if (id.Contains("Iso05")) return 0.05;
+    if (id.Contains("Iso06")) return 0.06;
+    if (id.Contains("Iso07")) return 0.07;
+    if (id.Contains("Iso08")) return 0.08;
+    if (id.Contains("Iso09")) return 0.09;
+    if (id.Contains("Iso10")) return 0.1;
+
+    
 
     if (id == "POGHighPtTight") return 0.1;
     if (id == "POGHighPtMixTight") return 0.1;
-    if (id.Contains("MVA")) return 0.4;
+    if (id.Contains("HNMVA_")) return 0.1;
   }
   else if(lep_type == "Electron"){
+
+    if (id.Contains("ElOpt")){
+
+      TString ID_sub = id;
+      ID_sub = ID_sub.ReplaceAll("_"," ");
+      string sID_sub = string(ID_sub);
+
+      vector<TString> subStrings;
+      istringstream ID_subs(sID_sub);
+      do {
+        string subs;
+        ID_subs >> subs;
+        subStrings.push_back(TString(subs));
+      } while (ID_subs);
+
+      TString iso_string="";
+      for(unsigned int i=0; i < subStrings.size(); i++){
+        if (subStrings[i].Contains("ISO")) iso_string = subStrings[i];
+      } 
+      TString iso_cut = iso_string.ReplaceAll("ISOB","");
+      iso_cut = iso_cut.ReplaceAll("ISOEC","");
+      iso_cut = iso_cut.ReplaceAll("p",".");
+
+      std::string iso_s = std::string(iso_cut);
+      std::string::size_type sz;  
+      
+      double iso_d = std::stod (iso_s,&sz);
+      return iso_d;
+
+    }
+
 
     if( id == "HNTight_17028") return 0.08;
 
@@ -476,27 +1540,27 @@ double AnalyzerCore::GetIsoFromID(TString  lep_type, TString id, double eta, dou
       if(fabs(eta) < 1.479) return (0.0287 + (0.506/pt));
       else  return (0.0445 + (0.963/pt));
     }
-    if( id = "HN2016") {
+    if( id == "HN2016") {
       if(fabs(eta) < 1.479) return 0.1;
       else  return (0.06);
     }
-    if( id = "HN2017") {
+    if( id == "HN2017") {
       if(fabs(eta) < 1.479) return 0.085;
       else  return (0.05);
     }
-    if( id = "HN2018") {
+    if( id == "HN2018") {
       if(fabs(eta) < 1.479) return 0.095;
       else  return (0.07);
     }
-    if( id = "HNRelaxedIP2016") {
+    if( id == "HNRelaxedIP2016") {
       if(fabs(eta) < 1.479) return 0.1;
       else  return (0.05);
     }
-    if( id = "HNRelaxedIP2017") {
+    if( id == "HNRelaxedIP2017") {
       if(fabs(eta) < 1.479) return 0.1;
       else  return (0.05);
     }
-    if( id = "HNRelaxedIP2018") {
+    if( id == "HNRelaxedIP2018") {
       if(fabs(eta) < 1.479) return 0.095;
       else  return (0.07);
     }
@@ -525,31 +1589,60 @@ double AnalyzerCore::GetIsoFromID(TString  lep_type, TString id, double eta, dou
       if(fabs(eta) < 1.479) return (0.0478 + (0.506/pt));
       else  return (0.0658 + (0.963/pt));
     }
+    if( id == "HN2016POG") {
+      if(fabs(eta) < 1.479) return (0.0287 + (0.506/pt));
+      else  return (0.0445 + (0.963/pt));
+    }
 
+    if( id == "Iso1") {
+      if(fabs(eta) < 1.479) return  0.08;
+      else  return 0.08;
+    }
+    if( id == "Iso2") {
+      if(fabs(eta) < 1.479) return  0.09;
+      else  return 0.08;
+    }
+    if( id == "Iso3") {
+      if(fabs(eta) < 1.479) return  0.1;
+      else  return 0.08;
+    }
+    if( id == "Iso4") {
+      if(fabs(eta) < 1.479) return  0.12;
+      else  return 0.08;
+    }
+    if( id == "Iso5") {
+      if(fabs(eta) < 1.479) return  0.09;
+      else  return 0.09;
+    }
+    if( id == "Iso6") {
+      if(fabs(eta) < 1.479) return  0.1;
+      else  return 0.1;
+    }
+    if( id == "Iso7") {
+      if(fabs(eta) < 1.479) return  0.12;
+      else  return 0.12;
+    }
+
+    
+    if( id.Contains("HNTight_Opt")) return 0.08;
+
+    if( id.Contains("HN2016MVA")) return 0.08;   
+    if( id.Contains("HN2016POG")) return 0.08;   
     if( id == "passMVAID_noIso_WP90V16") return 0.05;
     if( id == "passMVAID_noIso_WP80") return 0.08;
     if( id == "passMVAID_noIso_WP90") return 0.08;
     if( id == "passMVAID_Iso_WP80") return 999.0;
     if( id == "passMVAID_Iso_WP90") return 999.0;
 
+    if (id.Contains("HNMVA_")) return 0.1;
+
+
   }
-  cout << "[HNL_LeptonCore::GetIsoFromID ] ID not found.." << endl;
+  cout << "[AnalyzerCore::GetIsoFromID ] ID not found.." << id<< endl;
   exit(EXIT_FAILURE);
 
   return -999999999.;
 
-}
-
-bool AnalyzerCore::PassID(std::vector<Electron> electrons, TString ID){
-
-  int nel(0);
-  for(auto el : electrons){
-
-    if( el.PassID(ID) ) nel++;
-
-  }
-  if (nel ==2) return true;
-  return false;
 }
 
 
@@ -641,6 +1734,55 @@ std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(const std::vector<Mu
 }
 
 
+std::vector<Lepton *> AnalyzerCore::MakeLeptonPointerVector(const std::vector<Muon>& muons, const std::vector<Electron>& electrons, AnalyzerParameter param_,  double TightIso, bool UseMini){
+
+  std::vector<Lepton *> out;
+  for(unsigned int i=0; i<muons.size(); i++){
+    Lepton *l = (Lepton *)(&muons.at(i));
+    if( !(l->LeptonFlavour() == Lepton::MUON) ){
+      cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<Muon>& muons)] Not muon.." << endl;
+      exit(EXIT_FAILURE);
+    }
+    if(TightIso>0){
+
+      double this_RelIso = l->RelIso();
+      if(UseMini) this_RelIso = l->MiniRelIso();
+      double ptcone = l->CalcPtCone(this_RelIso, TightIso);
+      l->SetPtCone( ptcone );
+
+    }
+    l->SetPassID(muons[i].PassID(param_.Muon_Tight_ID));
+    //cout << "MakeLeptonPointerVector Muon " << param_.Muon_Tight_ID << " " <<  l->Pt() << endl;
+    out.push_back(l);
+  }
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    Lepton *l = (Lepton *)(&electrons.at(i));
+    if( !(l->LeptonFlavour() == Lepton::ELECTRON) ){
+      cout << "[AnalyzerCore::MakeLeptonPointerVector(std::vector<ELECTRON>& electrons)] Not electron.." << endl;
+      exit(EXIT_FAILURE);
+    }
+    if(TightIso>0){
+
+      double this_RelIso = l->RelIso();
+      if(UseMini) this_RelIso = l->MiniRelIso();
+      double ptcone = l->CalcPtCone(this_RelIso, TightIso);
+      l->SetPtCone( ptcone );
+
+    }
+    l->SetPassID(electrons[i].PassID(param_.Electron_Tight_ID));
+
+    //cout << "MakeLeptonPointerVector Electron " << param_.Electron_Tight_ID <<" " <<  l->Pt() << endl;
+
+    out.push_back(l);
+  }
+
+  std::sort(out.begin(),     out.end(),     PtComparingPtr);
+
+  return out;
+}
+
+
 
 
 std::vector<Photon> AnalyzerCore::GetAllPhotons(){
@@ -703,7 +1845,7 @@ std::vector<Photon> AnalyzerCore::GetPhotons(TString id, double ptmin, double fe
 
 
 
-std::vector<Jet> AnalyzerCore::GetAllJets(){
+std::vector<Jet> AnalyzerCore::GetAllJets(bool applyCorr){
 
   std::vector<Jet> out;
   for(unsigned int i=0; i<jet_pt->size(); i++){
@@ -713,11 +1855,14 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetPxUnSmeared(jet.Px());
     jet.SetPyUnSmeared(jet.Py());
 
-
+    jet.SetJEC(jet_JECL1FastJet->at(i), jet_JECFull->at(i));
+    //jet.SetNTracks(jet_vtxNtracks->at(i));
     //==== Jet energy up and down are 1.xx or 0.99, not energy
     jet.SetEnShift( jet_shiftedEnUp->at(i), jet_shiftedEnDown->at(i) );
     if(!IsDATA){
-      jet *= jet_smearedRes->at(i);
+      if(applyCorr){
+	jet *= jet_smearedRes->at(i);
+      }
       jet.SetResShift( jet_smearedResUp->at(i)/jet_smearedRes->at(i), jet_smearedResDown->at(i)/jet_smearedRes->at(i) );
       jet.SetRes(jet_smearedRes->at(i));
       jet.SetGenFlavours(jet_partonFlavour->at(i), jet_hadronFlavour->at(i));
@@ -742,7 +1887,7 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     jet.SetPileupJetId(jet_PileupJetId->at(i));
     jet.SetTightJetID(jet_tightJetID->at(i));
     jet.SetTightLepVetoJetID(jet_tightLepVetoJetID->at(i));
-
+    
     out.push_back(jet);
   }
 
@@ -1061,6 +2206,7 @@ std::vector<Muon> AnalyzerCore::UseTunePMuon(const std::vector<Muon>& muons){
     this_muon.SetCharge( this_tunep4.Charge() );
     this_muon.SetMiniAODPt( this_muon.MiniAODTunePPt() );
 
+
 /*
     cout << "@@@@ TuneP @@@@" << endl;
     cout << "this_muon.Pt() = " << this_muon.Pt() << endl;
@@ -1206,170 +2352,6 @@ std::vector<FatJet> AnalyzerCore::SelectFatJets(const std::vector<FatJet>& jets,
 }
 
 
-
-pair<int,double> AnalyzerCore::GetNBJets(vector<Jet> jets, AnalyzerParameter param,TString WP){
-
-  int NBJets_NoSF(0);
-  JetTagging::WP             jwp = JetTagging::Medium;
-  if  (WP == "Loose")        jwp = JetTagging::Loose;
-  else if  (WP == "Medium")  jwp = JetTagging::Medium;
-  else  if  (WP == "Tight")  jwp = JetTagging::Tight;
-  else return make_pair(-1,1.);
-
-  JetTagging::Tagger    tagger = JetTagging::DeepCSV;
-  if  (WP.Contains("DeepJet")) tagger = JetTagging::DeepJet;
-
-  JetTagging::MeasurmentType type = JetTagging::comb;
-  if  (WP.Contains("DeepJet")) type =  JetTagging::mujets;
-
-
-
-  JetTagging::Parameters jtp = JetTagging::Parameters(tagger,
-							      jwp,
-							      JetTagging::incl, type);
-
-
-  double btagWeight_1a = mcCorr->GetBTaggingReweight_1a(jets, jtp);
-  double btagWeight_1d = 1.;//mcCorr->GetBTaggingReweight_1d(jets, jtp_DeepCSV_Reshape);                                                         
-
-
-  for(auto ij : jets)  {
-    double this_discr = ij.GetTaggerResult(tagger);
-    if( this_discr > mcCorr->GetJetTaggingCutValue(tagger, jwp) ) NBJets_NoSF++;
-  }
-
-  if(param.BJet_Method=="1a") return make_pair(NBJets_NoSF,btagWeight_1a);
-  if(param.BJet_Method=="1d") return make_pair(NBJets_NoSF,btagWeight_1d);
-  if(param.BJet_Method=="2a") return make_pair(GetNBJets2a(jets,param, WP),1.);
-
-  cout << "[AnalyzerCore::GettNBjet] wtf" << endl;
-  exit(EXIT_FAILURE);
-
-  return make_pair(NBJets_NoSF,-9999.);
-
-}
-
-pair<int,double> AnalyzerCore::GetNBJets(vector<Jet> jets, TString WP, TString method){
-
-  int NBJets_NoSF(0);
-  JetTagging::WP jwp = JetTagging::Medium;
-  if  (WP == "Loose")  jwp = JetTagging::Loose;
-  else if  (WP == "Medium")  jwp = JetTagging::Medium;
-  else  if  (WP == "Tight")  jwp = JetTagging::Tight;
-  else return make_pair(-1,1.);
-
-  JetTagging::Tagger    tagger = JetTagging::DeepCSV;
-  if  (WP.Contains("DeepJet")) tagger = JetTagging::DeepJet;
-
-  JetTagging::MeasurmentType type = JetTagging::comb;
-  if  (WP.Contains("DeepJet")) type =  JetTagging::mujets;
-
-
-  JetTagging::Parameters jtp= JetTagging::Parameters(tagger,
-							      jwp,
-							      JetTagging::incl, type);
-
-  double btagWeight_1a = mcCorr->GetBTaggingReweight_1a(jets, jtp);
-  double btagWeight_1d = 1.;//mcCorr->GetBTaggingReweight_1d(jets, jtp_DeepCSV_Reshape);                                                         
-
-
-  for(auto ij : jets)  {
-    double this_discr = ij.GetTaggerResult(tagger);
-    if( this_discr > mcCorr->GetJetTaggingCutValue(tagger, jwp) ) NBJets_NoSF++;
-  }
-
-  if(method=="1a") return make_pair(NBJets_NoSF,btagWeight_1a);
-  if(method=="1d") return make_pair(NBJets_NoSF,btagWeight_1d);
-  if(method=="2a") return make_pair(GetNBJets2a(jets, WP),1.);
-
-
-  cout << "[AnalyzerCore::GetNBJet] wtf" << endl;
-  exit(EXIT_FAILURE);
-
-  return make_pair(NBJets_NoSF,-9999.);
-}
-
-int AnalyzerCore::GetNBJets2a(TString ID, TString WP){
-
-  vector<Jet> this_AllJets = GetAllJets();
-  vector<Jet>       jets   = SelectJets(this_AllJets,ID, 20., 2.4);
-
-  int NBJets_WithSF_2a(0);
-  //  JetTagging::Parameters param_jets = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::mujets);
-
-  JetTagging::WP             jwp = JetTagging::Medium;
-  if  (WP.Contains("Loose"))        jwp = JetTagging::Loose;
-  else if  (WP.Contains("Medium"))  jwp = JetTagging::Medium;
-  else  if  (WP.Contains("Tight"))  jwp = JetTagging::Tight;
-  else return -1;
-
-  JetTagging::Tagger    tagger = JetTagging::DeepCSV;
-  if  (WP.Contains("DeepJet")) tagger = JetTagging::DeepJet;
-
-  JetTagging::MeasurmentType type = JetTagging::comb;
-  if  (WP.Contains("DeepJet")) type =  JetTagging::mujets;
-  for( auto i  :  jets)
-    if( mcCorr->IsBTagged_2a(JetTagging::Parameters(tagger,       jwp, JetTagging::incl,type), i) ) NBJets_WithSF_2a++;
-
-
-  return NBJets_WithSF_2a;
-}
-
-
-
-int AnalyzerCore::GetNBJets2a( vector<Jet> jets, AnalyzerParameter param, TString WP){
-
-  int NBJets_WithSF_2a(0);
-
-  JetTagging::WP             jwp = JetTagging::Medium;
-  if  (WP == "Loose")        jwp = JetTagging::Loose;
-  else if  (WP == "Medium")  jwp = JetTagging::Medium;
-  else  if  (WP == "Tight")  jwp = JetTagging::Tight;
-  else return -1;
-
-
-  JetTagging::Tagger    tagger = JetTagging::DeepCSV;
-  if  (WP.Contains("DeepJet")) tagger = JetTagging::DeepJet;
-
-  JetTagging::MeasurmentType type = JetTagging::comb;
-  if  (WP.Contains("DeepJet")) type =  JetTagging::mujets;
-
-  for( auto i  :  jets){
-    if(fabs(i.Eta()) >2.4) continue;
-    if( mcCorr->IsBTagged_2a(JetTagging::Parameters(tagger,       jwp, JetTagging::incl, type), i,param.SystDir_BTag)	) NBJets_WithSF_2a++;
-  }
-  
-  return NBJets_WithSF_2a;
-}
-
-
-int AnalyzerCore::GetNBJets2a( vector<Jet> jets, TString WP){
-
-  int NBJets_WithSF_2a(0);
-
-  JetTagging::WP             jwp = JetTagging::Medium;
-  if  (WP == "Loose")        jwp = JetTagging::Loose;
-  else if  (WP == "Medium")  jwp = JetTagging::Medium;
-  else  if  (WP == "Tight")  jwp = JetTagging::Tight;
-  else return -1;
-
-
-  JetTagging::Tagger    tagger = JetTagging::DeepCSV;
-  if  (WP.Contains("DeepJet")) tagger = JetTagging::DeepJet;
-
-  JetTagging::MeasurmentType type = JetTagging::comb;
-  if  (WP.Contains("DeepJet")) type =  JetTagging::mujets;
-
-
-  for(unsigned int i=0; i<jets.size(); i++)
-    if( mcCorr->IsBTagged_2a(JetTagging::Parameters(tagger,       jwp, JetTagging::incl, type), jets.at(i)) ) NBJets_WithSF_2a++;
-
-
-  return NBJets_WithSF_2a;
-}
-
-
-
 double AnalyzerCore::GetEventFatJetSF(vector<FatJet> fatjets, TString label, int dir){
 
   double FatJetTau21_SF(1);
@@ -1383,25 +2365,79 @@ double AnalyzerCore::GetEventFatJetSF(vector<FatJet> fatjets, TString label, int
 double AnalyzerCore::GetFatJetSF(FatJet fatjet, TString tag,  int dir){
 
   if(IsDATA) return 1.;
-  float fsys = -1;
+  double fsys = -1;
   if(dir > 0) fsys =1;
   if(dir==0) fsys=0.;
 
-  double loose_sf(1.);
-  if(DataYear==2016) loose_sf = 1.03 + fsys*0.14;
-  if(DataYear==2017) loose_sf = 0.974 + fsys*0.029;
-  if(DataYear==2018) loose_sf = 0.980 + fsys*0.019;
 
-  if(tag=="ak8_type1") return loose_sf;
-  if (tag.Contains("_tau21" ))  return loose_sf;
+  double loose_sf(1.);
+  if(tag.Contains("HP")){
+    if(DataYear==2016) loose_sf = 0.99  + fsys*0.11;
+    if(DataYear==2017) loose_sf = 0.974 + fsys*0.029;
+    if(DataYear==2018) loose_sf = 0.980 + fsys*0.019;
+    return loose_sf;
+  }
+  else if(tag.Contains("LP")){
+    
+    if(DataYear==2016) loose_sf = 1.03 + fsys*0.14;
+
+    else if(DataYear==2017) {
+      if (fatjet.PuppiTau21() < 0.45) loose_sf = 0.974 + fsys*0.029;
+      else if (fatjet.PuppiTau21() < 0.75)    loose_sf = 1.136 + fsys*0.162;
+    }
+
+    else if(DataYear==2018) {
+      if (fatjet.PuppiTau21() <0.45) loose_sf = 0.980 + fsys*0.019;
+      else if (fatjet.PuppiTau21() < 0.75)  loose_sf = 1.20 + fsys*0.194;
+    }
+    return loose_sf;
+  }
 
   return 1.;
 
 }
 
+double  AnalyzerCore::GetBJetSF(AnalyzerParameter param,vector<Jet> jets, JetTagging::Parameters jtp){
+  
+  if(IsData) return 1.;
+  string syst = "";
+  if(param.syst_ == AnalyzerParameter::BTagSFHTagUp) syst="SystHTagUp";
+  else if (param.syst_ == AnalyzerParameter::BTagSFHTagDown) syst="SystHTagDown";
+  else if (param.syst_ == AnalyzerParameter::BTagSFLTagUp) syst="SystLTagUp";
+  else if (param.syst_ == AnalyzerParameter::BTagSFLTagDown) syst="SystLTagDown";
+  
+  return mcCorr->GetBTaggingReweight_1a(jets, jtp, syst);
+}
+
+vector<Jet>   AnalyzerCore::SelectBJets(AnalyzerParameter param,vector<Jet> jetColl, JetTagging::Parameters jtp){
+
+  vector<Jet> output_jets;
+
+  for(unsigned int ijet =0; ijet < jetColl.size(); ijet++){
+    if( jetColl[ijet].GetTaggerResult(jtp.j_Tagger) <= mcCorr->GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP) ) continue;  
+    output_jets.push_back( jetColl.at(ijet) );
+  }
+  std::sort(output_jets.begin(),       output_jets.end(),        PtComparing);
+  return output_jets;
+
+}
+
+vector<Jet>   AnalyzerCore::SelectLJets(AnalyzerParameter param,vector<Jet> jetColl, JetTagging::Parameters jtp){
+
+  vector<Jet> output_jets;
+
+  for(unsigned int ijet =0; ijet < jetColl.size(); ijet++){
+    if( jetColl[ijet].GetTaggerResult(jtp.j_Tagger) > mcCorr->GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP) ) continue;
+    output_jets.push_back( jetColl.at(ijet) );
+  }
+  std::sort(output_jets.begin(),       output_jets.end(),        PtComparing);
+  return output_jets;
+
+}
 
 
-vector<Jet>   AnalyzerCore::GetBJets(AnalyzerParameter param,vector<Jet> jets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean, double dr_ak8_clean, TString pu_tag,std::vector<Lepton *> leps_veto,  vector<FatJet> fatjets, JetTagging::Parameters jtp){
+
+vector<Jet>   AnalyzerCore::SelectAK4Jets(vector<Jet> jets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean, double dr_ak8_clean, TString pu_tag,std::vector<Lepton *> leps_veto,  vector<FatJet> fatjets){
 
   vector<Jet> output_jets;
   for(unsigned int ijet =0; ijet < jets.size(); ijet++){
@@ -1418,19 +2454,14 @@ vector<Jet>   AnalyzerCore::GetBJets(AnalyzerParameter param,vector<Jet> jets, d
       if(jets[ijet].DeltaR(fatjets[ifjet]) <dr_ak8_clean) jetok = false;
     }
 
-    if(!jetok) continue;
-
-    if( jets[ijet].GetTaggerResult(jtp.j_Tagger) <= mcCorr->GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP) ) continue;
-    
-
+    if(lepton_cleaning&&!jetok) continue;
     if(pu_tag=="")output_jets.push_back(jets[ijet]);
-    else if(jets[ijet].PassPileupMVA(pu_tag,GetEra())) output_jets.push_back(jets[ijet]);
+    else {
+      if(jets[ijet].PassPileupMVA(pu_tag,GetEra())) output_jets.push_back(jets[ijet]);
+    }
   }
 
   std::sort(output_jets.begin(),       output_jets.end(),        PtComparing);
-
-
-
 
   return output_jets;
 
@@ -1438,9 +2469,7 @@ vector<Jet>   AnalyzerCore::GetBJets(AnalyzerParameter param,vector<Jet> jets, d
 
 
 
-vector<Jet>   AnalyzerCore::GetBJets(AnalyzerParameter param, vector<Jet> jets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean, double dr_ak8_clean, TString pu_tag, vector<Electron>  veto_electrons, vector<Muon>  veto_muons, vector<FatJet> fatjets, JetTagging::Parameters jtp){
-
-
+vector<Jet>   AnalyzerCore::SelectAK4Jets(vector<Jet> jets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean, double dr_ak8_clean, TString pu_tag, vector<Electron>  veto_electrons, vector<Muon>  veto_muons, vector<FatJet> fatjets){
 
   vector<Jet> output_jets;
   for(unsigned int ijet =0; ijet < jets.size(); ijet++){
@@ -1460,76 +2489,7 @@ vector<Jet>   AnalyzerCore::GetBJets(AnalyzerParameter param, vector<Jet> jets, 
       if(jets[ijet].DeltaR(fatjets[ifjet]) <dr_ak8_clean) jetok = false;
     }
 
-    if(!jetok) continue;
-
-    if( jets[ijet].GetTaggerResult(jtp.j_Tagger) <= mcCorr->GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP) ) continue;
-
-    if(pu_tag=="")output_jets.push_back(jets[ijet]);
-
-    else if(jets[ijet].PassPileupMVA(pu_tag,GetEra())) output_jets.push_back(jets[ijet]);
-  }
-  std::sort(output_jets.begin(),       output_jets.end(),        PtComparing);
-
-  return output_jets;
-}
-
-
-
-
-
-
-
-vector<Jet>   AnalyzerCore::GetAK4Jets(vector<Jet> jets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean, double dr_ak8_clean, TString pu_tag,std::vector<Lepton *> leps_veto,  vector<FatJet> fatjets){
-
-  vector<Jet> output_jets;
-  for(unsigned int ijet =0; ijet < jets.size(); ijet++){
-    bool jetok=true;
-
-    if(fabs(jets[ijet].Eta()) > eta_cut) continue;
-    if(jets[ijet].Pt() < pt_cut)continue;
-
-    for(auto ilep : leps_veto){
-      if(ilep->DeltaR(jets[ijet]) < dr_lep_clean) jetok = false;
-    }
-
-    for(unsigned int ifjet =0; ifjet < fatjets.size(); ifjet++){
-      if(jets[ijet].DeltaR(fatjets[ifjet]) <dr_ak8_clean) jetok = false;
-    }
-
-    if(!jetok) continue;
-    if(pu_tag=="")output_jets.push_back(jets[ijet]);
-    else if(jets[ijet].PassPileupMVA(pu_tag,GetEra())) output_jets.push_back(jets[ijet]);
-  }
-
-  std::sort(output_jets.begin(),       output_jets.end(),        PtComparing);
-
-  return output_jets;
-
-}
-
-
-
-vector<Jet>   AnalyzerCore::GetAK4Jets(vector<Jet> jets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean, double dr_ak8_clean, TString pu_tag, vector<Electron>  veto_electrons, vector<Muon>  veto_muons, vector<FatJet> fatjets){
-
-  vector<Jet> output_jets;
-  for(unsigned int ijet =0; ijet < jets.size(); ijet++){
-    bool jetok=true;
-
-    if(fabs(jets[ijet].Eta()) > eta_cut) continue;
-    if(jets[ijet].Pt() < pt_cut)continue;
-
-    for(unsigned int iel=0 ; iel < veto_electrons.size(); iel++){
-      if(jets[ijet].DeltaR(veto_electrons[iel]) < dr_lep_clean) jetok = false;
-    }
-
-    for(unsigned int iel=0 ; iel < veto_muons.size(); iel++){
-      if(jets[ijet].DeltaR(veto_muons[iel]) < dr_lep_clean) jetok = false;
-    }
-    for(unsigned int ifjet =0; ifjet < fatjets.size(); ifjet++){
-      if(jets[ijet].DeltaR(fatjets[ifjet]) <dr_ak8_clean) jetok = false;
-    }
-
-    if(!jetok) continue;
+    if(lepton_cleaning&&!jetok) continue;
     if(pu_tag=="")output_jets.push_back(jets[ijet]);
     else if(jets[ijet].PassPileupMVA(pu_tag,GetEra())) output_jets.push_back(jets[ijet]);
   }
@@ -1539,7 +2499,31 @@ vector<Jet>   AnalyzerCore::GetAK4Jets(vector<Jet> jets, double pt_cut ,  double
 }
 
 
-vector<FatJet>  AnalyzerCore::GetAK8Jets(vector<FatJet> fatjets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean , bool apply_tau21, double tau21_cut , bool apply_masscut, double sdmass_lower_cut,  double sdmass_upper_cut, vector<Electron>  veto_electrons, vector<Muon>  veto_muons){
+double AnalyzerCore::GetJetPileupIDSF(vector<Jet> jets , TString WP, AnalyzerParameter param){
+
+  if(IsData) return 1.;
+  if(WP=="") return 1.;
+  
+  double JPU_W=1.;
+  for(auto ij: jets){
+    if(param.syst_ == AnalyzerParameter::JetPUIDUp)   JPU_W*= mcCorr->JetPileUpSF(ij, WP,1 );
+    else if(param.syst_ == AnalyzerParameter::JetPUIDDown)   JPU_W*= mcCorr->JetPileUpSF(ij, WP,-1 );
+    else JPU_W*= mcCorr->JetPileUpSF(ij, WP,0 );
+  }
+
+  return JPU_W;
+}
+
+
+
+vector<FatJet>  AnalyzerCore::SelectAK8Jets(vector<FatJet> fatjets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean , bool apply_tau21, double tau21_cut , bool apply_masscut, double sdmass_lower_cut,  double sdmass_upper_cut, vector<Electron>  veto_electrons, vector<Muon>  veto_muons){
+
+
+  return SelectAK8Jetsv2(fatjets,pt_cut,eta_cut, lepton_cleaning, dr_lep_clean,apply_tau21, tau21_cut,apply_masscut,sdmass_lower_cut,sdmass_upper_cut, -999., veto_electrons,veto_muons);
+}
+
+vector<FatJet>  AnalyzerCore::SelectAK8Jetsv2(vector<FatJet> fatjets, double pt_cut ,  double eta_cut, bool lepton_cleaning  , double dr_lep_clean , bool apply_tau21, double tau21_cut , bool apply_masscut, double sdmass_lower_cut,  double sdmass_upper_cut, double WQCDTagger, vector<Electron>  veto_electrons, vector<Muon>  veto_muons){
+
 
   vector<FatJet> output_fatjets;
   for(unsigned int ijet =0; ijet < fatjets.size(); ijet++){
@@ -1554,6 +2538,9 @@ vector<FatJet>  AnalyzerCore::GetAK8Jets(vector<FatJet> fatjets, double pt_cut ,
       if(fatjets[ijet].DeltaR(veto_muons[iel]) < dr_lep_clean) jetok = false;
     }
 
+    if(WQCDTagger > 0){
+      if (fatjets[ijet].GetTaggerResult(JetTagging::particleNet_WvsQCD) < WQCDTagger) continue;
+    }
 
     double lower_sd_mass_cut=sdmass_lower_cut;
     double upper_sd_mass_cut=sdmass_upper_cut;
@@ -1574,12 +2561,18 @@ vector<FatJet>  AnalyzerCore::GetAK8Jets(vector<FatJet> fatjets, double pt_cut ,
     }
 
     double tau_21_cut = tau21_cut;
-    if(tau21_cut < 0.){
+    if(tau21_cut > 0.){
       if(DataYear==2016) tau_21_cut = 0.55;
+      if(DataYear==2017) tau_21_cut = 0.75;
+      if(DataYear==2018) tau_21_cut = 0.75;
+    }
+    else{
+
+      if(DataYear==2016) tau_21_cut = 0.35;
       if(DataYear==2017) tau_21_cut = 0.45;
       if(DataYear==2018) tau_21_cut = 0.45;
-    }
 
+    }
     if( fabs(fatjets[ijet].Eta()) > eta_cut)    continue;
     if( fabs(fatjets[ijet].Pt())  < pt_cut)    continue;
 
@@ -1635,6 +2628,43 @@ std::vector<Electron> AnalyzerCore::SmearElectrons(const std::vector<Electron>& 
 
 }
 
+
+bool AnalyzerCore::IsHEMIssueRun(){
+
+  if(!IsDATA) return false;
+
+  int RunNumber=run;
+  return RunNumber>319077;
+
+}
+
+bool AnalyzerCore::IsHEMIssueReg(Particle& Particle){
+
+  bool IstheRegion=false;
+  double eta=Particle.Eta(), phi=Particle.Phi();
+
+  if(eta>-3. && eta<-1.3 && phi>-1.57 && phi<-0.87) IstheRegion=true;
+
+  return IstheRegion;
+}
+
+
+
+bool AnalyzerCore::IsHEMCRReg(Particle& Particle, TString Option){
+
+  bool IstheRegion=false;
+  double eta=Particle.Eta(), phi=Particle.Phi();
+  bool SameEta = Option.Contains("SameEta");
+  bool SamePhi = Option.Contains("SamePhi");
+
+  if     (SameEta && (eta>-3. && eta<-1.3) && !(phi>-1.57 && phi<-0.87) ) IstheRegion=true;
+  else if(SamePhi && (eta< 3. && eta> 1.3) &&  (phi>-1.57 && phi<-0.87) ) IstheRegion=true;
+
+  return IstheRegion;
+}
+
+
+
 bool AnalyzerCore::FindHEMElectron(Electron electron){
 
     if (DataYear != 2018) return false;
@@ -1685,6 +2715,33 @@ std::vector<Jet> AnalyzerCore::ScaleJets(const std::vector<Jet>& jets, int sys){
   return out;
 
 }
+
+
+std::vector<Jet> AnalyzerCore::ScaleJetsIndividualSource(const std::vector<Jet>& jets, int sys, TString source){
+
+  if(!std::count(JECSources.begin(),JECSources.end(), source)) {
+    cout << "[AnalyzerCore::ScaleJetsIndividualSource] source " << source << " was not found" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  std::vector<Jet> out;
+  for(unsigned int i=0; i<jets.size(); i++){
+
+    Jet this_jet = jets.at(i);
+
+    double get_shift = GetJECUncertainty(source , "AK4PFchs",this_jet.Eta(),this_jet.Pt(), sys);
+
+    this_jet *= get_shift;
+
+    out.push_back( this_jet );
+  }
+
+  return out;
+
+}
+
+
+
 std::vector<Jet> AnalyzerCore::SmearJets(const std::vector<Jet>& jets, int sys){
 
   std::vector<Jet> out;
@@ -1742,7 +2799,12 @@ std::vector<FatJet> AnalyzerCore::ScaleSDMassFatJets(const std::vector<FatJet>& 
   for(unsigned int i=0; i<jets.size(); i++){
     //==== jets is a const vector. So in this function, we have to copy the elements like below
     FatJet this_jet = jets.at(i);
-    double current_SDMass = this_jet.SDMass() * (1. + double(sys) * 0.0094 );
+
+    double current_SDMass (1.);    
+    if(DataYear == 2016) current_SDMass = this_jet.SDMass() * (1. + double(sys) * 0.0094 );
+    if(DataYear == 2017) current_SDMass = this_jet.SDMass() * (0.982 + double(sys) * 0.004 );
+    if(DataYear == 2018) current_SDMass = this_jet.SDMass() * (0.982 + double(sys) * 0.004 ); // FIX
+
     this_jet.SetSDMass( current_SDMass );
     
     out.push_back( this_jet );
@@ -1758,7 +2820,12 @@ std::vector<FatJet> AnalyzerCore::SmearSDMassFatJets(const std::vector<FatJet>& 
   for(unsigned int i=0; i<jets.size(); i++){
     //==== jets is a const vector. So in this function, we have to copy the elements like below
     FatJet this_jet = jets.at(i);
-    double current_SDMass = this_jet.SDMass() * (1. + double(sys) * 0.20 );
+    double current_SDMass (1.);
+    //https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetWtagging#2017_scale_factors_and_correctio
+    if(DataYear == 2016) current_SDMass = this_jet.SDMass() * (1. + double(sys) * 0.20 );
+    if(DataYear == 2017) current_SDMass = this_jet.SDMass() * (1.09 + double(sys) * 0.05 );
+    if(DataYear == 2018) current_SDMass = this_jet.SDMass() * (1.09 + double(sys) * 0.05 ); //FIX
+    
     this_jet.SetSDMass( current_SDMass );
 
     out.push_back( this_jet );
@@ -1827,7 +2894,6 @@ double AnalyzerCore::GetMuonSFEventWeight(std::vector<Muon> muons,AnalyzerParame
       this_weight *= this_idsf*this_isosf*this_trigsf;
       if(param.DEBUG) cout << "GetMuonSFEventWeight this_idsf=" << this_idsf << " this_isosf=" << this_isosf << " this_trigsf=" << this_trigsf << endl;
 
-
       double reco_pt = (param.Muon_RECO_SF_Key  == "HighPtMuonRecoSF") ?  MiniAODP : this_pt;
 
       double this_recosf = mcCorr->MuonReco_SF(param.Muon_RECO_SF_Key, this_eta, reco_pt,SystDir_MuonRecoSF);
@@ -1838,10 +2904,47 @@ double AnalyzerCore::GetMuonSFEventWeight(std::vector<Muon> muons,AnalyzerParame
 
       FillWeightHist(param.Name+"/IDMuWeight_"+param.Name,this_idsf);
       FillWeightHist(param.Name+"/ISOMuWeight_"+param.Name,this_isosf);
+      FillWeightHist(param.Name+"/TrigMuWeight_"+param.Name,this_trigsf);
 
     }// end of muon loop  
 
   }// end of MC req.                                                                                                                             
+
+  bool apply_tracking_SF = true;
+  double MuonTrackineSF(1.);
+  
+  //https://twiki.cern.ch/twiki/bin/view/CMSPublic/TrackingPOGResultsRun2Legacy#Muon_tracking_performance_in_AN2
+  // https://cds.cern.ch/record/2724492/files/DP2020_035.pdf
+  if (apply_tracking_SF){
+    if(DataEra=="2016preVFP"){
+      for(auto im : muons) {
+        if(fabs(im.Eta()) > 1.5) MuonTrackineSF*= 0.99;
+	
+      } 
+    }
+    if(DataEra=="2016postVFP"){
+      for(auto im : muons) {
+	if(fabs(im.Eta()) > 1.) MuonTrackineSF*= 0.995;
+      }
+    }
+    if(DataYear==2017){
+      for(auto im : muons) {
+        if(im.Pt() > 60. && im.Pt() < 120) MuonTrackineSF*= 0.995;
+      }
+    }
+    
+    if(DataYear==2018){
+      for(auto im : muons) {
+	if(im.Pt() > 60. && im.Pt() < 120) MuonTrackineSF*= 0.997;
+      }
+    }
+    this_weight=this_weight*MuonTrackineSF;
+    
+    FillWeightHist(param.Name+"/TrackerMuWeight_"+param.Name,MuonTrackineSF);
+  }
+
+  FillWeightHist(param.Name+"/FullMuWeight_"+param.Name,this_weight);
+
 
   return this_weight;
 
@@ -1941,9 +3044,11 @@ double AnalyzerCore::GetElectronSFEventWeight(std::vector<Electron> electrons, A
       double this_idsf    = mcCorr->ElectronID_SF(param.Electron_ID_SF_Key, el.scEta(), el.Pt(), SystDir_ElectronIDSF);
 
       this_weight *= this_recosf*this_idsf;
-      FillWeightHist(param.Name+"/el_reco_sf_"+param.Name, this_recosf);
-      FillWeightHist(param.Name+"/el_id_sf_"+param.Name, this_idsf);
-
+      
+      if(param.WriteOutVerbose == 0){
+	FillWeightHist(param.Name+"/el_reco_sf_"+param.Name, this_recosf);
+	FillWeightHist(param.Name+"/el_id_sf_"+param.Name, this_idsf);
+      }
     }
     double this_trigsf = mcCorr->ElectronTrigger_SF(param.Electron_Trigger_SF_Key, param.Electron_Trigger_NameForSF, electrons,SystDir_ElectronTriggerSF);
 
@@ -1974,50 +3079,97 @@ double AnalyzerCore::GetFakeRateM(double eta, double pt, AnalyzerParameter param
 
 
 
-double AnalyzerCore::GetFakeWeight(std::vector<Lepton *> leps, AnalyzerParameter param, bool apply_r){
+double AnalyzerCore::GetFakeWeight(std::vector<Lepton *> leps, AnalyzerParameter _param, bool apply_r){
 
   if(!IsData) return 1.;
-
+  
   double this_weight = -1.;
   if(leps.size() == 1){
-    TString fr_key1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  param.Electron_FR_Key : param.Muon_FR_Key;
-    TString pr_key1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? "ptcone_eta_Prescaled" : "ptcone_eta_Prescaled";
+    TString fr_key1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_FR_Key : _param.Muon_FR_Key;
+    TString pr_key1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? _param.Electron_PR_Key : _param.Muon_PR_Key;
 
-    double this_fr1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(param.Electron_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()) : fakeEst->GetMuonFakeRate(param.Muon_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()); 
-    double this_pr1 = (apply_r) ? 0.9 : 1.;
+    if(!leps[0]->LepIDSet()) {
+      cout << "Lepton ID not set" << endl;
+      exit(EXIT_FAILURE);
+    }
+    
+    double this_fr1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(_param.Electron_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()) : fakeEst->GetMuonFakeRate(_param.Muon_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()); 
+    double this_pr1 = 1.;
+    if(apply_r) this_pr1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronPromptRate(_param.Electron_Tight_ID,pr_key1 , fabs(leps[0]->Eta()), leps[0]->Pt()) :fakeEst->GetMuonPromptRate(_param.Muon_Tight_ID, pr_key1 , fabs(leps[0]->Eta()), leps[0]->Pt()) ;
+    
+    this_weight=  fakeEst->CalculateLepWeight(this_pr1, this_fr1, leps[0]->PassLepID() );
 
-    TString lep1_ID = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  param.Electron_Tight_ID : param.Muon_Tight_ID;
-
-    this_weight=  fakeEst->CalculateLepWeight(this_pr1, this_fr1, lep1_ID );
+    //    cout << this_weight<< " L"<<endl;
 
     return this_weight;
 
 
 
-    // fakeEst->GetElectronPromptRate(param.Electron_Tight_ID, pr_key1, fabs(electrons[0].Eta()), electrons[0].Pt());
-    // fakeEst->GetMuonPromptRate(param.Muon_Tight_ID, pr_key1, fabs(muons[0].Eta()), muons[0].Pt());
+    // fakeEst->GetElectronPromptRate(_param.Electron_Tight_ID, pr_key1, fabs(electrons[0].Eta()), electrons[0].Pt());
+    // fakeEst->GetMuonPromptRate(_param.Muon_Tight_ID, pr_key1, fabs(muons[0].Eta()), muons[0].Pt());
   }
   if (leps.size() == 2){
 
-    TString fr_key1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  param.Electron_FR_Key : param.Muon_FR_Key;
-    TString fr_key2 = (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ?  param.Electron_FR_Key : param.Muon_FR_Key;
-    TString pr_key1 = "ptcone_eta_Prescaled";
-    TString pr_key2 = "ptcone_eta_Prescaled";
+    if(! (leps[0]->LepIDSet() || leps[1]->LepIDSet())) {
+      cout << "Lepton ID not set" << endl;
+      exit(EXIT_FAILURE);
+    }
 
-    double this_fr1 =  (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(param.Electron_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()) : fakeEst->GetMuonFakeRate(param.Muon_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()); 
-    double this_fr2 = (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(param.Electron_Tight_ID, fr_key1, fabs(leps[1]->Eta()), leps[1]->Pt()) : fakeEst->GetMuonFakeRate(param.Muon_Tight_ID, fr_key1, fabs(leps[1]->Eta()), leps[1]->Pt()); 
+    TString fr_key1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_FR_Key : _param.Muon_FR_Key;
+    TString fr_key2 = (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_FR_Key : _param.Muon_FR_Key;
+    TString pr_key1 =  (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_PR_Key : _param.Muon_PR_Key;
+    TString pr_key2 =  (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_PR_Key : _param.Muon_PR_Key;
 
-    double this_pr1 = (apply_r) ? 0.9 : 1.;
-    double this_pr2 = (apply_r) ? 0.9 : 1.;
+    double this_fr1 =  (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(_param.Electron_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()) : fakeEst->GetMuonFakeRate(_param.Muon_Tight_ID, fr_key1, fabs(leps[0]->Eta()), leps[0]->Pt()); 
+    double this_fr2 = (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(_param.Electron_Tight_ID, fr_key2, fabs(leps[1]->Eta()), leps[1]->Pt()) : fakeEst->GetMuonFakeRate(_param.Muon_Tight_ID, fr_key2, fabs(leps[1]->Eta()), leps[1]->Pt()); 
 
-    TString lep1_ID = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  param.Electron_Tight_ID : param.Muon_Tight_ID;
-    TString lep2_ID = (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ?  param.Electron_Tight_ID : param.Muon_Tight_ID;
+    double this_pr1 = 1.;
+    if(apply_r) this_pr1 = (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronPromptRate(_param.Electron_Tight_ID,pr_key1 , fabs(leps[0]->Eta()), leps[0]->Pt()) :fakeEst->GetMuonPromptRate(_param.Muon_Tight_ID, pr_key1 , fabs(leps[0]->Eta()), leps[0]->Pt()) ;
+    double this_pr2 = 1.;
+    if(apply_r) this_pr2 = (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronPromptRate(_param.Electron_Tight_ID,pr_key2 , fabs(leps[1]->Eta()), leps[1]->Pt()) :fakeEst->GetMuonPromptRate(_param.Muon_Tight_ID, pr_key2 , fabs(leps[1]->Eta()), leps[1]->Pt()) ;
 
-    this_weight = fakeEst->CalculateDilepWeight(this_pr1,this_fr1, this_pr2, this_fr2, lep1_ID,lep2_ID,0);
+    TString ID1 =  (leps[0]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_Tight_ID : _param.Muon_Tight_ID;
+    TString ID2 =  (leps[1]->LeptonFlavour() == Lepton::ELECTRON) ?  _param.Electron_Tight_ID : _param.Muon_Tight_ID;
 
+
+    // TMP FIX TO PT 
+    if (leps[1]->LeptonFlavour() == Lepton::ELECTRON && leps[1]->Pt() < 20) this_fr2*= 1.15;
+    if (leps[1]->LeptonFlavour() == Lepton::MUON && leps[1]->Pt() < 20) this_fr2*= 1.2;
+    
+    this_weight = fakeEst->CalculateDilepWeight(this_pr1,this_fr1, this_pr2, this_fr2, leps[0]->PassLepID(),leps[1]->PassLepID(),0);
+
+    //cout << this_weight << " 2L"<<endl;
     return this_weight;
   }
 
+
+  else{
+    
+
+    double this_weight = -1.;
+    vector<double> FRs;
+
+    double this_fr = -999.;
+    for(auto lep : leps){
+
+      if( lep->PassLepID() ) continue;
+      
+      this_fr =  (lep->LeptonFlavour() == Lepton::ELECTRON) ? fakeEst->GetElectronFakeRate(_param.Electron_Tight_ID, _param.Electron_FR_Key, fabs(lep->Eta()), lep->Pt()) : fakeEst->GetMuonFakeRate(_param.Muon_Tight_ID, _param.Muon_FR_Key, fabs(lep->Eta()), lep->Pt()); 
+      this_weight *= -1.*this_fr/(1.-this_fr);
+      FRs.push_back(this_fr);
+      
+    }
+    
+    if(FRs.size()==0){
+      return 0.;
+    }
+    else{
+      //cout << this_weight<< " ML"<<endl;
+      
+      return this_weight;
+    }
+  }
+  
   return -999.;
 }
 
@@ -2072,7 +3224,162 @@ double AnalyzerCore::GetCFWeightElectron(vector<double> el_pt, vector<double> el
 }
 
 
+double AnalyzerCore::GetCFrates(TString id, double pt, double eta){
 
+  eta = fabs(eta);
+  double x = 1./pt;
+  double a, b, c;
+  double rate (0.);
+
+  if(DataEra=="2016preVFP"){ // UL MIGRATED
+    if(id == "HNTightV2"){
+      if(eta < 0.8){
+        if(x < 0.004){ a = -6.19041e+00; b = -7.38711e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.038){ a = 1.45276e-06; b = 7.72346e-03; c = -1.45076e-05; rate = a/(x+b)+c; }
+        else{ a = 9.71303e-05; b = -0.00208995; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.004){ a = -4.73210e+00; b = -4.98697e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.004 && x<0.036){ a = 1.08024e-05; b = 4.03858e-03; c = -8.32696e-05; rate = a/(x+b)+c; }
+        else{ a = 0.000740277; b = -0.0154686; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 3.19899e-05; b = -6.09451e-04; c = 1.50164e-03; rate = a/(x+b)+c;
+      }
+    }
+  }
+
+  else if(DataEra=="2016postVFP"){ // UL MIGRATED
+    if(id == "HNTightV2"){
+      if(eta < 0.8){
+        if(x < 0.002){ a = -5.09610e+00; b = -1.29241e+03; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.002 && x<0.022){ a = 3.95560e-07; b = -1.14944e-03; c = 1.83440e-05; rate = a/(x+b)+c; }
+        else{ a = 6.34584e-05; b = -0.00131961; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.002){ a = -3.55492e+00; b = -1.05267e+03; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.002 && x<0.014){ a = 5.04842e-06; b = -2.06530e-04; c = 1.51220e-04; rate = a/(x+b)+c; }
+        else{ a = 0.000642187; b = -0.0134713; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 4.98575e-05; b = 8.07806e-04; c = 6.91510e-04; rate = a/(x+b)+c;
+      }
+    }
+  }
+
+  else if(DataYear==2017){ //UL MIGRATED
+    if(id == "HNTightV2"){
+      if(eta < 0.8){ 
+        if(x < 0.005){ a = -7.20188e+00; b = -5.35974e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.005 && x<0.026){ a = 1.11758e-06; b = 1.20114e-02; c = -1.48319e-05; rate = a/(x+b)+c; }
+        else{ a = 2.75774e-05; b = -0.000472906; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){ 
+        if(x < 0.003){ a = -4.84051e+00; b = -7.80357e+02; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.003 && x<0.038){ a = 2.04166e-06; b = -2.92844e-04; c = 4.42685e-06; rate = a/(x+b)+c; }
+        else{ a = 0.000126619; b = -0.00189268; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 2.12574e-05; b = 4.01600e-04; c = -7.53337e-06; rate = a/(x+b)+c;
+      }
+    }
+  }
+  else if(DataYear==2018){ // UL MIGRATED
+    if(id == "HNTightV2"){
+      if(eta < 0.8){
+        if(x < 0.002){ a = -5.73695e+00; b = -1.29458e+03; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.002 && x<0.022){ a = 1.85580e-07; b = -1.29739e-03; c = 1.18060e-05; rate = a/(x+b)+c; }
+        else{ a = 3.68107e-05; b = -0.000730055; rate = a + b*x; }
+      }
+      else if(eta>=0.8 && eta<1.479){
+        if(x < 0.002){ a = -4.48813e+00; b = -1.06378e+03; rate = TMath::Exp(a + b*x); }
+        else if(x>=0.002 && x<0.035){ a = 2.04543e-06; b = -5.01415e-04; c = 1.05875e-05; rate = a/(x+b)+c; }
+        else{ a = 0.000119787; b = -0.00166241; rate = a + b*x; }
+      }
+      else{
+        //if(x < 0.01){ a = 0.0127778; b = -0.744197; }
+        //else if(x>=0.01 && x<0.0205){ a = 0.00725863; b = -0.18864; }
+        //else{ a = 0.00417112; b = -0.0371866; }
+        a = 2.06403e-05; b = 4.25782e-04; c = 4.31896e-06; rate = a/(x+b)+c;
+      }
+    }
+  }
+
+  if(rate < 0.) rate = 0.;
+  return rate;
+
+}
+
+double AnalyzerCore::GetCFWeightElectron(vector<Lepton *> lepptrs, AnalyzerParameter param, bool applySF, int syst){
+  if(!param.Electron_Tight_ID.Contains("HNTight")) return 0.;
+  if(lepptrs.size() > 2) return 0.;
+
+  std::vector<Electron> el;
+  for(unsigned int i=0; i<lepptrs.size(); i++){
+    if(lepptrs.at(i)->LeptonFlavour() == Lepton::ELECTRON){
+      Electron *el_tmp = (Electron *)lepptrs.at(i);
+      el.push_back(*el_tmp);
+    }
+  }
+  if(el.size()==2 && el.at(0).Charge()*el.at(1).Charge()>0) return 0.;
+
+  std::vector<double> CFrate, CFweight, sf;
+  double cfweight = 0.;
+  for(unsigned int i=0; i<el.size(); i++){
+    CFrate.push_back(GetCFrates(param.Electron_Tight_ID, el.at(i).Pt(), el.at(i).scEta()));
+    CFweight.push_back(CFrate.at(i)/(1.-CFrate.at(i)));
+
+    if(applySF){
+      if(DataEra=="2016preVFP"){
+        if(fabs(el.at(i).scEta()) < 1.479){
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(0.9330 + syst*0.);
+        }
+        else{
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(1.1681 + syst*0.);
+        }
+      }
+      if(DataEra=="2016postVFP"){
+        if(fabs(el.at(i).scEta()) < 1.479){
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(0.9763 + syst*0.);
+        }
+        else{
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(1.1475 + syst*0.);
+        }
+      }
+      if(DataYear==2017){
+        if(fabs(el.at(i).scEta()) < 1.479){
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(1.4395 + syst*0.);
+        }
+        else{
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(1.3247 + syst*0.);
+        }
+      }
+      if(DataYear==2018){
+        if(fabs(el.at(i).scEta()) < 1.479){
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(1.1234 + syst*0.);
+        }
+        else{
+          if(param.Electron_Tight_ID == "HNTightV2") sf.push_back(1.3097 + syst*0.);
+        }
+      }
+    }
+    else sf.push_back(1.);
+
+    cfweight += sf.at(i)*CFweight.at(i);
+  }
+
+  return cfweight;
+
+}
 
 
 
@@ -2094,21 +3401,26 @@ void AnalyzerCore::initializeAnalyzerTools(){
   puppiCorr->ReadHistograms();
 
   //==== FakeBackgroundEstimator
-  fakeEst->SetEra(GetEra());
-  fakeEst->ReadHistograms();
 
+  if(AnalyserRunsFullBkg()){
+    fakeEst->SetEra(GetEra());
+    fakeEst->ReadHistograms();
   //==== CFBackgroundEstimator
-  cfEst->SetEra(GetEra());
-  cfEst->ReadHistograms();
+    
+    cfEst->SetEra(GetEra());
+    cfEst->ReadHistograms();
+
+  }
+
 
 }
 
 
-float AnalyzerCore::GetKFactor(){
+double AnalyzerCore::GetKFactor(){
 
   if(IsDATA) return 1.;
 
-  float weight = 1.;
+  double weight = 1.;
 
   if(MCSample.Contains("WZTo3LNu_powheg") or MCSample.Contains("WZTo2L2Q")){
     //Physics Letters B 761 (2016) 197 
@@ -2134,6 +3446,11 @@ float AnalyzerCore::GetKFactor(){
   else if(MCSample.Contains("ttW") && !MCSample.Contains("To")){
     weight = 600.8/610.;
   }
+  else if(MCSample.Contains("WJet") && MCSample.Contains("HT")){
+    return 1.21;
+  }
+
+
 
   return weight;
 
@@ -2144,7 +3461,7 @@ double AnalyzerCore::MCweight(bool usesign, bool norm_1invpb) const {
 
   if(IsDATA) return 1.;
   double weight=gen_weight;
-
+  
   //MiNNLO sample has some events with unphysically large weight
   if(MCSample.Contains("DYJets")&&MCSample.Contains("MiNNLO")){
     double maxweight=2358.0700*5.;
@@ -2280,18 +3597,174 @@ std::vector<Muon> AnalyzerCore::MuonWithoutGap(const std::vector<Muon>& muons){
 }
 
 
-std::vector<Muon> AnalyzerCore::MuonNonPromptOnly(const std::vector<Muon>& muons, const std::vector<Gen>& gens){
+vector<Muon> AnalyzerCore::SkimLepColl(const vector<Muon>& MuColl, vector<Gen>& TruthColl, AnalyzerParameter param, TString Option){
+
+  bool GetPrompt=false, GetHadFake=false, GetEWtau=false, GetNHIntConv=false, GetNHExtConv=false;
+
+  if(Option.Contains("Prompt"))          GetPrompt    =true;
+  if(Option.Contains("HFake"))           GetHadFake   =true;
+  if(Option.Contains("EWtau"))           GetEWtau     =true;
+  if(Option.Contains("NHConv"))         {GetNHIntConv =true; GetNHExtConv=true;}
+  else{ 
+    if(Option.Contains("NHIntConv")) GetNHIntConv =true;
+    if(Option.Contains("NHExtConv")) GetNHExtConv =true; 
+  }
+  if(     Option=="Fake"     )          {GetHadFake   =true; GetNHExtConv=true;}
+
+
+
+  vector<Muon> ReturnVec;
+  for(unsigned int i=0; i<MuColl.size(); i++){
+
+    if(IsData) ReturnVec.push_back(MuColl.at(i));
+    else {
+      int LepType=GetLeptonType_JH(MuColl.at(i), TruthColl); 
+      bool PassSel=false;
+      
+      if( GetPrompt    && (LepType==1 || LepType==2) ) PassSel=true;
+      if( GetHadFake   && (LepType<0 && LepType>=-4) ) PassSel=true;
+      if( GetEWtau     &&         LepType==3         ) PassSel=true;
+      if( GetNHIntConv &&         LepType>=4         ) PassSel=true;
+      if( GetNHExtConv &&         LepType<-4         ) PassSel=true;
+      if( PassSel ) ReturnVec.push_back(MuColl.at(i));
+    }
+  }
+
+  return ReturnVec;
+}
+
+
+
+vector<Electron> AnalyzerCore::SkimLepColl(const vector<Electron>& ElColl, vector<Gen>& TruthColl, AnalyzerParameter param,TString Option){
+
+  bool GetPrompt=false, GetHadFake=false, GetEWtau=false, GetNHIntConv=false, GetNHExtConv=false, GetCF=false;
+  //CFHFakeNHConv
+  if(Option.Contains("Prompt"))          GetPrompt    =true;
+  if(Option.Contains("CF"))              GetCF        =true;
+  if(Option.Contains("HFake"))           GetHadFake   =true;
+  if(Option.Contains("EWtau"))           GetEWtau     =true;
+  if(Option.Contains("NHConv"))         {GetNHIntConv =true; GetNHExtConv=true;}
+  else{ if(Option.Contains("NHIntConv")) GetNHIntConv =true;
+    if(Option.Contains("NHExtConv")) GetNHExtConv =true; }
+  if(     Option=="Fake"     )          {GetHadFake   =true; GetNHExtConv=true;}
+
+
+  vector<Electron> ReturnVec;
+  for(unsigned int i=0; i<ElColl.size(); i++){
+    if(IsData) ReturnVec.push_back(ElColl.at(i));
+    else {
+      int LepType=GetLeptonType_JH(ElColl.at(i), TruthColl); bool PassSel=false;
+      
+      if( GetPrompt    && (LepType==1 || LepType==2) ) PassSel=true;
+      if( GetHadFake   && (LepType<0 && LepType>=-4) ) PassSel=true;
+      if( GetEWtau     &&         LepType==3         ) PassSel=true;
+      if( GetNHIntConv &&         LepType>=4         ) PassSel=true;
+      if( GetNHExtConv &&         LepType<-4         ) PassSel=true;
+      if( GetCF        &&         IsCF(ElColl.at(i), TruthColl) ) PassSel=true;
+      if( Option.Contains("NoCF") && IsCF(ElColl.at(i), TruthColl) ) PassSel=false;
+      if( PassSel ) ReturnVec.push_back(ElColl.at(i));
+    }
+  }
+
+  return ReturnVec;
+}
+
+
+
+vector<Electron> AnalyzerCore::SkimLepColl(const vector<Electron>& ElColl, TString Option){
+  
+  vector<Electron> ReturnColl;
+
+  bool Barrel1=false, Barrel2=false, Endcap=false;
+  if(Option.Contains("B1")) Barrel1=true;
+  if(Option.Contains("B2")) Barrel2=true;
+  if(Option.Contains("E"))  Endcap =true;
+
+  for(unsigned int i=0; i<ElColl.size(); i++){
+    bool PassSel=false; double fEta=fabs(ElColl.at(i).Eta());
+    if( Barrel1 && fEta <0.8               ) PassSel=true;
+    if( Barrel2 && fEta>=0.8 && fEta<1.479 ) PassSel=true;
+    if( Endcap  && fEta>=1.479 && fEta<2.5 ) PassSel=true;
+    if( PassSel ) ReturnColl.push_back(ElColl.at(i));
+  }
+
+  return ReturnColl;
+}
+
+
+vector<Muon> AnalyzerCore::SkimLepColl(const vector<Muon>& MuColl,  TString Option){
+  
+  vector<Muon> ReturnColl;
+  bool Barrel=false, Overlap=false, Endcap=false;
+  if(Option.Contains("MB")) Barrel =true;
+  if(Option.Contains("MO")) Overlap=true;
+  if(Option.Contains("ME")) Endcap =true;
+
+  for(unsigned int i=0; i<MuColl.size(); i++){
+    bool PassSel=false; double fEta=fabs(MuColl.at(i).Eta());
+    if( Barrel  && fEta <0.9               ) PassSel=true;
+    if( Overlap && fEta>=0.9 && fEta<1.6   ) PassSel=true;
+    if( Endcap  && fEta>=1.6 && fEta<2.4   ) PassSel=true;
+    if( PassSel ) ReturnColl.push_back(MuColl.at(i));
+  }
+
+  return ReturnColl;
+}
+
+
+vector<Jet> AnalyzerCore::SkimJetColl(const vector<Jet>& JetColl, vector<Gen>& TruthColl, AnalyzerParameter param,TString Option){
+
+  bool GetPrLepCleanJet=false;
+  TString Criteria="";
+  if(Option.Contains("NoPr"))  GetPrLepCleanJet =true;
+  if(Option.Contains("NoTau")) Criteria="InclTau";
+
+  vector<Jet> ReturnVec;
+  for(unsigned int i=0; i<JetColl.size(); i++){
+    bool HasEWLep=HasEWLepInJet(JetColl.at(i), TruthColl, Criteria);
+    if( GetPrLepCleanJet && (!HasEWLep) ) ReturnVec.push_back(JetColl.at(i));
+  }
+
+  return ReturnVec;
+}
+
+
+bool AnalyzerCore::HasEWLepInJet(Jet Jet, vector<Gen>& TruthColl, TString Option){
+
+  int HasEWLep=false;
+  bool InclEWTau=Option.Contains("InclTau");
+  for(unsigned int i=2; i<TruthColl.size(); i++){
+    if(TruthColl.at(i).MotherIndex()<0 )  continue;
+    bool IsCand=false;
+    int abspid=fabs(TruthColl.at(i).PID());
+    int absmpid=fabs(TruthColl.at(TruthColl.at(i).MotherIndex()).PID());
+    if( TruthColl.at(i).Status()==1 ){
+      if( abspid==11 || abspid==13 ){
+        int LepType=GetLeptonType_JH(i, TruthColl);
+        if( LepType==1 || LepType==2 || LepType==3 ) IsCand=true; 
+      }
+    }
+    if( InclEWTau && abspid==15 && TruthColl.at(i).Status()>20 && TruthColl.at(i).Status()<30 ) IsCand=true;
+    else if( InclEWTau && abspid==15 && (absmpid==23 || absmpid==24) && TruthColl.at(i).Status()==2 ) IsCand=true;
+
+    if( IsCand && TruthColl.at(i).DeltaR(Jet)<0.4) HasEWLep=true;
+    if( HasEWLep ) break;
+  }
+
+  return HasEWLep;
+}
+
+
+std::vector<Muon> AnalyzerCore::MuonPromptOnly(const std::vector<Muon>& muons, const std::vector<Gen>& gens){
 
   if(IsDATA) return muons;
 
   std::vector<Muon> out;
 
   for(unsigned int i=0; i<muons.size(); i++){
-    bool pass=false;
-    if(GetLeptonType(muons.at(i), gens)>0)pass=true;
-    if(!pass)out.push_back( muons.at(i) );
+    if(GetLeptonType(muons.at(i), gens)<=0) continue;
+    out.push_back( muons.at(i) );
   }
-
 
   return out;
 
@@ -2351,8 +3824,8 @@ Muon AnalyzerCore::MuonUsePtCone(const Muon& muon){
 
 Particle AnalyzerCore::UpdateMET(const Particle& METv, const std::vector<Muon>& muons){
 
-  float met_x = METv.Px();
-  float met_y = METv.Py();
+  double met_x = METv.Px();
+  double met_y = METv.Py();
 
   double px_orig(0.), py_orig(0.),px_corrected(0.), py_corrected(0.);
   for(unsigned int i=0; i<muons.size(); i++){
@@ -2376,8 +3849,8 @@ Particle AnalyzerCore::UpdateMET(const Particle& METv, const std::vector<Muon>& 
 
 Particle AnalyzerCore::UpdateMETSmearedJet(const Particle& METv, const std::vector<Jet>& jets){
 
-  float met_x = METv.Px();
-  float met_y = METv.Py();
+  double met_x = METv.Px();
+  double met_y = METv.Py();
 
   double px_orig(0.), py_orig(0.),px_corrected(0.), py_corrected(0.);
   for(auto jet : jets){
@@ -2412,27 +3885,46 @@ std::vector<Muon> AnalyzerCore::MuonApplyPtCut(const std::vector<Muon>& muons, d
 
 }
 
+std::vector<Electron> AnalyzerCore::ElectronPromptOnly(const std::vector<Electron>& electrons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return electrons;
+
+  std::vector<Electron> out;
+  for(unsigned int i=0; i<electrons.size(); i++){
+    bool pass=true;
+    if(GetLeptonType(electrons.at(i), gens) <= 0)pass=false;
+    if(GetLeptonType(electrons.at(i), gens)== -5)pass=true;
+    if(GetLeptonType(electrons.at(i), gens)== -6)pass=true;
+  
+    if(pass)out.push_back( electrons.at(i) );
+  }
+  
+  return out;
+  
+}
+
 std::vector<Electron> AnalyzerCore::ElectronPromptOnly(const std::vector<Electron>& electrons, const std::vector<Gen>& gens, AnalyzerParameter param){
 
   if(IsDATA) return electrons;
 
   std::vector<Electron> out;
   for(unsigned int i=0; i<electrons.size(); i++){
-    bool pass=false;
+    bool pass=true;
     //if(GetLeptonType(electrons.at(i), gens)<=0) continue;
 
     if(param.ElFakeMethod == "Data"){
-      if(GetLeptonType(electrons.at(i), gens) > 0)pass=true;
+      if(GetLeptonType(electrons.at(i), gens) <= 0)pass=false;
     }
+
     if(param.ElFakeMethod == "DataNoConv"){
-      if(GetLeptonType(electrons.at(i), gens) > 0)pass=true;
+      if(GetLeptonType(electrons.at(i), gens) <= 0)pass=false;
       if(GetLeptonType(electrons.at(i), gens)== -5)pass=true;
       if(GetLeptonType(electrons.at(i), gens)== -6)pass=true;
     }
     if(param.CFMethod == "Data"){
       if(IsCF(electrons.at(i), gens)) pass=false;
     }
-
+    
     if(pass)out.push_back( electrons.at(i) );
   }
 
@@ -2498,6 +3990,264 @@ std::vector<Jet> AnalyzerCore::JetsAwayFromFatJet(const std::vector<Jet>& jets, 
   return out;
 
 }
+
+
+Jet AnalyzerCore::GetCorrectedJetCloseToLepton(Muon lep, Jet jet){
+
+  //jet_LepAwareJECv2 = (raw_jet * L1 - lepton) * L2L3Res + lepton                                                        
+
+  Particle  rawJet = jet * (1./ jet.JEC_Full());
+
+  Particle  lepp4 = lep;
+  double l1corrFactor = jet.JEC_L1();
+  Particle jetp4 = (rawJet - lepp4 * (1.0 / l1corrFactor)) * (jet.Pt() / rawJet.Pt()) + lepp4;
+
+
+  //cout << "Corr Eta : " << jetp4.Eta() << " " << jet.Eta() << endl;
+  // cout << "Corr Phi : " << jetp4.Phi() << " " << jet.Phi() << endl;
+
+  Jet jet_corr = jet;
+
+  jet_corr.SetPtEtaPhiE(jetp4.Pt(), jetp4.Eta(), jetp4.Phi(),jetp4.E());
+
+  return jet_corr;
+}
+
+Jet AnalyzerCore::GetCorrectedJetCloseToLepton(Electron lep, Jet jet){
+
+  //jet_LepAwareJECv2 = (raw_jet * L1 - lepton) * L2L3Res + lepton
+  
+  Particle  rawJet = jet * (1./ jet.JEC_Full());
+  Particle  lepp4 = lep;
+  double l1corrFactor = jet.JEC_L1();
+  Particle jetp4 = (rawJet - lepp4 * (1.0 / l1corrFactor)) * (jet.Pt() / rawJet.Pt()) + lepp4;
+  
+  Jet jet_corr = jet;
+  jet_corr.SetPtEtaPhiE(jetp4.Pt(), jetp4.Eta(), jetp4.Phi(),jetp4.E());
+
+  return jet_corr;
+}
+
+Jet AnalyzerCore::GetCorrectedJetCloseToLepton(Lepton* lep, Jet jet){
+
+  //jet_LepAwareJECv2 = (raw_jet * L1 - lepton) * L2L3Res + lepton                                                                                                                                                                                                      
+
+  Particle  rawJet = jet * (1./ jet.JEC_Full());
+  Particle  lepp4 = *lep;
+  double l1corrFactor = jet.JEC_L1();
+  Particle jetp4 = (rawJet - lepp4 * (1.0 / l1corrFactor)) * (jet.Pt() / rawJet.Pt()) + lepp4;
+
+  Jet jet_corr = jet;
+  jet_corr.SetPtEtaPhiE(jetp4.Pt(), jetp4.Eta(), jetp4.Phi(),jetp4.E());
+
+  return jet_corr;
+}
+
+
+double  AnalyzerCore::JetLeptonMassDropLepAware( Muon lep, bool removeLep, bool ApplyCorr){
+
+
+  // ApplyCorr def is false, this is same as Mini/NanoAOD value stored                                                                                                                                              
+  // if ApplyCorr is true then Jet smearing and lepton smearing is applied and values are corrected                                                                                                                 
+
+  std::vector<Jet> jets = GetAllJets(ApplyCorr);
+
+  double mindR=0.4;
+  if(!ApplyCorr)lep.SetPtEtaPhiE(lep.MiniAODPt(), lep.Eta(), lep.Phi(), lep.E());
+
+  Jet closejet;
+  for(auto jet : jets){
+    if (lep.DeltaR(jet) < mindR) closejet = GetCorrectedJetCloseToLepton(lep,jet);
+  }
+
+  TLorentzVector lepp4 = lep;
+  TLorentzVector jetp4 = closejet;
+
+
+  if(removeLep)   jetp4 = jetp4 - lep;
+
+  TLorentzVector LJ =  jetp4 + lep;
+  
+  return (LJ.M() - jetp4.M());
+
+}
+
+
+double  AnalyzerCore::JetLeptonMassDropLepAware( Electron lep, bool removeLep, bool ApplyCorr){
+
+
+  std::vector<Jet> jets = GetAllJets(ApplyCorr);
+
+  double mindR=0.4;
+
+  Jet closejet;
+  for(auto jet : jets){
+    if (lep.DeltaR(jet) < mindR) closejet = GetCorrectedJetCloseToLepton(lep,jet);
+  }
+
+  TLorentzVector lepp4 = lep;
+  TLorentzVector jetp4 = closejet;
+
+
+  if(removeLep)   jetp4 = jetp4 - lep;
+
+  TLorentzVector LJ =  jetp4 + lep;
+
+  return (LJ.M() - jetp4.M());
+
+
+}
+
+
+
+double  AnalyzerCore::JetLeptonPtRelLepAware( Muon lep, bool removeLep, bool ApplyCorr){
+
+
+  // ApplyCorr def is false, this is same as Mini/NanoAOD value stored
+  // if ApplyCorr is true then Jet smearing and lepton smearing is applied and values are corrected
+
+  std::vector<Jet> jets = GetAllJets(ApplyCorr);
+
+  double mindR=0.4;
+  if(!ApplyCorr)lep.SetPtEtaPhiE(lep.MiniAODPt(), lep.Eta(), lep.Phi(), lep.E());
+
+  Jet closejet;
+  for(auto jet : jets){
+    if (lep.DeltaR(jet) < mindR) closejet = GetCorrectedJetCloseToLepton(lep,jet);
+  }
+  
+  TLorentzVector lepp4 = lep;
+  TLorentzVector jetp4 = closejet;
+  
+  double PtRel = lepp4.Perp((closejet-lepp4).Vect()); // Default
+  //double PtRel2 = lepp4.Vect().Cross((jetp4 - lepp4).Vect().Unit()).Mag();
+  if(!removeLep) PtRel = lepp4.Perp((closejet).Vect());
+
+
+  return PtRel;
+
+}
+
+double  AnalyzerCore::JetLeptonPtRelLepAware( Electron lep, bool removeLep, bool ApplyCorr){
+
+  // ApplyCorr def is false, this is same as Mini/NanoAOD value stored                                                                                     
+  // if ApplyCorr is true then Jet smearing and lepton smearing is applied and values are corrected                                                       
+
+  std::vector<Jet> jets = GetAllJets(ApplyCorr);
+
+  double mindR=0.4;
+  //if(!ApplyCorr)lep.SetPtEtaPhiE(lep.MiniAODPt(), lep.Eta(), lep.Phi(), lep.E());
+
+  Jet closejet;
+  for(auto jet : jets){
+    if (lep.DeltaR(jet) < mindR) closejet = GetCorrectedJetCloseToLepton(lep,jet);
+  }
+
+  TLorentzVector lepp4 = lep;
+  TLorentzVector jetp4 = closejet;
+
+  double PtRel = lepp4.Perp((closejet-lepp4).Vect());
+  if(!removeLep) PtRel = lepp4.Perp((closejet).Vect());
+
+  //  double PtRel2 = lepp4.Vect().Cross((jetp4 - lepp4).Vect().Unit()).Mag();
+
+  //cout << "JetLeptonPtRelLepAware " <<  PtRel << " vs  " << PtRel2 << " vs  "  << lep.lep_jet_ptrel() << " vs " << lep.lep_jet_ptrelDef() << endl;                                                                                          
+
+  return PtRel;
+
+}
+
+
+double  AnalyzerCore::JetLeptonPtRatioLepAware(Muon lep, bool removeLep, bool ApplyCorr){
+
+  std::vector<Jet> jets = GetAllJets(ApplyCorr);
+
+  double  mindR=0.4;
+  
+  if(!ApplyCorr)lep.SetPtEtaPhiE(lep.MiniAODPt(), lep.Eta(), lep.Phi(), lep.E());
+
+  Jet closejet;
+  for(auto jet : jets){
+    if (lep.DeltaR(jet) < mindR) {
+      closejet = GetCorrectedJetCloseToLepton(lep,jet);
+      mindR = lep.DeltaR(jet);
+    }
+  }
+
+  Particle lepp4 = lep;
+  
+  if (mindR == 0.4) {
+    
+    return std::min(1./ (1. + lep.RelIso()), 1.5);
+  }
+
+  
+  if(closejet.Pt() == 0.) {
+    cout << "mindR = " << mindR << endl;
+    cout << "[JetLeptonPtRatioLepAware( Muon lep,  bool removeLep, bool ApplyCorr] 0 Jet pt" <<  endl;
+    cout << "Number of jets = " << jets.size() << endl;
+    for(auto jet : jets){
+      cout << "Jet pt = " << jet.Pt() << " dR = " << lep.DeltaR(jet) << endl;
+      Jet closejet2 = GetCorrectedJetCloseToLepton(lep,jet);
+      cout << "GetCorrectedJetCloseToLepton(lep,jet) pt = " << closejet2.Pt() << endl;
+    }
+
+    exit(EXIT_FAILURE);
+  }
+
+
+  //cout << "JetLeptonPtRatioLepAware " <<  (lepp4.Pt() / closejet.Pt()) << " vs  " << lep.lep_jet_ptratio() << " vs " << lep.lep_jet_ptratioDef() << endl;
+  //cout << "Jet pt must be " << lepp4.Pt()/lep.lep_jet_ptratio() << endl;
+  //for(auto ijet : jets) cout << "Jet pt = " << GetCorrectedJetCloseToLepton(lep,ijet).Pt() <<  " dR lep " << lep.DeltaR(ijet) <<endl;
+  if(removeLep)   return std::min(lepp4.Pt() / (closejet-lepp4).Pt(),1.5);
+
+  return std::min(lepp4.Pt() / closejet.Pt(),1.5); 
+
+}
+
+
+double  AnalyzerCore::JetLeptonPtRatioLepAware( Electron lep,  bool removeLep, bool ApplyCorr){
+
+  std::vector<Jet> jets = GetAllJets(ApplyCorr);
+
+  double  mindR=0.4;
+
+  Jet closejet;
+  for(auto jet : jets){
+    if (lep.DeltaR(jet) < mindR) {
+      closejet = GetCorrectedJetCloseToLepton(lep,jet);
+      mindR = lep.DeltaR(jet);
+    }
+  }
+
+  Particle lepp4 = lep;
+
+  if (mindR == 0.4)    return std::min(1./ (1. + lep.RelIso()), 1.5);
+
+
+
+  if(removeLep)   return std::min(lepp4.Pt() / (closejet-lepp4).Pt(),  1.5);
+
+  if(closejet.Pt() == 0.) {
+    cout << "mindR = " << mindR<< endl;
+
+    cout << "[JetLeptonPtRatioLepAware( Electron lep,  bool removeLep, bool ApplyCorr] 0 Jet pt" <<  endl;
+    cout << "Number of jets = " << jets.size() << endl;
+    for(auto jet : jets){
+      cout << "Jet pt = " << jet.Pt() << " dR = " << lep.DeltaR(jet) << endl;
+      Jet closejet2 = GetCorrectedJetCloseToLepton(lep,jet);
+      cout << "GetCorrectedJetCloseToLepton(lep,jet) pt = " << closejet2.Pt() << endl;
+    }
+
+
+    exit(EXIT_FAILURE);
+  }
+
+  return std::min(lepp4.Pt() / closejet.Pt(), 1.5);
+
+}
+
+
 
 std::vector<Jet> AnalyzerCore::JetsVetoLeptonInside(const std::vector<Jet>& jets, const std::vector<Electron>& els, const std::vector<Muon>& mus, double dR){
 
@@ -2605,8 +4355,11 @@ void AnalyzerCore::PrintGen(const std::vector<Gen>& gens){
   cout << "index\tPID\tStatus\tMIdx\tMPID\tStart\tPt\tEta\tPhi\tM" << endl;
   for(unsigned int i=2; i<gens.size(); i++){
     Gen gen = gens.at(i);
-    vector<int> history = TrackGenSelfHistory(gen, gens);
-    cout << i << "\t" << gen.PID() << "\t" << gen.Status() << "\t" << gen.MotherIndex() << "\t" << gens.at(gen.MotherIndex()).PID()<< "\t" << history[0] << "\t";
+    if(!MCSample.Contains("Sherpa")){
+      vector<int> history = TrackGenSelfHistory(gen, gens);
+      cout << i << "\t" << gen.PID() << "\t" << gen.Status() << "\t" << gen.MotherIndex() << "\t" << gens.at(gen.MotherIndex()).PID()<< "\t" << history[0] << "\t";
+    }
+  
     printf("%.2f\t%.2f\t%.2f\t%.2f\n",gen.Pt(), gen.Eta(), gen.Phi(), gen.M());
   }
 
@@ -2623,14 +4376,30 @@ void AnalyzerCore::PrintEvent(AnalyzerParameter param,TString selection,double w
 
 }
 
-bool AnalyzerCore::IsCF(Electron el, std::vector<Gen> gens){
+bool AnalyzerCore::IsCF(Electron el, std::vector<Gen> truthColl){
 
   int charge_el_reco = el.Charge();
   Lepton l = Lepton(el);
+  
+  int LepType = GetLeptonType_JH(el, truthColl);
+  
+  if(LepType<= 0)    return false;
+  int Idx_Closest    = GenMatchedIdx(el,truthColl);
+  int IdxType_NearEl = LepType>3? GetPrElType_InSameSCRange(Idx_Closest, truthColl, "IdxType"):Idx_Closest;
+  int Idx_NearEl     = LepType>3? IdxType_NearEl/10:Idx_Closest;
 
-  Gen gen_el= GetGenMatchedLepton(l, gens);
-  int pdgid = gen_el.PID() ;
-  if( (pdgid * charge_el_reco) > 0) return true;
+  // METHOD 1
+  // This does not include internal conv CF
+  //bool method1=false;
+  //Gen gen_el= GetGenMatchedLepton(l, truthColl);
+  //int pdgid = gen_el.PID() ;
+  //if( (pdgid * charge_el_reco) > 0) method1=true;
+  
+  //if((charge_el_reco*truthColl.at(Idx_NearEl).PID()>0) != method1)cout << (charge_el_reco*truthColl.at(Idx_NearEl).PID()>0) << "  method 1= " << method1 << endl;
+
+  //  if((charge_el_reco*truthColl.at(Idx_NearEl).PID()>0) != method1) cout << "Lep Type = " << LepType << endl;
+
+  if(charge_el_reco*truthColl.at(Idx_NearEl).PID()>0) return true;
 
   return false;
 }
@@ -2800,19 +4569,52 @@ bool AnalyzerCore::IsFromHadron(const Gen& me, const std::vector<Gen>& gens){
 }
 
 
+bool AnalyzerCore::ConversionSplitting(std::vector<Lepton *> leps,const std::vector<Gen>& gens){
+  
+
+  if(IsData) return true;
+  
+  int nlep_pt20(0);
+
+  for(auto ilep : leps){
+
+    if(ilep->Pt() > 15.) nlep_pt20++;
+  }
+ 
+  if(MCSample.Contains("WGTo") ||MCSample.Contains("ZGTo")){
+    if(nlep_pt20 ==3) return true;
+    else return false;
+  }
+  else if(MCSample.Contains("DYJet") || MCSample.Contains("WJet")) {
+
+    if(nlep_pt20 !=3) return true;
+    else return false;
+
+  }
+  
+  return true;
+ 
+}
+
 bool AnalyzerCore::ConversionVeto(std::vector<Lepton *> leps,const std::vector<Gen>& gens){
 
   // function vetos conversion events in DY/X+G                                                                                                  
   // since Z/G and WG have cut on photon in GEN need to overlap with DY                                                                          
   // Photon Cut is 15 GeV                                                                                                                        
   //                                                                                                                                             
-
+  
+  if (IsData) return true;
+  
+  double ph_pt=-1;
+  bool photon_found=false;
   bool GENTMatched=false;
   for(auto ilep : leps){
     for(unsigned int i=2; i<gens.size(); i++){
       Gen gen = gens.at(i);
       if(ilep->DeltaR(gen) < 0.2) {
+	if(gen.PID() == 22 && gen.isPromptFinalState()) ph_pt = gen.Pt();
         if(gen.PID() == 22 && gen.isPromptFinalState() && gen.Pt()> 15.) {
+	  photon_found=true;
           GENTMatched=true;
           for(unsigned int j=2; j<gens.size(); j++){
             if(!(fabs(gens.at(j).PID()) <7 || fabs(gens.at(j).PID()) == 21)) continue;
@@ -2825,10 +4627,24 @@ bool AnalyzerCore::ConversionVeto(std::vector<Lepton *> leps,const std::vector<G
     if(GENTMatched) break;
   }
 
-  if(MCSample.Contains("WG") ||MCSample.Contains("ZG"))   return GENTMatched;
-  else if(MCSample.Contains("DY") || MCSample.Contains("WJ")) return !GENTMatched;
+  if(!photon_found) {
+    cout << "No Matching photon found " << endl;
+    PrintGen(gens);
+  }
+  
+  if(MCSample.Contains("WGTo") ||MCSample.Contains("ZGTo") )   {
+    if(!photon_found) return true;
+    if(!GENTMatched)cout << "GHENT Conv event removed in " << MCSample << endl;
+    cout << "Matched photon pt = " << ph_pt << endl;
+    return GENTMatched;
+  }
+  else if(MCSample.Contains("DYJet") || MCSample.Contains("WJet") ){
+    if(!photon_found) return true;
+    cout << "Matched photon pt = " << ph_pt << endl;
+    return !GENTMatched;
+  }
 
-  return false;
+  return true;
 }
 
 
@@ -2850,7 +4666,7 @@ int AnalyzerCore::GetPrElType_InSameSCRange_Public(int TruthIdx, const std::vect
   if(abs(TruthColl.at(TruthIdx).PID())!=11) return false;
   if(TruthColl.at(TruthIdx).Status()!=1) return false;
 
-  float dPhiMax=0.3, dEtaMax=0.1;
+  double dPhiMax=0.3, dEtaMax=0.1;
   int NearbyElType=-1;
 
   for(unsigned int it_gen=2; it_gen<TruthColl.size(); it_gen++){
@@ -3241,6 +5057,7 @@ void AnalyzerCore::FillHist(TString histname,
     this_hist = new TH2D(histname, "", n_binx, xbins, n_biny, ybins);
     this_hist->SetDirectory(NULL);
     maphist_TH2D[histname] = this_hist;
+    //cout << "CReating TH2D " <<  histname << endl;
   }
 
   this_hist->Fill(value_x, value_y, weight);
@@ -3394,9 +5211,11 @@ void AnalyzerCore::WriteHist(){
     TString this_suffix=this_fullname(0,this_fullname.Last('/'));
     TDirectory *dir = outfile->GetDirectory(this_suffix);
     if(!dir){
+      cout << "Making outdir  " << this_suffix << endl;
       outfile->mkdir(this_suffix);
     }
     outfile->cd(this_suffix);
+    cout << "Writing " << this_name << endl;
     mapit->second->Write(this_name);
     outfile->cd();
   }
@@ -3520,6 +5339,7 @@ void AnalyzerCore::FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatje
 
 }
 
+<<<<<<< HEAD
 // TODO update params for UL
 double AnalyzerCore::GetCFratesFromFunction(TString id, double pt, double eta){
 
@@ -3664,3 +5484,440 @@ double AnalyzerCore::GetCFratesFromHistograms(TString era, double pt, double eta
   return rate;
 
 }
+=======
+
+
+int AnalyzerCore::GetFakeLepSrcType(const Lepton& Lep, vector<Jet>& JetColl){
+  //Type: -1: Unmatched, 1:L, 2:C, 3:B
+  int SrcType=-1;
+  bool NearB=false, NearC=false, NearL=false;
+  for(unsigned int ij=0; ij<JetColl.size(); ij++){
+    if(Lep.DeltaR(JetColl.at(ij))<0.4){
+      if     (JetColl.at(ij).hadronFlavour()==5){ NearB=true; break; }//1)
+      else if(JetColl.at(ij).hadronFlavour()==4){ NearC=true; }
+      else if(JetColl.at(ij).hadronFlavour()==0){ NearL=true; }
+    }
+  }
+
+  if     (NearB) SrcType=3;
+  else if(NearC) SrcType=2;
+  else if(NearL) SrcType=1;
+
+  return SrcType;
+  //1) Higher Priority to B. if there's multiple near jets, then b-jet has higher priority
+
+}
+
+
+
+int AnalyzerCore::GetPartonType_JH(int TruthIdx, std::vector<Gen>& TruthColl){
+  //Type : 1:W decay product (LO sample)
+  //       Currently have interest only in parton from W decay
+  //       0:Error/Non classified 
+
+  //Only consider Status 1 lepton
+  if(TruthIdx<2) return 0;
+  if( !(fabs(TruthColl.at(TruthIdx).PID())>0 && fabs(TruthColl.at(TruthIdx).PID())<10) ) return 0;
+
+  int PartonType=0;
+  int MotherIdx       = TruthColl.at(TruthIdx).MotherIndex();
+
+  int MPID=0;
+  //  int Status_now=0;
+  //    if(    TruthIdx!=-1   ){ Status_now    = TruthColl.at(TruthIdx).Status();
+  //                           }                           
+  if(   MotherIdx!=-1   ){ MPID         = TruthColl.at(MotherIdx).PID();
+  }
+ 
+  if     ( TruthIdx==-1 )                                       PartonType= 0;
+  else if( fabs(MPID)==23 || fabs(MPID)==24 || fabs(MPID)==25 ) PartonType= 1;
+  else PartonType=0;
+
+  return PartonType;
+}
+
+
+int AnalyzerCore::GetPrElType_InSameSCRange(int TruthIdx, std::vector<Gen>& TruthColl, TString Option){
+  //Abbreviation: Get Prompt Electron Type In Same Supercluster Range
+  //Pr. e>eee (int. conv.) case, collimated electrons can be merged in one SC & track is selected among them, and reconstructed as single electron. 
+  //In this case, still there will be a nearby prompt electron of LepType 1-3 within supercluster merging range.
+  //Supercluster merging range: |dphi|<0.3/0.3 (EB/EE), |deta|<0/0.07 (EB/EE) (+marginal 0.03 from 2 crystal size of 5x5 clusters)
+  //Ref:JINST 10 (2015) P06005, arXiv:1502.02701
+  //Return Value: 1/2/3:LeptonType-1/2/3 electron found in same SC range
+  //             -1: No LeptonType-1/2/3 electron found in same SC range
+  //
+  //Note: Hadronic origins are not included in this algo. as I am not sure of effect of many nearby particles in jets on the ele-reco performance.
+  //      + it is not of my interest yet.
+
+  if(TruthIdx<2) return 0;
+  if(abs(TruthColl.at(TruthIdx).PID())!=11) return 0;
+  if(TruthColl.at(TruthIdx).Status()!=1) return 0;
+
+  double dPhiMax=0.3, dEtaMax=0.1;
+  int NearbyElType=-1, NearbyPrElIdx=-1;
+
+  for(unsigned int it_gen=2; it_gen<TruthColl.size(); it_gen++){
+    if(TruthColl.at(it_gen).Status()!=1) continue;
+    if(abs(TruthColl.at(it_gen).PID())!=11) continue;
+    if(fabs(TruthColl.at(TruthIdx).Eta()-TruthColl.at(it_gen).Eta())>dEtaMax) continue;
+    if(fabs(TruthColl.at(TruthIdx).DeltaPhi(TruthColl.at(it_gen)))>dPhiMax) continue;
+
+    int LepType = GetLeptonType_JH(it_gen, TruthColl);
+    if(!(LepType>=1 && LepType<=3)) continue;
+    NearbyElType  = LepType;
+    NearbyPrElIdx = it_gen;
+  }
+
+  if     (Option.Contains("IdxType")){ return (NearbyElType>0? NearbyPrElIdx*10+NearbyElType:-1); }
+  else if(Option.Contains("Idx"))    { return NearbyPrElIdx; }
+  
+  return NearbyElType;
+  
+}
+
+
+int AnalyzerCore::GetLeptonType_JH(int TruthIdx, std::vector<Gen>& TruthColl){
+  //Type : 1:EWPrompt  /  2:Signal Daughter /  3:EW/Sig-tau daughter / 4:Internal Conversion daughter from t/EWV/EWlep(Implicit,Explicit) / 5:Internal Conversion daughter from HardScatterPhoton
+  //      -1:Unmatched & not EW Conversion candidate / -2:Hadron daughter / -3:Daughter of tau from hadron or parton / -4:Internal conversion daughter(implicit,explicit) having hadronic origin / -5:External conversion candidate(Hard scattered photon) / -6:External conversion from t/EWV/EWlep
+  //      (-4:Daughter of Non-hard scattered photon & has parton or hadron ancestor OR implicit Conv from quark)
+  //       0:Error / >0: Non-fake: Non-hadronic origin / <0 : Fakes: Hadronic origin or external conversion
+
+
+  //Only consider Status 1 lepton
+  if(TruthColl.size()==0) return 0;
+  if(TruthIdx<2) return 0;
+  if(TruthColl.at(TruthIdx).Status()!=1) return 0;
+  if( !(fabs(TruthColl.at(TruthIdx).PID())==11 || fabs(TruthColl.at(TruthIdx).PID())==13) ) return 0;
+
+  int LeptonType=0;
+  int LastSelfIdx     = LastSelfMotherIdx(TruthIdx,TruthColl);
+  int MotherIdx       = FirstNonSelfMotherIdx(TruthIdx,TruthColl);
+  int LastSelfMIdx    = LastSelfMotherIdx(MotherIdx,TruthColl);
+  int GrMotherIdx     = FirstNonSelfMotherIdx(MotherIdx,TruthColl);
+  int LastSelfGrMIdx  = LastSelfMotherIdx(GrMotherIdx,TruthColl);
+
+  int MPID=0, GrMPID=0;
+  int Status_orig=0, MStatus_orig=0, MStatus_last=0, GrMStatus_orig=0, GrMStatus_last=0;
+  bool HadronicOrigin = false;
+  if(    TruthIdx!=-1   ){ Status_orig    = TruthColl.at(LastSelfIdx).Status();
+    HadronicOrigin = HasHadronicAncestor(TruthIdx, TruthColl);
+  }                           
+  if(   MotherIdx!=-1   ){ MPID         = TruthColl.at(MotherIdx).PID();
+    MStatus_orig = TruthColl.at(LastSelfMIdx).Status();
+    MStatus_last = TruthColl.at(MotherIdx).Status();
+  }
+  if(  GrMotherIdx!=-1  ){ GrMPID         = TruthColl.at(GrMotherIdx).PID();
+    GrMStatus_orig = TruthColl.at(LastSelfGrMIdx).Status();
+    GrMStatus_last = TruthColl.at(GrMotherIdx).Status();
+  }
+ 
+  if     ( TruthIdx==-1 )                                       LeptonType= 0;
+  else if( fabs(MPID)==23 || fabs(MPID)==24 || fabs(MPID)==25 ) LeptonType= 1;
+  else if( IsSignalPID(MPID) )                                  LeptonType= 2;
+  else if( Status_orig>20 && Status_orig<30 )                   LeptonType= 1;//1)
+  else if( fabs(MPID)>50 )                                      LeptonType=-2;
+  else if( fabs(MPID)==15 && MStatus_last==2 ){
+    if     ( fabs(GrMPID)==23 || fabs(GrMPID)==24 || fabs(GrMPID)==25 ) LeptonType= 3;
+    else if( IsSignalPID(GrMPID) )                                      LeptonType= 3;
+    else if( MStatus_orig>20  && MStatus_orig<30  )                     LeptonType= 3;//1)
+    else if( HadronicOrigin )                                           LeptonType=-3;//2-a)
+    else if( fabs(GrMPID)==22  && GrMStatus_orig>20 && GrMStatus_orig<30 )                     LeptonType= 5;//2-b)
+    else if( fabs(GrMPID)==22 )                                                                LeptonType= 4;//2-c)
+    else if( (fabs(GrMPID)==11 || fabs(GrMPID)==13 || fabs(GrMPID)==15) && GrMStatus_last!=2 ) LeptonType= 4;//2-d)
+    else                                                                                       LeptonType= 0;
+  }
+  else if( fabs(MPID)==22 ){
+    if( MStatus_orig>20 && MStatus_orig<30 )                            LeptonType= 5;//3-a)
+    else if( HadronicOrigin )                                           LeptonType=-4;//3-b)
+    else if( fabs(GrMPID)==24 || fabs(GrMPID)==23 || fabs(GrMPID)==6  ) LeptonType= 4;//3-c)
+    else if( fabs(GrMPID)==11 || fabs(GrMPID)==13 || fabs(GrMPID)==15 ) LeptonType= 4;//3-d)
+    else                                                                LeptonType= 0;
+  }
+  else if( (fabs(MPID)==11 || fabs(MPID)==13 || fabs(MPID)==15) && MStatus_last!=2 && !HadronicOrigin ) LeptonType= 4;//4-a)
+  else if( ((fabs(MPID)>=1 && fabs(MPID)<=5) || fabs(MPID)==21) && MStatus_last!=2 )                    LeptonType=-4;//4-b)
+  else if( fabs(MPID)==6 ) LeptonType=4;//4-c)
+  else LeptonType=0;
+
+
+  return LeptonType;
+
+  //**footnote
+  //These are based on observation in DY,ZG,TT sample(DY,ZG:amcnlo+pythia, TT:powheg+pythia) for other PS generator, convention may differ.
+  //1) In amcnlo generator, output of ME level generation does not have specific guage field mother. e.g. u u~ > l+ l- -> fabs(MID)=1
+  //   This perhaps due to multiple field can interplay in production, and apparently it is not possible to distinguish them in any logic.
+  //   e.g. think about previous example. you cannot say whether this is from gamma or Z or H...
+  //   But in PS procedure, corrections on ME proc is done sometimes. In that case it seems mother is set Z for OS ll prod. W for lnu prod.
+  //   e.g. If pythia applies ISR process on input u u~, than it should affect momentum of all the consequent processes, or in case of lnu, W radiating gamma can be added.
+  //   You may think lnu case is obvious, but it may not like in case of pp > lllnu(You never know which one is from W>lnu and Z>ll)
+  //2-a) e.g. a)Had > ta+X, ta>l+2nu b) q>ta+X in jet fragmentation (ta is not hardscattered, since it is already considered prev. step)
+  //2-b) e.g. gamma>ta(+)+ta(-)+X, ta>lnu (St=2)
+  //2-c) e.g. " " " " " " " " " " " " " " " " " ", but soft gamma case. this is not observed in test sample but put here just in case.
+  //          (Non hadronic origin since such case already counted before, gamma should be from non-hadronic source)
+  //2-d) e.g. l>tata..+l.. , ta>l+2nu (Implicit tau conv. from non-hadronic lepton and decay) In implicit conv. GenStatus!=2
+  //3-a) e.g. hard gamma>ll
+  //3-b) e.g. a) Had>gamma+X, gamma>ll+X (in PS+Had stage intermediate process is omitted you see just Had>Nphoton+Mhadrons+..)
+  //          b) q>gamma+q, gamms>ll+X in jet fragmentation or radiations of tops.
+  //          c) gluon>Ngamma+Mhadrons in jet fragmentation (Actually observed in samples)
+  //3-c) e.g. W+>W+ gamma, or t>t+gamma, gamma>ll+X, not yet observed in test sample but possible (upto radiation is observed so far)
+  //3-d) e.g. ta>ta+gamma, gamma>ll+X, tau not from hadron(e.g. pp>tata)
+  //4-a) e.g. EW lep l, l>lll... just implicit conversion. 
+  //4-b) e.g. q or g> Nlepton +MHadrons... in parton shower history
+  //4-c) e.g. t>t+ll.. implicit conversion
+}
+
+
+int AnalyzerCore::GetLeptonType_JH(const Lepton& Lep, std::vector<Gen>& TruthColl){
+  //Type : 1:EW-Prompt / 2: BSM-Prompt / 3:EW/BSM-Prompt-Tau Daughter 
+  //       4:Internal Conversion from Soft QED Radiation (PS-level) / 5:Internal Conversion from Hard Process Photon (ME-level)
+  //      -1:Unmatched & not EW Conversion candidate (mis-reco. or external conversion within jets)
+  //      -2:Hadron Daughter / -3:Daughter of Tau from Hadron or Parton / -4:Internal Conversion Daughter having hadronic origin
+  //      -5:External Conversion Candidate (Hard scattered photon) / -6:External conversion from t/EWV/EWlep
+  //      (-4:Daughter of Non-hard scattered photon & has parton or hadron ancestor OR implicit Conv from quark)
+  //       0:Error / >0: Non-fake: Non-hadronic origin / <0 : Fakes: Hadronic origin or external conversion
+
+  if(TruthColl.size()==0) return 0;
+
+  int LeptonType=0;
+  int MatchedTruthIdx = GenMatchedIdx(Lep,TruthColl);
+
+  int NearPhotonType=0, NearPhotonIdx=-1;
+  if( MatchedTruthIdx==-1 ){
+    NearPhotonIdx  = GetNearPhotonIdx(Lep, TruthColl);
+    NearPhotonType = GetPhotonType_JH(NearPhotonIdx, TruthColl);
+    if     ( NearPhotonType<=0 ) LeptonType=-1;//1)
+    else if( NearPhotonType==1 ) LeptonType=-5;//2)
+    else if( NearPhotonType==2 ) LeptonType=-6;//3)
+  }
+  else{
+    LeptonType = GetLeptonType_JH(MatchedTruthIdx, TruthColl);//4)
+    if(LeptonType>=4 && LeptonType<=5){//5)
+      int NearbyPrElType = GetPrElType_InSameSCRange(MatchedTruthIdx, TruthColl);
+      if(NearbyPrElType>0) LeptonType = NearbyPrElType;
+    }
+  }
+
+
+  return LeptonType;
+
+  //**footnote
+  //1) matched to no gen-lepton nor gen-photon -> mis-reco.
+  //   matched to no gen-lepton, but to photon with hadronic origin -> mis-reco. (e.g. pions->e) or external conversion from photon in jets
+  //2) matched to no gen-lepton, but to photon with non-hadronic origin (hard process) -> external conversion from photon with non-hadronic source (ME-level)
+  //3) matched to no gen-lepton, but to photon with non-hadronic origin (soft QED radiation) -> external conversion from photon with non-hadronic source (PS-level)
+  //4) matched to gen-lepton, categorize based on the truth categorization algo.: AnalyzerCore::GetLeptonType_JH(int TruthIdx, std::vector<Gen>& TruthColl)
+  //5) collimated e/gm objects are merged in SC, hence if there is prompt electron within SC-merging range, reco-electron's properties actually represent pre-QED-FSR prompt-electron,
+  //   rather than the closest internal conversion electron. Therefore shift the type to the prompt lepton's type.
+}
+
+
+
+int AnalyzerCore::GetPhotonType_JH(int PhotonIdx, std::vector<Gen>& TruthColl){
+  //Type : 
+  // 0: Invalid input or Error or Hard process photon is input when it is not final line of its history
+  // 1: prompt photon (hard process (ME-level)) / 2: prompt Else prompt daughter(l,V,t)
+  //-1: Reserved for unmatched(Not used now) / -2: Hadronic origin
+
+  if( PhotonIdx<2 ) return 0;
+  if( !(TruthColl.at(PhotonIdx).PID()==22 && (TruthColl.at(PhotonIdx).Status()==1 || TruthColl.at(PhotonIdx).Status()==23)) ) return 0;
+
+  if(TruthColl.at(PhotonIdx).Status()==23){
+    if(IsFinalPhotonSt23(TruthColl)) return 1;
+    else                             return 0;
+  }//From this pt, only St1 Photon is treated.
+
+  int PhotonType=0;
+  int LastSelfIdx    = LastSelfMotherIdx(PhotonIdx,TruthColl);
+  int MotherIdx      = FirstNonSelfMotherIdx(PhotonIdx,TruthColl);
+  int fMPID=0, Status_orig=0;
+  bool HadronicOrigin = false;
+  if( PhotonIdx!=-1 ){ Status_orig    = TruthColl.at(LastSelfIdx).Status();
+    HadronicOrigin = HasHadronicAncestor(PhotonIdx, TruthColl);
+  }                           
+  if( MotherIdx!=-1 ){ fMPID          = fabs(TruthColl.at(MotherIdx).PID()); }
+
+
+  if     (    Status_orig>20 && Status_orig<30          ) PhotonType= 1;//1)
+  else if(         fMPID==23 || fMPID==25               ) PhotonType= 1;//2)
+  else if( fMPID==24 || fMPID==6  || IsSignalPID(fMPID) ) PhotonType= 2;//3)
+  else if(            HadronicOrigin                    ) PhotonType=-2;//4)
+  else if( fMPID==11 || fMPID==13 || fMPID==15          ) PhotonType= 2;//5)
+  else                                                    PhotonType= 0;
+  
+  return PhotonType;
+  //**footnote
+  //1) In case of ME-level photon, they have history; GenSt=23>...>1.
+  //   this is better than checking mother because intermediate-mother is not written in some cases, where generation is not explicitly on-shell.
+  //   e.g. qq>llG instead of qq>Z>llG
+  //2) Sometimes, photon's final state is 1 before any history. (Presumably skimmed between pythia & MiniAOD).
+  //   e.g. G;St=1, Mother=Z ; algorithm 1) cannot catch this.
+  //   but PS step also treats photon radiation (same kind of history), therefore distinction between type 1 and 2 is not physical.
+  //3) top and charged bosons radiate photons, and some case the photon is very energetic.
+  //4) This category does not include tops. Photons from hadrons and quarks. But predominantly, in most of the cases they are daughter of pi0.
+  //   But rarely other mesons as eta, B, or even some quarks can also radiate energetic photons.
+  //5) Photons radiated from lepton FSR. Sometimes they are quite energetic.
+}
+
+//------------------------------------------------------------------------------------------//
+
+
+
+//--Gen-Matching Tools----------------------------------------------------------------------//
+int AnalyzerCore::GenMatchedIdx(const Lepton& Lep, std::vector<Gen>& truthColl){
+  //Find Matched Index within dR01; if ambiguous closest dR one chosen (Resolution way better than dPtRel)
+  //Seed from RecoLepton
+
+  int MatchedIdx=-1, PIDLep=0;
+  double dR=999., dRmax=0.1;
+
+  if(Lep.LeptonFlavour()==Lepton::ELECTRON) PIDLep = 11;
+  else if(Lep.LeptonFlavour()==Lepton::MUON) PIDLep = 13;
+  else{
+    cout << "[AnalyzerCore::GetGenMatchedLepton] input lepton flavour not set" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  for(unsigned int i=2; i<truthColl.size(); i++){
+    if( truthColl.at(i).MotherIndex()<0     ) continue;
+    if( truthColl.at(i).Status()!=1         ) continue;
+    if( fabs(truthColl.at(i).PID())!=PIDLep ) continue;
+    if( truthColl.at(i).DeltaR(Lep)>dRmax   ) continue;
+
+    if( truthColl.at(i).DeltaR(Lep)<dR ){ dR=truthColl.at(i).DeltaR(Lep); MatchedIdx=i; }
+  }
+
+  return MatchedIdx;
+}
+
+
+int AnalyzerCore::GetNearPhotonIdx(const Lepton& Lep, std::vector<Gen>& TruthColl){
+  // Return gen-photon index, which are candidate for source of external conversion. 1)
+
+  int NearPhotonIdx=-1;
+  double PTthreshold=10., dPtRelmax=0.5;//2)
+  double dRmax=0.2;//3)
+  double dRmin=999.;
+  for(unsigned int i=2; i<TruthColl.size(); i++){
+    if( TruthColl.at(i).MotherIndex()<0   ) continue;
+    if( !(TruthColl.at(i).PID()==22 && (TruthColl.at(i).Status()==1 || TruthColl.at(i).Status()==23)) ) continue;
+    if( TruthColl.at(i).Pt()<PTthreshold  ) continue;
+    if( !(Lep.Pt()/TruthColl.at(i).Pt()>(1.-dPtRelmax) && Lep.Pt()/TruthColl.at(i).Pt()<(1.+dPtRelmax)) ) continue;
+    if( Lep.DeltaR(TruthColl.at(i))>dRmax ) continue;
+
+    if( TruthColl.at(i).Status()==23 && !IsFinalPhotonSt23(TruthColl) ) continue;//4)
+    if( Lep.DeltaR(TruthColl.at(i))<dRmin ){ dRmin=Lep.DeltaR(TruthColl.at(i)); NearPhotonIdx=i; }
+  }
+
+
+  return NearPhotonIdx;
+  //footnote
+  //1) External conversion is only meaningful for electron, as external conversion rate is theoretically ~M^{-2} in asymmetric limit (ref: arXiv:1110.1368)
+  //   In the conversion study, I also observed that muon conversion rate is less than ~1/3000 of electron conversion rate (unobserved).
+  //2) In 16' analyses using Cat-Ntuples, I used dPtRel<0.2 cut, which was optimized for PT>25 electrons. It is updated to 0.5 as I observe that PT(e)/PT(g) varies between 0.5 and 1.3 for 10<PT(e)<25. Thus this cut is valid for PT(e)>10 GeV.
+  //3) dReg is larger for low Pt electrons, but 0.2 cut is still enough for matching for all PT(e)>10.
+  //4) In some MC events, hard scattered photon(GenSt23) is the last history of the photon and do not have daughter in the history. Presumably because generator history is partly skimmed in MiniAOD.
+}
+
+
+int AnalyzerCore::FirstNonSelfMotherIdx(int TruthIdx, std::vector<Gen>& TruthColl){
+
+  if(TruthIdx<2) return -1;
+
+  int pid=TruthColl.at(TruthIdx).PID(), midx=TruthIdx;
+  while(TruthColl.at(midx).PID()==pid){
+    midx=TruthColl.at(midx).MotherIndex();  
+    if(midx<0) break;
+  }
+
+  return midx;
+}
+
+
+
+
+int AnalyzerCore::LastSelfMotherIdx(int TruthIdx,std::vector<Gen>& TruthColl){
+
+  if(TruthIdx<2) return TruthIdx;
+
+  int pid=TruthColl.at(TruthIdx).PID(), midx=TruthIdx, currentidx=TruthIdx;
+  while(TruthColl.at(midx).PID()==pid){
+    currentidx=midx;
+    midx=TruthColl.at(midx).MotherIndex();  
+    if(midx<0) break;
+  }
+
+  return currentidx;
+}
+
+
+bool AnalyzerCore::HasHadronicAncestor(int TruthIdx, std::vector<Gen>& TruthColl){
+  //Returns true  if 1)has hadron mother, 2)has quark mother(!top) 3)Incident protons
+  //        false if 1)is hardscattered truth, 2)EW/H/BSM/t daughter, 3)not above, 4)invalid input(e.g. unmatched case)
+  
+  if(TruthIdx<0) return false;
+  if(TruthIdx<2) return true;
+
+  bool HasPartonHadronAncestor=false;
+  int  midx=TruthIdx, fmid=fabs(TruthColl.at(midx).PID()), MSt_orig=-1;
+  int  St_orig=TruthColl.at(LastSelfMotherIdx(TruthIdx, TruthColl)).Status();
+  if( St_orig>20 && St_orig<30) return false;
+
+  while( midx>=2 ){
+    midx=FirstNonSelfMotherIdx(midx,TruthColl);
+    MSt_orig=TruthColl.at(LastSelfMotherIdx(midx,TruthColl)).Status();
+    fmid=fabs(TruthColl.at(midx).PID());
+    if(  fmid==23 || fmid==24 || fmid==25 || fmid==6 || IsSignalPID(fmid) ){ HasPartonHadronAncestor=false; break; }
+    if( (fmid==11 || fmid==13 || fmid==15 || fmid==22) && (MSt_orig>20 && MSt_orig<30)){ HasPartonHadronAncestor=false; break; }
+    if( fmid>50 ) { HasPartonHadronAncestor=true; break; }
+    if( (fmid>=1 && fmid<=5) || fmid==21 ){ HasPartonHadronAncestor=true; break; }
+  }
+
+  return HasPartonHadronAncestor;
+}
+
+
+
+
+bool AnalyzerCore::IsFinalPhotonSt23(std::vector<Gen>& TruthColl){
+  //In Some XG proc events, it is observed that some of photons' last status is 23. Presumably due to skimming of generator history between pythia and MiniAOD.
+  //The function returns if this is the case.
+  //And this is designed only for 1 hard photon case as W+G or Z+G or TT+G
+
+  bool IsFinalGammaStatus23 = false;
+  bool HasStatus23Photon    = false;
+  for(unsigned int i=2; i<TruthColl.size(); i++){
+    int fpid  = fabs(TruthColl.at(i).PID());
+    int GenSt = TruthColl.at(i).Status();
+    int MPID_direct= TruthColl.at(TruthColl.at(i).MotherIndex()).PID();
+    if( !((fpid!=22 && MPID_direct==22) || (fpid==22 && (GenSt==23||GenSt==1))) ) continue;
+
+    int LastSelfIdx  = LastSelfMotherIdx(i,TruthColl);
+    int LastSelfSt   = TruthColl.at(LastSelfIdx).Status();
+    int MotherIdx    = FirstNonSelfMotherIdx(i,TruthColl);
+    int LastSelfMIdx=-1, MStatus_orig=-1;
+    if(MotherIdx!=-1){
+      LastSelfMIdx = LastSelfMotherIdx(MotherIdx,TruthColl);
+      MStatus_orig = TruthColl.at(LastSelfMIdx).Status();
+    }
+
+    if(fpid==22){
+      if(GenSt==23) {HasStatus23Photon=true; IsFinalGammaStatus23=true;}
+      else if(GenSt==1 && LastSelfSt==23) {IsFinalGammaStatus23=false; break;}//a)
+    }
+    else if( MPID_direct==22 && MStatus_orig==23 ){ IsFinalGammaStatus23=false; break;}//b)
+  }
+
+  if(!HasStatus23Photon) return false;
+  
+  return IsFinalGammaStatus23;
+
+  //**footnotes
+  //a) Status-23 photon's last is 1. Thus status-23 photon is not the last history.
+  //b) Daughter particle of status-23 photon is found. Thus status-23 photon is not the last history.
+}
+
+
+
+
+
+
+>>>>>>> 7bac041d83d0e7d48973bffc7d764d664f9d6e22

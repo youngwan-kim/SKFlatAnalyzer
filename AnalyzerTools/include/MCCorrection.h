@@ -63,6 +63,8 @@ public:
 
   bool IgnoreNoHist;
 
+
+  double JetPileUpSF(Jet j, TString WP, int sys=0);
   double MuonReco_SF(TString key, double eta, double p, int sys=0);
   double MuonID_SF(TString ID, double eta, double pt, int sys=0);
   double MuonISO_SF(TString ID, double eta, double pt, int sys=0);

@@ -1,2 +1,2 @@
 # alias PD xsec nmc sumsign sumw
-WGJJToLNu	WGJJToLNu_EWKnotop_QCD_TuneCP5_13TeV-madgraph-pythia8	66610	1000000	1000000.0	1000000.0 
+WGJJToLNu	WGJJToLNu_EWKnotop_QCD_TuneCP5_13TeV-madgraph-pythia8	5.662	1000000	1000000.0	1000000.0 

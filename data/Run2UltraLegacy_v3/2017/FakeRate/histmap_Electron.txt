@@ -1,7 +1,9 @@
-HNTightV2	Electron_FakeRate_HNTightV2_2017.root
-HNTightV2_AwayJetPt40   FakeRate13TeV_el_2017.root
-HNTightV2_AwayJetPt40   FakeRate13TeV_el_ptfix_2017.root
-HNTight_17028_AwayJetPt40	FakeRate13TeV_el_2017.root
-HNTight_17028_AwayJetPt40	FakeRate13TeV_el_ptfix_2017.root
-passPOGTight_AwayJetPt40	FakeRate13TeV_el_2017.root
-passPOGTight_AwayJetPt40	FakeRate13TeV_el_ptfix_2017.root
+FakeRate HNTightV2	ptcone_eta  AwayJetPt40	FakeRate13TeV_el_2017.root
+FakeRate HNTight_17028	ptcone_eta  AwayJetPt40	FakeRate13TeV_el_2017.root
+FakeRate passPOGTight	ptcone_eta  AwayJetPt40	FakeRate13TeV_el_2017.root
+FakeRate HNTightV2	ptcone_ptfix_eta  AwayJetPt40	FakeRate13TeV_el_ptfix_2017.root
+FakeRate HNTight_17028  ptcone_ptfix_eta  AwayJetPt40 FakeRate13TeV_el_ptfix_2017.root
+FakeRate passPOGTight   ptcone_ptfix_eta  AwayJetPt40 FakeRate13TeV_el_ptfix_2017.root
+PromptRate				  HNTightV2     ptcone_eta   central	PromptRate13TeV_el_2017.root
+PromptRate				  		HNTight_17028		  ptcone_eta   central	PromptRate13TeV_el_2017.root
+PromptRate									  passPOGTight   ptcone_eta   central	PromptRate13TeV_el_2017.root

@@ -9,6 +9,8 @@ public:
 
   Jet();
   ~Jet();
+  void  PrintObject(TString label);
+
 
   void SetArea(double area);
   void SetGenFlavours(int pf, int hf);
@@ -21,6 +23,18 @@ public:
   void SetTaggerResults(std::vector<double> ds);
   void SetEnergyFractions(double cH, double nH, double nEM, double cEM, double muE);
   inline double ChargedEmEnergyFraction() const { return j_chargedEmEnergyFraction;}
+  inline double ChargedHadEnergyFraction() const { return j_chargedHadronEnergyFraction;}
+  inline double NeutralEmEnergyFraction() const { return j_neutralEmEnergyFraction;}
+  inline double NeutralHadEnergyFraction() const { return j_neutralHadronEnergyFraction;}
+  inline double MuonEnergyFraction() const { return j_muonEnergyFraction;}
+
+  inline double NVtxTracks() const { return j_nvtx_tracks;}
+  void SetNTracks(double v);
+
+  void SetJEC(double l1, double full);
+  inline double JEC_L1() const {return j_jec_l1;}
+  inline double JEC_Full() const {return j_jec_full;}
+
   void SetMultiplicities(double cM, double nM);
   void SetPileupJetId(double v);
   inline double PileupJetId() const { return j_PileupJetId; }
@@ -98,6 +112,10 @@ private:
   double j_cJetNN_corr;
   double j_cJetNN_res;
   bool j_tightJetID, j_tightLepVetoJetID;
+  double j_nvtx_tracks;
+  double j_jec_l1;
+  double j_jec_full;
+
 
   ClassDef(Jet,1)
 };

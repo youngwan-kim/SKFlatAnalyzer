@@ -24,6 +24,8 @@ Jet::Jet() : Particle() {
   j_chargedMultiplicity=-999;
   j_neutralMultiplicity=-999;
   j_PileupJetId=-999.;
+  j_jec_l1=1;
+  j_jec_full=1;
   j_En_up=1.;
   j_En_down=1.;;
   j_Res  = 1.;
@@ -33,9 +35,47 @@ Jet::Jet() : Particle() {
   j_bJetNN_res=-999.;
   j_cJetNN_corr=1.;
   j_cJetNN_res=-999.;
-  
+  j_nvtx_tracks=-999;  
   j_tightJetID=false;
   j_tightLepVetoJetID=false;
+}
+
+void Jet::PrintObject(TString label){
+  
+  cout << "Jet::PrintObject  " << label << endl;
+  cout << "j_area " << j_area << endl;
+  cout << "j_partonFlavour " <<  j_partonFlavour << endl;
+  cout << "j_hadronFlavour " << j_hadronFlavour <<  endl;
+  cout << "j_GenHFHadronMatcher_flavour " << j_GenHFHadronMatcher_flavour << endl;
+  cout << "j_GenHFHadronMatcher_origin " <<  j_GenHFHadronMatcher_origin << endl;
+  cout << "j_PxUnSmeared " << j_PxUnSmeared  << endl;
+  cout << " j_PyUnSmeared " << j_PyUnSmeared << endl;
+  cout << "j_DeepCSV " << j_DeepCSV << endl;
+  cout << "j_DeepCSV_CvsL " << j_DeepCSV_CvsL<< endl;
+  cout << "j_DeepCSV_CvsB " << j_DeepCSV_CvsB<< endl;
+  cout << "j_DeepJet " << j_DeepJet<< endl;
+  cout << "j_DeepJet_CvsL " << j_DeepJet_CvsL<< endl;
+  cout << "j_DeepJet_CvsB " << j_DeepJet_CvsB<< endl;
+  cout << "j_chargedHadronEnergyFraction " << j_chargedHadronEnergyFraction<< endl;
+  cout << "j_neutralHadronEnergyFraction " << j_neutralHadronEnergyFraction<< endl;
+  cout << "j_neutralEmEnergyFraction " << j_neutralEmEnergyFraction<< endl;
+  cout << "j_chargedEmEnergyFraction " << j_chargedEmEnergyFraction<< endl;
+  cout << "j_muonEnergyFraction " << j_muonEnergyFraction<< endl;
+  cout << "j_chargedMultiplicity " << j_chargedMultiplicity<< endl;
+  cout << "j_neutralMultiplicity " << j_neutralMultiplicity<< endl;
+  cout << "j_PileupJetId " << j_PileupJetId<< endl;
+  cout << "j_jec_l1 " << j_jec_l1<< endl;
+  cout << "j_jec_full " << j_jec_full<< endl;
+  cout << "j_En_up " << j_En_up<< endl;
+  cout << "j_En_down " << j_En_down<< endl;
+  cout << "j_Res " << j_Res  << endl;
+  cout << "j_Res_up " << j_Res_up << endl;
+  cout << "j_Res_down " << j_Res_down << endl;
+  cout << "j_bJetNN_corr " << j_bJetNN_corr<< endl;
+  cout << "j_bJetNN_res " << j_bJetNN_res<< endl;
+  cout << "j_cJetNN_corr " << j_cJetNN_corr<< endl;
+  cout << "j_cJetNN_res " << j_cJetNN_res<< endl;
+  cout << "j_nvtx_tracks " << j_nvtx_tracks<< endl;
 }
 
 Jet::~Jet(){
@@ -44,6 +84,11 @@ Jet::~Jet(){
 
 void Jet::SetArea(double area){
   j_area = area;
+}
+
+void Jet::SetJEC(double l1, double full){
+  j_jec_l1 = l1;
+  j_jec_full = full;
 }
 void Jet::SetGenFlavours(int pf, int hf){
   j_partonFlavour = pf;
@@ -75,6 +120,11 @@ void Jet::SetMultiplicities(double cM, double nM){
 void Jet::SetPileupJetId(double v){
   j_PileupJetId = v;
 }
+
+void Jet::SetNTracks(double d){
+  j_nvtx_tracks = d;
+}
+
 
 void Jet::SetEnShift(double en_up, double en_down){
   j_En_up = en_up;
@@ -154,7 +204,7 @@ double Jet::GetTaggerResult(JetTagging::Tagger tg) const {
 
 bool Jet::PassPileupMVA(TString WP, TString Era) const {
 
-  //https://twiki.cern.ch/twiki/bin/view/CMS/PileupJetIDUL                                                                                                                                                                                                                                                                                    
+  //https://twiki.cern.ch/twiki/bin/view/CMS/PileupJetIDUL                                                                                                                                                                                                                                                                                   
 
   bool pass=false;
 
@@ -280,7 +330,7 @@ bool Jet::PassPileupMVA(TString WP, TString Era) const {
         else if(this->Pt() < 20.){ if(PileupJetId() > 0.77) pass=true; }
         else if(this->Pt() < 30.){ if(PileupJetId() > 0.90) pass=true; }
         else if(this->Pt() < 40.){ if(PileupJetId() > 0.96) pass=true; }
-        else if(this->Pt() < 50.){ if(PileupJetId() > 0.96) pass=true; }
+        else if(this->Pt() < 50.){ if(PileupJetId() > 0.98) pass=true; }
         else pass=true;
       }
       else if(fabs(this->Eta()) < 2.75){

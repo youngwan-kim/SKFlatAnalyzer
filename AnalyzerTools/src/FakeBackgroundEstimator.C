@@ -27,7 +27,6 @@ void FakeBackgroundEstimator::ReadHistograms(){
     is >> d; // <syst key>
     is >> e; // <rootfilename>
     
-    continue; //-> FIX
     TFile *file = new TFile(datapath+"/"+e);
     TList *histlist = file->GetListOfKeys();
     for(int i=0;i<histlist->Capacity();i++){
@@ -59,7 +58,6 @@ void FakeBackgroundEstimator::ReadHistograms(){
     is >> c; // <var key> 
     is >> d; // <syst key>
     is >> e; // <rootfilename>                                                                                                                                                                    
-    continue; //-> FIX
 
     TFile *file = new TFile(datapath+"/"+e);
     TList *histlist = file->GetListOfKeys();
@@ -97,11 +95,16 @@ double FakeBackgroundEstimator::GetElectronFakeRate(TString ID, TString key, dou
 
   eta = fabs(eta);
 
-  if(pt>=80) pt = 79;
+  if(pt>=60) pt = 59;
   if(pt < 10) pt=11;
-
+  
+  ID = ID.ReplaceAll("ElOpt_","");
+  ID = ID.ReplaceAll("MuOpt_","");
+  
   std::map< TString, TH2D* >::const_iterator mapit;
   //passPOGMedium_LIP_ptcone_eta_AwayJetPt60;1
+
+  //cout << "FakeRate_"+ID+"_"+key << endl;
   mapit = map_hist_Electron.find("FakeRate_"+ID+"_"+key);
 
   if(mapit==map_hist_Electron.end()){
@@ -192,12 +195,15 @@ double FakeBackgroundEstimator::GetMuonFakeRate(TString ID, TString key, double 
   double error = 0.;
 
   eta = fabs(eta);
-  if(pt>=80) pt = 79;
+  if(pt>=60) pt = 59;
   if(pt < 7) pt=7;
 
+  ID = ID.ReplaceAll("ElOpt_","");
+  ID = ID.ReplaceAll("MuOpt_","");
   
   std::map< TString, TH2D* >::const_iterator mapit;
   mapit = map_hist_Muon.find("FakeRate_"+ID+"_"+key);
+  //  cout << "FakeRate_"+ID+"_"+key << endl;
 
   if(mapit==map_hist_Muon.end()){
     if(IgnoreNoHist) return 1.;
@@ -261,7 +267,6 @@ double FakeBackgroundEstimator::GetWeight(vector<Lepton *> lepptrs, AnalyzerPara
 
 double FakeBackgroundEstimator::GetFullWeight(vector<Lepton *> lepptrs, AnalyzerParameter param, int sys){
 
-  double this_weight = -1.;
   vector<double> FRs;
   vector<double> PRs;
   vector<bool>  isT;
@@ -301,6 +306,8 @@ double FakeBackgroundEstimator::GetFullWeight(vector<Lepton *> lepptrs, Analyzer
   if(lepptrs.size() == 2) return CalculateDilepWeight(PRs[0],FRs[0],PRs[1],FRs[1], isT[0],isT[1], 0);
   
   if(lepptrs.size() == 1) return CalculateLepWeight(PRs[0],FRs[0], isT[0]);
+
+  return 1.;
 }
 
 

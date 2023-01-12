@@ -1222,9 +1222,10 @@ bool Event::IsPDForTrigger(TString trig, TString PD){
       if(trig=="HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300_v") return true;
       if(trig=="HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v") return true;
       if(trig=="HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v") return true;
-      
+      if(trig=="HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v") return true;
+      if(trig=="HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v") return true;
     }
-    
+  
     else   if(PD=="SingleMuon"){
       if(trig=="HLT_DoubleIsoMu17_eta2p1_noDzCut_v") return true;
       if(trig=="HLT_IsoMu16_eta2p1_MET30_LooseIsoPFTau50_Trk30_eta2p1_v") return true;
@@ -1455,6 +1456,7 @@ bool Event::IsPDForTrigger(TString trig, TString PD){
       if(trig=="HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v")  return true;
       if(trig=="HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v")  return true;
     }
+  
     if(PD=="SingleMuon"){
       if(trig=="HLT_IsoMu20_eta2p1_LooseChargedIsoPFTau27_eta2p1_CrossL1_v")  return true;
       if(trig=="HLT_IsoMu20_eta2p1_LooseChargedIsoPFTau27_eta2p1_TightID_CrossL1_v")  return true;
