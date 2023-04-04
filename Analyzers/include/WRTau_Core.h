@@ -29,7 +29,7 @@ public:
                              const std::vector<Lepton *> TightLeptons);
 
   // Objects 
-  double GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double pt);
+  double GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double pt,bool GetFromDM=false);
   std::vector<Jet> VetoTauFromJets(const std::vector<Jet>& jets, const std::vector<Tau>& taus, double dR=0.4);
   std::vector<FatJet> VetoTauFromFatJets(const std::vector<FatJet>& fatjets, const std::vector<Tau>& taus, double dR=0.8);
   std::vector<Lepton*> VetoTauFromLeptons(const std::vector<Lepton *> leptons, const std::vector<Tau>& taus, double dR=0.4);

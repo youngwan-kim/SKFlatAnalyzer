@@ -165,7 +165,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
 
         TString idname = "vJet"+idname_map[vJet_vec.at(i)]+"_vEl"+idname_map[vEl_vec.at(j)]+"_vMu"+idname_map[vMu_vec.at(k)];
         TString path = param.Name+"/"+idname;
-        vector<Tau> taus = SelectTaus_varWP(taus_lepVeto,i,j,k,50,2.4);
+        vector<Tau> taus = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
         std::sort(taus.begin(),taus.end(),PtComparing);
 
         vector<Jet> jets_tauVeto = VetoTauFromJets(this_AllJets,taus); 

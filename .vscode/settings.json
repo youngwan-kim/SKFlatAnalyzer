@@ -69,6 +69,7 @@
         "iomanip": "cpp",
         "SkimTree_HNMultiLep.C": "cpp",
         "TDirectoryHelper.C": "cpp",
-        "ZTauTau.C": "cpp"
+        "ZTauTau.C": "cpp",
+        "string": "cpp"
     }
 }

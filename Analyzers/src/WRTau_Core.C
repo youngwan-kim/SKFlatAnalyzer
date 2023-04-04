@@ -8,7 +8,7 @@ bool WRTau_Core::isResolvedPreselection(const std::vector<Tau>& taus, const std:
   return (isPreselection(taus) && hasAtLeast2AK4Jets(jets) && hasAtLeast1Leptons(TightLeptons));
 }
 
-double WRTau_Core::GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double pt){
+double WRTau_Core::GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double pt,bool GetFromDM){
 
   double sf(1.);
 
@@ -37,16 +37,23 @@ double WRTau_Core::GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double p
   
   TDirectory* origDir = gDirectory;
   TString TauPath = datapath+"/Tau/";
+  TString vsVar = "pt";
+  TString DMVar = "DMinclusive_";
+
+  if(GetFromDM){
+    vsVar = "dm";
+    DMVar = "DM"+std::to_string(DM)+"_";
+  }
 
   // TauID_SF_dm_DeepTau2017v2p1VSjet_VSjetLoose_VSeleVVLoose_Mar07
-  TString FileName = "TauID_SF_pt_DeepTau2017v2p1VSjet_VSjet"+vsJetWP+"_VSele"+vsEleWP+"_Mar07.root";
+  TString FileName = "TauID_SF_"+vsVar+"_DeepTau2017v2p1VSjet_VSjet"+vsJetWP+"_VSele"+vsEleWP+"_Mar07.root";
   TString EraString = "";
   if(DataEra=="2016preVFP") EraString = "2016_preVFP";
   else if(DataEra=="2016postVFP") EraString = "2017_postVFP";
   else EraString = DataEra;
 
   //TString SFhistname = "DM"+std::to_string(DM)+"_"+EraString+"_hist";
-  TString SFhistname = "DMinclusive_"+EraString+"_hist";
+  TString SFhistname = DMVar+EraString+"_hist";
   TFile *TauSFfile = new TFile(TauPath+FileName);
   histDir->cd();
   if(!TauSFfile){
