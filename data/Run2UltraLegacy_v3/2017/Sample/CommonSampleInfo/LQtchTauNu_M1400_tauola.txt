@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+LQtchTauNu_M1400_tauola	LQtchTauNu_M1400_tauola	1.0	96000	96000.0	9.600000000000e+04

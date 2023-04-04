@@ -22,6 +22,8 @@ public:
 
   // ID functions 
   bool PassID(TString ID) const;
+  bool PassWRID(int vJet) const;
+  bool PassID_varWP(int vJet, int vEl, int vMu) const;
 
   // Functions to set variables
   void SetIDBit(unsigned int idbit);

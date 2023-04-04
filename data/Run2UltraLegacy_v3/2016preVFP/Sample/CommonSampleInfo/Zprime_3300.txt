@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+Zprime_3300		150000	74000	74000.0	1.132984836295e+02

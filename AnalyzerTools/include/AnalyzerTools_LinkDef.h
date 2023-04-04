@@ -5,6 +5,7 @@
 #pragma link off all functions;
 #pragma link C++ nestedclasses;
 
+#pragma link C++ class TauIDSFTool.h
 #pragma link C++ class AnalyzerParameter+;
 #pragma link C++ class FakeBackgroundEstimator+;
 #pragma link C++ class CFBackgroundEstimator+;

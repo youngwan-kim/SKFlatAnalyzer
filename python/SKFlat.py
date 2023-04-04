@@ -131,7 +131,7 @@ if IsKNU:
 
 ## Make Sample List
 
-InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron", "SinglePhoton", "MuonEG", "EGamma"]
+InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron", "SinglePhoton", "MuonEG", "EGamma","Tau"]
 AvailableDataPeriods = []
 if args.Era == "2016preVFP":
   AvailableDataPeriods = ["B_ver2","C","D","E","F"]

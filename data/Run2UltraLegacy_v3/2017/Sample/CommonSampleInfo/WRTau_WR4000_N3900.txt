@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+WRTau_WR4000_N3900	WRTau_WR4000_N3900	9.292e-06	94000	94000.0	9.400000000000e+04

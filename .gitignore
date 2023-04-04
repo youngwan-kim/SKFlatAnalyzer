@@ -5,3 +5,11 @@
 *_Dict.cxx
 lib/*.tar.gz
 */obj
+TauStudyPlots
+WRTau
+./*.root
+./*.log
+rootfiles
+EfficiencyCheck
+TEMP
+SubmitScripts

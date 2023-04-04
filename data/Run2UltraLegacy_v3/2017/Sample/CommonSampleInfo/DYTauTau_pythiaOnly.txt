@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+DYTauTau_pythiaOnly	DYTauTau_pythiaOnly	1.0	82933	82933.0	8.293300000000e+04

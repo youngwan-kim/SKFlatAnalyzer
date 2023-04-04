@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+DYTauTau_tauola	DYTauTau_tauola	1.0	83755	83755.0	8.375500000000e+04

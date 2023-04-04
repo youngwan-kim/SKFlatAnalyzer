@@ -163,6 +163,7 @@ bool Electron::PassID(TString ID) const{
   if(ID=="SUSYLoose") return Pass_SUSYLoose();
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
+  if(ID=="CutBasedLooseNoIso") return Pass_CutBasedLooseNoIso();
 
   if(ID=="TriLepEleLoose") return Pass_TriLepEleLoose();
   if(ID=="TriLepEleFO") return Pass_TriLepEleFO();

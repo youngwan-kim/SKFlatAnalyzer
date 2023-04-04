@@ -1,5 +1,15 @@
 #include "HNL_TriLep.h"
 
+HNL_TriLep::HNL_TriLep(){
+
+}
+
+
+HNL_TriLep::~HNL_TriLep(){
+
+}
+
+
 void HNL_TriLep::initializeAnalyzer(){
 
   trilepton_triggers.clear();
@@ -130,10 +140,11 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   Particle METv = ev.GetMETVector();
 
   double weight(1.);
-  if(!IsDATA) weight *= MCweight() * ev.GetTriggerLumi("Full");
+  if(!IsDATA) weight *= MCweight() * ev.GetTriggerLumi("Full") * GetPrefireWeight(0);
 
-  // Trigger Cut
-  if(!( ev.PassTrigger(trilepton_triggers) || ev.PassTrigger(dilepton_triggers) || ev.PassTrigger(lepton_triggers) )) return;
+  // Trigger Cut : Only passing dilep/lep triggers for 2 light lep + tau final states
+  if(!( ev.PassTrigger(dilepton_triggers) || ev.PassTrigger(lepton_triggers) )) return;
+  //if(!(  ev.PassTrigger(lepton_triggers) )) return;
 
   // All Leptons
   AllLeptons.clear();
@@ -174,7 +185,7 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
     MVASlope = -.0005; MVAIntercept = .035;
   }
 
-/*vector<Muon> muons_FO;
+  /*vector<Muon> muons_FO;
   for(unsigned int i=0; i<AllMuons.size(); i++){
     if(!(AllMuons.at(i).PassID(param.Muon_Loose_ID))) continue;
     if(!(AllMuons.at(i).Pt()>10. && fabs(AllMuons.at(i).Eta())<2.4)) continue;
@@ -287,8 +298,9 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   FillHist("CutFlow",4.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] BJetVeto" << endl;
 
-  // 5. pT cut
+  // 5. pT cut (trigger safe)
   if(!( TightLeptons.at(0)->Pt() > 15 && TightLeptons.at(1)->Pt() > 10 && TightLeptons.at(2)->Pt() > 10 )) return;
+
   FillHist("CutFlow",5.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] pTCut" << endl;
 
@@ -308,7 +320,6 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   FillHist("CutFlow",6.,weight,10,0.,10.);
   if(HasFlag("debug")) cout << "[DEBUG] mOSSF" << endl;
 
-
   // Low Mass Selection (will only focus on dilep+tau final state)
   if(!( TightLeptons.at(0)->Pt()<55 )) return;
   FillHist("LowMass/CutFlow",1.,weight,5,0.,5.);
@@ -320,10 +331,59 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
   if(!( Trilepton.M()<80 )) return;
   FillHist("LowMass/CutFlow",3.,weight,5,0.,5.);
 
-
   // Finally select tau involved (dilep+tau) categories (Cat1,2 in Table18 from AN)
-  if(taus.size()>2 || TightLeptons.at(2)->LeptonFlavour() == Lepton::TAU) return;
-  FillHist("LowMass/DilepTau/LeadingLeptonPt",TightLeptons.at(0)->Pt(),weight,10,10.,60.);
+  double nTau(0); double nEl(0); double nMu(0);
+  vector<Lepton::Flavour> FinalStateFlavor;
+  for(unsigned int i=0; i<TightLeptons.size(); i++){
+    FinalStateFlavor.push_back(TightLeptons.at(i)->LeptonFlavour());
+  }
+  nTau = count(FinalStateFlavor.begin(),FinalStateFlavor.end(),Lepton::TAU);
+  nEl = count(FinalStateFlavor.begin(),FinalStateFlavor.end(),Lepton::ELECTRON);
+  nMu = count(FinalStateFlavor.begin(),FinalStateFlavor.end(),Lepton::MUON); 
+  if(nTau != 1) return;
+  FillHist("LowMass/DiLepTau/CutFlow",0.,weight,5,0.,5.);
+
+  // pT cut 
+  if(DataYear == 2016){
+    if(nEl == 2 && nTau == 1){
+      if(FinalStateFlavor.at(0) == Lepton::TAU && (!(TightLeptons.at(1)->Pt()>30) || !(TightLeptons.at(1)->Pt()>25 && TightLeptons.at(1)->Pt()>15))) return;
+      else if(FinalStateFlavor.at(1) == Lepton::TAU && (!(TightLeptons.at(0)->Pt()>30) || !(TightLeptons.at(0)->Pt()>25 && TightLeptons.at(1)->Pt()>15))) return;
+      else if(FinalStateFlavor.at(2) == Lepton::TAU && !(TightLeptons.at(0)->Pt()>23)) return;
+    }
+    else if(nMu == 2 && nTau == 1){
+      if(FinalStateFlavor.at(0) == Lepton::TAU && !(TightLeptons.at(1)->Pt()>20)) return;
+    }
+    else if(nMu == nEl && nEl == nTau){
+      if(FinalStateFlavor.at(0) == Lepton::TAU){
+        if(FinalStateFlavor.at(1) == Lepton::ELECTRON && !(TightLeptons.at(1)->Pt()>25)) return;
+        else if(FinalStateFlavor.at(1) == Lepton::MUON && !(TightLeptons.at(1)->Pt()>23)) return;
+      }
+      else{
+        if(!(TightLeptons.at(0)->Pt()>23)) return;
+      }
+    }
+  }
+  else{
+    if(nEl == 2 && nTau == 1){
+      if(FinalStateFlavor.at(0) == Lepton::TAU && (!(TightLeptons.at(1)->Pt()>35) || !(TightLeptons.at(1)->Pt()>25 && TightLeptons.at(1)->Pt()>15))) return;
+      else if(FinalStateFlavor.at(1) == Lepton::TAU && (!(TightLeptons.at(0)->Pt()>35) || !(TightLeptons.at(0)->Pt()>25 && TightLeptons.at(1)->Pt()>15))) return;
+      else if(FinalStateFlavor.at(2) == Lepton::TAU && !(TightLeptons.at(0)->Pt()>23)) return;
+    }
+    else if(nMu == 2 && nTau == 1){
+      if(FinalStateFlavor.at(0) == Lepton::TAU && !(TightLeptons.at(1)->Pt()>20)) return;
+    }
+    else if(nMu == nEl && nEl == nTau){
+      if(FinalStateFlavor.at(0) == Lepton::TAU){
+        if(FinalStateFlavor.at(1) == Lepton::ELECTRON && !(TightLeptons.at(1)->Pt()>25)) return;
+        else if(FinalStateFlavor.at(1) == Lepton::MUON && !(TightLeptons.at(1)->Pt()>25)) return;
+      }
+      else{
+        if(!(TightLeptons.at(0)->Pt()>25)) return;
+      }
+    }
+  }
+  FillHist("LowMass/DiLepTau/CutFlow",1.,weight,5,0.,5.);
+
   vector<double> mOS2l_v;
   for(unsigned int i=0; i<TightLeptons.size(); i++){
     for(unsigned int j=0; j<TightLeptons.size(); j++){
@@ -336,15 +396,34 @@ void HNL_TriLep::executeEventFromParameter(AnalyzerParameter param){
     }
   }
   double mOS2lmin = *min_element(mOS2l_v.begin(),mOS2l_v.end());
-  FillHist("LowMass/DilepTau/minOS2lMass",mOS2lmin,weight,12,0.,60.);
+  FillHist("LowMass/DiLepTau/CutFlow",2.,weight,5,0.,5.);
+  FillHist("LowMass/DiLepTau/minOS2lMass",mOS2lmin,weight,12,0.,60.);
+  FillHist("LowMass/DiLepTau/LeadingLeptonPt",TightLeptons.at(0)->Pt(),weight,10,10.,60.);
+  FillHist("LowMass/DiLepTau/Tau/pT",taus.at(0).Pt(),weight,60,0.,120.);
+  FillHist("LowMass/DiLepTau/Tau/Eta",taus.at(0).Eta(),weight,60,-3.,3.);
+  FillHist("LowMass/DiLepTau/Tau/phi",taus.at(0).Phi(),weight,60,-3.,3.);
 
-}
 
-HNL_TriLep::HNL_TriLep(){
-
-}
-
-HNL_TriLep::~HNL_TriLep(){
+  /*vector<double> mOS2l_v;
+  for(unsigned int i=0; i<TightLeptons.size(); i++){
+    for(unsigned int j=0; j<TightLeptons.size(); j++){
+      if(i>=j) continue;
+      else{
+        if((TightLeptons.at(i)->Charge()*TightLeptons.at(j)->Charge() < 0)
+           && (TightLeptons.at(i)->LeptonFlavour() == TightLeptons.at(i)->LeptonFlavour())){
+              Particle OS2l = *TightLeptons.at(i) + *TightLeptons.at(j);
+              double mOS2l = OS2l.M();
+              mOS2l_v.push_back(mOS2l);
+              if(!(mOS2l>M_Z-15 && mOS2l<M_Z+15)) return;
+              FillHist("DilepTau/OS2lMass",mOS2l,weight,32,75.,107.);            
+           }
+      }
+    }
+  }
+  FillHist("DilepTau/Tau/pT",taus.at(0).Pt(),weight,60,0.,120.);
+  FillHist("DilepTau/Tau/Eta",taus.at(0).Eta(),weight,60,-3.,3.);
+  FillHist("DilepTau/Tau/phi",taus.at(0).Phi(),weight,60,-3.,3.);
+  */
 
 }
 

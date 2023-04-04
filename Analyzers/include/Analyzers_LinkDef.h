@@ -11,6 +11,16 @@
 #pragma link C++ class ExampleRun+;
 #pragma link C++ class LepTauJJ+;
 #pragma link C++ class HNL_TriLep+;
+#pragma link C++ class TauStudy+;
+#pragma link C++ class WRStudy+;
+#pragma link C++ class WRTau_Core+;
+#pragma link C++ class WRTau_SR+;
+#pragma link C++ class WRTau_SR_Test+;
+#pragma link C++ class WRTau_SR_Debug+;
+#pragma link C++ class WRTau_CR+;
+#pragma link C++ class ZTauTau+;
+#pragma link C++ class LeptonicTauStudy+;
+#pragma link C++ class TauolaValidation+;
 #pragma link C++ class SKFlatValidation+;
 #pragma link C++ class SkimTree_SS2lOR3l+;
 #pragma link C++ class SkimTree_LRSMHighPt+;

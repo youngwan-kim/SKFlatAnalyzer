@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+WRTau_WR1000_N500	WRTau_WR1000_N500	1.972	110000	110000.0	1.100000000000e+05

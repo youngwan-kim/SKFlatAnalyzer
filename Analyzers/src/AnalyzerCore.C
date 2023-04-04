@@ -843,6 +843,51 @@ std::vector<Tau> AnalyzerCore::SelectTaus(const std::vector<Tau>& taus, TString 
 
 }
 
+
+std::vector<Tau> AnalyzerCore::SelectWRTaus(const std::vector<Tau>& taus, int vJet, double ptmin, double fetamax){
+
+  std::vector<Tau> out;
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(!( taus.at(i).Pt()>ptmin )){
+
+      continue;
+    }
+    if(!( fabs(taus.at(i).Eta())<fetamax )){
+
+      continue;
+    }
+    if(!( taus.at(i).PassWRID(vJet) )){
+      continue;
+    }
+    out.push_back( taus.at(i) );
+  }
+  return out;
+
+}
+
+std::vector<Tau> AnalyzerCore::SelectTaus_varWP(const std::vector<Tau>& taus, int vJet,int vEl,int vMu, double ptmin, double fetamax){
+
+  std::vector<Tau> out;
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(!( taus.at(i).Pt()>ptmin )){
+
+      continue;
+    }
+    if(!( fabs(taus.at(i).Eta())<fetamax )){
+
+      continue;
+    }
+    if(!( taus.at(i).PassID_varWP(vJet,vEl,vMu) )){
+      continue;
+    }
+    out.push_back( taus.at(i) );
+  }
+  return out;
+
+}
+
+//auto AnalyzerCore::SimpleSelect()
+
 std::vector<Jet> AnalyzerCore::SelectJets(const std::vector<Jet>& jets, TString id, double ptmin, double fetamax){
 
   std::vector<Jet> out;
@@ -1444,6 +1489,32 @@ std::vector<FatJet> AnalyzerCore::FatJetsVetoLeptonInside(const std::vector<FatJ
 
 }
 
+std::vector<FatJet> AnalyzerCore::FatJetsVetoLeptonInside(const std::vector<FatJet>& jets, const std::vector<Lepton *> leps, double dR){
+
+  std::vector<FatJet> out;
+  for(unsigned int i=0; i<jets.size(); i++){
+    FatJet this_jet = jets.at(i);
+
+    bool HasLeptonInside = false;
+
+    for(const auto &lep : leps){
+      if( this_jet.DeltaR( *lep ) < dR ){
+        HasLeptonInside = true;
+        break;
+      }
+    }
+    if(HasLeptonInside) continue;
+
+    //==== if all fine,
+    out.push_back( this_jet );
+
+  }
+
+  return out;
+
+}
+
+
 std::vector<Jet> AnalyzerCore::JetsAwayFromPhoton(const std::vector<Jet>& jets, const std::vector<Photon>& photons, double mindr){
   
   std::vector<Jet> out;
@@ -1493,6 +1564,20 @@ void AnalyzerCore::PrintGen(const std::vector<Gen>& gens){
 
 }
 
+void AnalyzerCore::PrintPartialGen(const std::vector<Gen>& gens,const std::vector<Gen>& AllGens){
+
+  cout << "===========================================================" << endl;
+  cout << "RunNumber:EventNumber = " << run << ":" << event << endl;
+  cout << "index\tPID\tStatus\tMIdx\tMPID\tStart\tPt\tEta\tPhi\tM" << endl;
+  for(unsigned int i=0; i<gens.size(); i++){
+    Gen gen = gens.at(i);
+    vector<int> history = TrackGenSelfHistory(gen, AllGens);
+    cout << i << "\t" << gen.PID() << "\t" << gen.Status() << "\t" << gen.MotherIndex() << "\t" << AllGens.at(gen.MotherIndex()).PID()<< "\t" << history[0] << "\t";
+    printf("%.2f\t%.2f\t%.2f\t%.2f\n",gen.Pt(), gen.Eta(), gen.Phi(), gen.M());
+  }
+
+}
+
 Gen AnalyzerCore::GetGenMatchedLepton(const Lepton& lep, const std::vector<Gen>& gens){
 
   //==== find status 1 lepton
@@ -1500,6 +1585,7 @@ Gen AnalyzerCore::GetGenMatchedLepton(const Lepton& lep, const std::vector<Gen>&
   int reco_PID = -999;
   if(lep.LeptonFlavour()==Lepton::ELECTRON) reco_PID = 11;
   else if(lep.LeptonFlavour()==Lepton::MUON) reco_PID = 13;
+  else if(lep.LeptonFlavour()==Lepton::TAU) reco_PID = 15;
   else{
     cout << "[AnalyzerCore::GetGenMatchedLepton] input lepton flavour not set" << endl;
     exit(EXIT_FAILURE);
@@ -1741,7 +1827,7 @@ int AnalyzerCore::GetLeptonType_Public(int TruthIdx, const std::vector<Gen>& Tru
   else if( Status_orig>20 && Status_orig<30 )                   LeptonType= 1;//1)
   else if( fabs(MPID)>50 )                                      LeptonType=-2;
   else if( fabs(MPID)==15 && MStatus_last==2 ){
-           if     ( fabs(GrMPID)==23 || fabs(GrMPID)==24 || fabs(GrMPID)==25 ) LeptonType= 3;
+           if     ( fabs(GrMPID)==23 || fabs(GrMPID)==24 || fabs(GrMPID)==25 || fabs(GrMPID)==34 || fabs(GrMPID)==9900016) LeptonType= 3;
            else if( IsSignalPID(GrMPID) )                                      LeptonType= 3;
            else if( MStatus_orig>20  && MStatus_orig<30  )                     LeptonType= 3;//1)
            else if( HadronicOrigin )                                           LeptonType=-3;//2-a)
@@ -1958,6 +2044,7 @@ bool AnalyzerCore::IsSignalPID(int pid){
   if(pid>=9900000) return true;
   //==== ChargedHiggs
   if(pid==36 || pid==37) return true;
+  if(pid==34) return true;
 
   return false;
 
@@ -1994,6 +2081,19 @@ TH3D* AnalyzerCore::GetHist3D(TString histname){
   
   return h;
   
+}
+
+void AnalyzerCore::CopyHist(TString histname0, TString histname1){
+
+  TH1D *h_tmp = GetHist1D(histname0);
+  if(!h_tmp){
+    cout << "wrong hist copy" << endl;
+    return;
+  }
+  TH1D *h = (TH1D*)h_tmp->Clone(histname1);
+  h->SetDirectory(NULL);
+  maphist_TH1D[histname1] = h;
+
 }
 
 
@@ -2274,26 +2374,26 @@ void AnalyzerCore::FillLeptonPlots(std::vector<Lepton *> leps, TString this_regi
 
     Lepton *lep = leps[i];
 
-    FillHist(this_region+"/Lepton_"+this_itoa+"_Pt_"+this_region, lep->Pt(), weight, 1000, 0., 1000.);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_Eta_"+this_region, lep->Eta(), weight, 60, -3., 3.);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_RelIso_"+this_region, lep->RelIso(), weight, 100, 0., 1.);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_MiniRelIso_"+this_region, lep->MiniRelIso(), weight, 100, 0., 1.);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_Pt", lep->Pt(), weight, 1000, 0., 1000.);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_Eta", lep->Eta(), weight, 60, -3., 3.);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_RelIso", lep->RelIso(), weight, 100, 0., 1.);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_MiniRelIso", lep->MiniRelIso(), weight, 100, 0., 1.);
 
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dXY_"+this_region, fabs(lep->dXY()), weight, 500, 0., 0.05);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dXYSig_"+this_region, fabs(lep->dXY()/lep->dXYerr()), weight, 100, 0., 10);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dZ_"+this_region, fabs(lep->dZ()), weight, 500, 0., 0.5);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dZSig_"+this_region, fabs(lep->dZ()/lep->dZerr()), weight, 100, 0., 10);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_IP3D_"+this_region, fabs(lep->IP3D()), weight, 500, 0., 0.5);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_IP3DSig_"+this_region, fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_dXY", fabs(lep->dXY()), weight, 500, 0., 0.05);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_dXYSig", fabs(lep->dXY()/lep->dXYerr()), weight, 100, 0., 10);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_dZ", fabs(lep->dZ()), weight, 500, 0., 0.5);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_dZSig", fabs(lep->dZ()/lep->dZerr()), weight, 100, 0., 10);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
+    FillHist(this_region+"/Lepton_"+this_itoa+"_IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
 
     if(lep->LeptonFlavour()==Lepton::ELECTRON){
       Electron *el = (Electron *)lep;
-      FillHist(this_region+"/Lepton_"+this_itoa+"_MVANoIso_"+this_region, el->MVANoIso(), weight, 200, -1., 1.);
+      FillHist(this_region+"/Lepton_"+this_itoa+"_MVANoIso", el->MVANoIso(), weight, 200, -1., 1.);
     }
     else if(lep->LeptonFlavour()==Lepton::MUON){
       Muon *mu = (Muon *)lep;
-      FillHist(this_region+"/Lepton_"+this_itoa+"_Chi2_"+this_region, mu->Chi2(), weight, 500, 0., 50.);
-      FillHist(this_region+"/Lepton_"+this_itoa+"_TrkRelIso_"+this_region, mu->TrkIso()/mu->TuneP4().Pt(), weight, 100, 0., 1.);
+      FillHist(this_region+"/Lepton_"+this_itoa+"_Chi2", mu->Chi2(), weight, 500, 0., 50.);
+      FillHist(this_region+"/Lepton_"+this_itoa+"_TrkRelIso", mu->TrkIso()/mu->TuneP4().Pt(), weight, 100, 0., 1.);
     }
     else{
       cout << "[AnalyzerCore::FillLeptonPlots] lepton flavour wrong.." << endl;
@@ -2310,22 +2410,22 @@ void AnalyzerCore::FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatje
   for(unsigned int i=0; i<jets.size(); i++){
 
     TString this_itoa = TString::Itoa(i,10);
-    FillHist(this_region+"/Jet_"+this_itoa+"_Pt_"+this_region, jets.at(i).Pt(), weight, 1000, 0., 1000.);
-    FillHist(this_region+"/Jet_"+this_itoa+"_Eta_"+this_region, jets.at(i).Eta(), weight, 60, -3., 3.);
+    FillHist(this_region+"/Jet_"+this_itoa+"_Pt", jets.at(i).Pt(), weight, 5000, 0., 5000.);
+    FillHist(this_region+"/Jet_"+this_itoa+"_Eta", jets.at(i).Eta(), weight, 60, -3., 3.);
 
   }
 
   for(unsigned int i=0; i<fatjets.size(); i++){
 
     TString this_itoa = TString::Itoa(i,10);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_Pt_"+this_region, fatjets.at(i).Pt(), weight, 1000, 0., 1000.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_Eta_"+this_region, fatjets.at(i).Eta(), weight, 60, -3., 3.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_Mass_"+this_region, fatjets.at(i).M(), weight, 3000, 0., 3000.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_SDMass_"+this_region, fatjets.at(i).SDMass(), weight, 3000, 0., 3000.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_LSF_"+this_region, fatjets.at(i).LSF(), weight, 100, 0., 1.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau21_"+this_region, fatjets.at(i).PuppiTau2()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31_"+this_region, fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32_"+this_region, fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_Pt", fatjets.at(i).Pt(), weight, 5000, 0., 5000.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_Eta", fatjets.at(i).Eta(), weight, 60, -3., 3.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_Mass", fatjets.at(i).M(), weight, 3000, 0., 3000.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_SDMass", fatjets.at(i).SDMass(), weight, 3000, 0., 3000.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_LSF", fatjets.at(i).LSF(), weight, 100, 0., 1.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau21", fatjets.at(i).PuppiTau2()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
+    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
   }
 
 }

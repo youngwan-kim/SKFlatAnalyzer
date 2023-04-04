@@ -31,8 +31,8 @@ do
 	    CROSSSECTION=""
 	else
             echo "NAME = ${NAME}"
-	    echo "candidate cross sections= ${CROSSSECTIONS[@]}"
-	    read -p "select cross section: " CROSSSECTION
+	    #echo "candidate cross sections= ${CROSSSECTIONS[@]}"
+	    #read -p "select cross section: " CROSSSECTION
 	    [ -z "$CROSSSECTION" ] && CROSSSECTION=FIXMECROSSSECTION
 	fi
 	if [ "$CROSSSECTION" = "" ]; then
@@ -50,8 +50,8 @@ do
 		CROSSSECTION=${CROSSSECTIONS[0]}
 	    else
                 echo "NAME = ${NAME}"
-		echo "candidate cross sections= ${CROSSSECTIONS[@]}"
-		read -p "select cross section: " CROSSSECTION
+		#echo "candidate cross sections= ${CROSSSECTIONS[@]}"
+		#read -p "select cross section: " CROSSSECTION
 		[ -z "$CROSSSECTION" ] && CROSSSECTION=FIXMECROSSSECTION
 	    fi
 	fi
@@ -67,16 +67,16 @@ do
 		echo "$DIFF"
 		echo " > Update $OUT with $line"
 		echo -e "$NEWLINE"
-		read -p "(y/n): " YES
-		if [ "$YES" = "y" ];then
+		#read -p "(y/n): " YES
+		if [ true ];then
 		    echo -e "# alias PD xsec nmc sumsign sumw\n$NEWLINE" > $OUT
 		fi
 	    fi
 	else
 	    echo " > Update $OUT with $line"
 	    echo -e "$NEWLINE"
-	    read -p "(y/n): " YES
-	    if [ "$YES" = "y" ];then
+	    #read -p "(y/n): " YES
+	    if [ true ];then
 		echo -e "# alias PD xsec nmc sumsign sumw\n$NEWLINE" > $OUT
 	    fi
 	fi

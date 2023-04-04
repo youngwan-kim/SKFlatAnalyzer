@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+WRTau_WR2000_N800	WRtoNLtoLLJJ_WR2000_N800_tau	0.12742	76000	76000.0	7.600000000000e+04

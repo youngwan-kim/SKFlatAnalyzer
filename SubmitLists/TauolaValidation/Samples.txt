@@ -1,0 +1,4 @@
+LQtchTauNu_M1400_pythiaOnly
+LQtchTauNu_M1400_tauola
+LQtchTauNu_M3000_pythiaOnly
+LQtchTauNu_M3000_tauola

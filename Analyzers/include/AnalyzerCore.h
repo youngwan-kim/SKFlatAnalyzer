@@ -105,7 +105,8 @@ public:
   std::vector<Muon> SelectMuons(const std::vector<Muon>& muons, TString id, double ptmin, double fetamax);
 
   std::vector<Tau> SelectTaus(const std::vector<Tau>& taus, TString id, double ptmin, double fetamax);
-
+  std::vector<Tau> SelectWRTaus(const std::vector<Tau>& taus, int vJet, double ptmin, double fetamax);
+  std::vector<Tau> SelectTaus_varWP(const std::vector<Tau>& taus, int vJet,int vEl,int vMu, double ptmin, double fetamax);
 
   std::vector<Jet> SelectJets(const std::vector<Jet>& jets, TString id, double ptmin, double fetamax);
 
@@ -189,6 +190,7 @@ public:
   std::vector<Jet> JetsAwayFromFatJet(const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets, double mindr=1.0);
   std::vector<Jet> JetsVetoLeptonInside(const std::vector<Jet>& jets, const std::vector<Electron>& els, const std::vector<Muon>& mus, double dR=0.4);
   std::vector<FatJet> FatJetsVetoLeptonInside(const std::vector<FatJet>& jets, const std::vector<Electron>& els, const std::vector<Muon>& mus, double dR=0.8);
+  std::vector<FatJet> FatJetsVetoLeptonInside(const std::vector<FatJet>& jets, const std::vector<Lepton *> leps, double dR=0.8);
   std::vector<Jet> JetsAwayFromPhoton(const std::vector<Jet>& jets, const std::vector<Photon>& photons, double mindr);
   Particle AddFatJetAndLepton(const FatJet& fatjet, const Lepton& lep);
   Jet GetClosestJet(const std::vector<Jet>& jets, const Muon& muon);
@@ -197,6 +199,7 @@ public:
   //==== GenMatching
 
   void PrintGen(const std::vector<Gen>& gens);
+  void PrintPartialGen(const std::vector<Gen>& gens,const std::vector<Gen>& AllGens);
   static Gen GetGenMatchedLepton(const Lepton& lep, const std::vector<Gen>& gens);
   static Gen GetGenMatchedPhoton(const Lepton& lep, const std::vector<Gen>& gens);
   static vector<int> TrackGenSelfHistory(const Gen& me, const std::vector<Gen>& gens);
@@ -243,6 +246,7 @@ public:
 		int n_binx, const double *xbins,
 		int n_biny, const double *ybins,
 		int n_binz, const double *zbins);
+  void CopyHist(TString histname0, TString histname1);
 
   //==== JSFillHist : 1D
   std::map< TString, std::map<TString, TH1D*> > JSmaphist_TH1D;

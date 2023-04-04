@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+LQtchTauNu_M3000_pythiaOnly	LQtchTauNu_M3000_pythiaOnly	1.0	94000	94000.0	9.400000000000e+04
