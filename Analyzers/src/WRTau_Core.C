@@ -189,17 +189,34 @@ void WRTau_Core::FillMassHists(TString region,const Particle METv, const std::ve
     if(isBoostedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons)){ 
       Particle BstWR = taus.at(0) + AddFatJetAndLepton(fatjets.at(0),*LooseLeptons.at(0));
       Particle BstWR_MET = BstWR + METv; 
+      double BstWR_MT = MT(BstWR,METv);
       FillHist(region+"/BoostedWR",BstWR.M(),weight,5000,0.,5000.);
+      FillHist(region+"/MTBoostedWR",BstWR_MT,weight,5000,0.,5000.);
       FillHist(region+"/BoostedWR_withMET",BstWR_MET.M(),weight,5000,0.,5000.);
     }
 
     if(isResolvedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons)){ 
       Particle RsvWR = taus.at(0) + jets.at(0) + jets.at(1) + *TightLeptons.at(0);
       Particle RsvWR_MET = RsvWR + METv; 
+      double RsvWR_MT = MT(RsvWR,METv);
       FillHist(region+"/ResolvedWR",RsvWR.M(),weight,5000,0.,5000.);
+      FillHist(region+"/MTResolvedWR",RsvWR_MT,weight,5000,0.,5000.);
       FillHist(region+"/ResolvedWR_withMET",RsvWR_MET.M(),weight,5000,0.,5000.);
     }
 
+  }
+
+  if(taus.size()>0 && (LooseLeptons.size()>0 || TightLeptons.size()>0)){
+    if(LooseLeptons.size()>0){
+      Particle thll = taus.at(0) + *LooseLeptons.at(0);
+      double thll_MT = MT(thll,METv);
+      FillHist(region+"/MTtauhlooselep",thll_MT,weight,5000,0.,5000.);
+    }
+    if(TightLeptons.size()>0){
+      Particle thlt = taus.at(0) + *TightLeptons.at(0);
+      double thlt_MT = MT(thlt,METv);
+      FillHist(region+"/MTtauhtightlep",thlt_MT,weight,5000,0.,5000.);
+    }
   }
 
 }

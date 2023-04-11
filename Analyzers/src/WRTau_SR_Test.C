@@ -99,15 +99,16 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
   // if(param.Name == "WRTau_BkgSingleLeptonTrg")
   
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
-  vJet_vec = {4,5}; vEl_vec = {9,13}; vMu_vec = {17,20,21};
+  //vJet_vec = {4,5}; vEl_vec = {9,13}; vMu_vec = {17,20,21};
+  vJet_vec = {3,4,5}; vEl_vec = {9,13}; vMu_vec = {18,21};
   
 
-  map<int,TString> idname_map = {{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
-                                 {9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
+  map<int,TString> idname_map = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
+                                 {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
                                  {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
 
-  map<int,std::string> idname_map_str = {{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
-                                         {9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
+  map<int,std::string> idname_map_str = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
+                                         {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
                                          {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
 
 
@@ -136,13 +137,17 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
     else weight *= MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(0) * GetPileUpWeight(nPileUp,0);
   }
 
+  /*if(!IsDATA && MCSample.Contains("QCD")){
+    PassTrg = true;
+  }*/
+
   
   // Object Selection
   vector<Jet> this_AllJets = AllJets;
   vector<FatJet> this_AllFatJets = AllFatJets;
 
   vector<Tau> this_AllTaus = AllTaus;
-  vector<Muon> this_AllMuons = AllMuons;
+  vector<Muon> this_AllMuons = UseTunePMuon(AllMuons);
   vector<Electron> this_AllElectrons = AllElectrons;
 
   vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50., 2.4) ;
@@ -193,6 +198,9 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
         if(taus.at(0).Pt()<190) continue;
         FillHist(path+"/Cutflow",3.,weight,10,0.,10.);
 
+        if(LooseLeps.size()!=1) continue;
+        FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
+
         TString region = "Preselection";
         TString region_path = path+"/"+region;
 
@@ -205,7 +213,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
           
           if(!HasFlag("unweighted")){
 
-            /*std::string str_Era = "UL"+std::to_string(DataYear);
+            std::string str_Era = "UL"+std::to_string(DataYear);
 
             TauIDSFTool *tauSFTool_VSJet = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)]);
             TauIDSFTool *tauSFTool_VSJet_DM = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)],true);
@@ -213,9 +221,10 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
 
             tau_weight *= tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt());
             
-            if(HasFlag("ApplyTauDMSF")) tau_weight *= tau_weight_DM;*/
+            if(HasFlag("ApplyTauDMSF")) tau_weight *= tau_weight_DM;
 
-            tau_weight *= GetTauIDSF(idname_map[vJet_vec.at(i)],idname_map[vEl_vec.at(j)],taus.at(0).DecayMode(),taus.at(0).Pt());
+            /*tau_weight *= GetTauIDSF(idname_map[vJet_vec.at(i)],idname_map[vEl_vec.at(j)],taus.at(0).DecayMode(),taus.at(0).Pt());
+            cout << tau_weight << endl;*/
 
             // cout << "[TauSF] (vJet,vEl,vMu)" << tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt()) << "," << tau_weight_DM << endl;
           
@@ -236,14 +245,38 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
         FillHist(region_path+"/MET",METv.Pt(),weight,2500,0.,2500.);
 
         bool isBoostedPreselection(false);
+        bool isBoostedPreselectionTest(false);
+        bool isBoostedNonisoLepPreselection(false);
+        bool isBoostedNonisoLepPreselectionTest(false);
         bool isResolvedPreselection(false);
         bool hasAtLeast2AK4Jets = jets.size()>1;
         bool hasAtLeast1AK8Jets = fatjets.size()>0;
         bool hasAtLeast1TightLeptons = leptons.size()>0;
         bool hasAtLeast1LooseLeptons = LooseLeps.size()>0;
 
-        isResolvedPreselection = hasAtLeast2AK4Jets && (leptons.size()>0);
-        isBoostedPreselection = hasAtLeast1AK8Jets && (LooseLeps.size()>0);
+        //isResolvedPreselection = hasAtLeast2AK4Jets && (leptons.size()>0);
+        //isBoostedPreselection = hasAtLeast1AK8Jets && (LooseLeps.size()>0);
+        isResolvedPreselection = hasAtLeast2AK4Jets && hasAtLeast1TightLeptons;
+        isBoostedPreselection = !isResolvedPreselection && hasAtLeast1AK8Jets;
+        isBoostedPreselectionTest = !hasAtLeast2AK4Jets && hasAtLeast1AK8Jets;
+        
+        if(isBoostedPreselection){
+          for(const auto &lep : LooseLeps){
+            if(fatjets.at(0).DeltaR(*lep)<0.8){
+              isBoostedNonisoLepPreselection = true;
+              break;
+            }
+          }
+        }
+
+        if(isBoostedPreselectionTest){
+          for(const auto &lep : LooseLeps){
+            if(fatjets.at(0).DeltaR(*lep)<0.8){
+              isBoostedNonisoLepPreselectionTest = true;
+              break;
+            }
+          }
+        }
 
         double weight_loose(1.);
         double weight_tight(1.);
@@ -256,7 +289,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
                 weight_tight *= mcCorr->ElectronReco_SF(electrons.at(0).Eta(),electrons.at(0).Pt());
               }
               else if(leptons.at(0)->IsMuon()){
-                weight_tight *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key,muons.at(0).Eta(),muons.at(0).TuneP4().Pt());
+                weight_tight *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key,muons.at(0).Eta(),muons.at(0).Pt());
               }
             }
             if(hasAtLeast1LooseLeptons){
@@ -265,7 +298,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
                 weight_loose *= mcCorr->ElectronReco_SF(electrons_loose.at(0).Eta(),electrons_loose.at(0).Pt());
               }
               else if(LooseLeps.at(0)->IsMuon()){
-                weight_loose *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key,muons_loose.at(0).Eta(),muons_loose.at(0).TuneP4().Pt());
+                weight_loose *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key,muons_loose.at(0).Eta(),muons_loose.at(0).Pt());
               }
             }
           }
@@ -307,17 +340,128 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
           CopyHist(path+"/Cutflow",region_path+"/Cutflow");
           FillHist(region_path+"/Cutflow",4.,weight_BstPresel,10,0.,10.);
           FillHist(region_path+"/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+          for(unsigned int i=0;i<LooseLeps.size();i++){
+            FillHist(region_path+"/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+          }
           FillPreselHists(region_path,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
           FillMassHists(region_path,METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
 
           if(LooseLeps.at(0)->IsElectron()){
             FillPreselHists(region_path+"/ElTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillMassHists(region_path+"/ElTau",METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/ElTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
           }
 
           else if(LooseLeps.at(0)->IsMuon()){
             FillPreselHists(region_path+"/MuTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillMassHists(region_path+"/MuTau",METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/MuTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
           }
 
+        }
+
+        if(isBoostedPreselectionTest){
+
+          region = "Preselection_isBoostedPreselectionTest";
+          region_path = path+"/"+region;
+          double weight_BstPresel = weight * weight_loose;
+          if(HasFlag("debug")) cout << region << endl;
+
+          CopyHist(path+"/Cutflow",region_path+"/Cutflow");
+          FillHist(region_path+"/Cutflow",4.,weight_BstPresel,10,0.,10.);
+          FillHist(region_path+"/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+          for(unsigned int i=0;i<LooseLeps.size();i++){
+            FillHist(region_path+"/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+          }
+          FillPreselHists(region_path,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+          FillMassHists(region_path,METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+
+          if(LooseLeps.at(0)->IsElectron()){
+            FillPreselHists(region_path+"/ElTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillMassHists(region_path+"/ElTau",METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/ElTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
+          }
+
+          else if(LooseLeps.at(0)->IsMuon()){
+            FillPreselHists(region_path+"/MuTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillMassHists(region_path+"/MuTau",METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/MuTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
+          }
+
+        }
+
+        if(isBoostedNonisoLepPreselection){
+
+          region = "Preselection_isBoostedNonisoLepPreselection";
+          region_path = path+"/"+region;
+          double weight_BstPresel = weight * weight_loose;
+          if(HasFlag("debug")) cout << region << endl;
+
+          CopyHist(path+"/Cutflow",region_path+"/Cutflow");
+          FillHist(region_path+"/Cutflow",4.,weight_BstPresel,10,0.,10.);
+          FillHist(region_path+"/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+          for(unsigned int i=0;i<LooseLeps.size();i++){
+            FillHist(region_path+"/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+          }
+          FillPreselHists(region_path,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+          FillMassHists(region_path,METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+
+          if(LooseLeps.at(0)->IsElectron()){
+            FillPreselHists(region_path+"/ElTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillHist(region_path+"/ElTau/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/ElTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
+          }
+
+          else if(LooseLeps.at(0)->IsMuon()){
+            FillPreselHists(region_path+"/MuTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillHist(region_path+"/MuTau/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/MuTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
+          }
+        }
+
+        if(isBoostedNonisoLepPreselectionTest){
+
+          region = "Preselection_isBoostedNonisoLepPreselectionTest";
+          region_path = path+"/"+region;
+          double weight_BstPresel = weight * weight_loose;
+          if(HasFlag("debug")) cout << region << endl;
+
+          CopyHist(path+"/Cutflow",region_path+"/Cutflow");
+          FillHist(region_path+"/Cutflow",4.,weight_BstPresel,10,0.,10.);
+          FillHist(region_path+"/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+          for(unsigned int i=0;i<LooseLeps.size();i++){
+            FillHist(region_path+"/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+          }
+          FillPreselHists(region_path,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+          FillMassHists(region_path,METv,taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+
+          if(LooseLeps.at(0)->IsElectron()){
+            FillPreselHists(region_path+"/ElTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillHist(region_path+"/ElTau/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/ElTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
+          }
+
+          else if(LooseLeps.at(0)->IsMuon()){
+            FillPreselHists(region_path+"/MuTau",taus,jets,fatjets,LooseLeps,leptons,weight_BstPresel);
+            FillHist(region_path+"/MuTau/MET",METv.Pt(),weight_BstPresel,2500,0.,2500.);
+            for(unsigned int i=0;i<LooseLeps.size();i++){
+              FillHist(region_path+"/MuTau/dRl"+TString::Itoa(i,10)+"tau",fatjets.at(0).DeltaR(*LooseLeps.at(0)),weight_BstPresel,60,0.,6.);
+            }
+          }
         }
 
 

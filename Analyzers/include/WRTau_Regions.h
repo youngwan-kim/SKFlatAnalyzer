@@ -1,9 +1,9 @@
-#ifndef WRTau_CR_h
-#define WRTau_CR_h
+#ifndef WRTau_Regions_h
+#define WRTau_Regions_h
 
 #include "WRTau_Core.h"
 
-class WRTau_CR : public AnalyzerCore {
+class WRTau_Regions : public WRTau_Core {
 
 public:
 
@@ -11,8 +11,8 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
 
-  WRTau_CR();
-  ~WRTau_CR();
+  WRTau_Regions();
+  ~WRTau_Regions();
 
 };
 

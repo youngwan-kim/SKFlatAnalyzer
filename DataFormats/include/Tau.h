@@ -16,7 +16,7 @@ public:
   //  inline double dr03TkSumPt() const { return j_dr03TkSumPt; }
   //tau_decaymode
 
-
+  inline int IDBit() const {return j_IDBit;}
   inline int DecayMode() const { return j_decaymode;}
   inline bool DecayModeNewDM () const { return j_idDecayModeNewDMs;}
 
@@ -52,14 +52,14 @@ public:
     DeepTau2017v2p1VSEl_VTight = 1<< 14,
     DeepTau2017v2p1VSEl_VVTight= 1<< 15,
 
-    DeepTau2017v2p1VSMu_VVVLoose = 1<< 16,
-    DeepTau2017v2p1VSMu_VVLoose = 1<< 17,
-    DeepTau2017v2p1VSMu_VLoose = 1<< 18,
+    DeepTau2017v2p1VSMu_VVVLoose = 1<< 16, // NOT USED
+    DeepTau2017v2p1VSMu_VVLoose = 1<< 17,  // NOT USED
+    DeepTau2017v2p1VSMu_VLoose = 1<< 18,   
     DeepTau2017v2p1VSMu_Loose = 1<< 19,
     DeepTau2017v2p1VSMu_Medium  = 1<< 20,
     DeepTau2017v2p1VSMu_Tight = 1<< 21,
-    DeepTau2017v2p1VSMu_VTight = 1<< 22,
-    DeepTau2017v2p1VSMu_VVTight= 1<< 23,
+    DeepTau2017v2p1VSMu_VTight = 1<< 22,    // NOT USED
+    DeepTau2017v2p1VSMu_VVTight= 1<< 23,    // NOT USED
 
     byLooseCombinedIsolationDeltaBetaCorr3Hits = 1 << 24,
     byMediumCombinedIsolationDeltaBetaCorr3Hits = 1 << 25,

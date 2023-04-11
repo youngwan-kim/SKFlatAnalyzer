@@ -34,7 +34,7 @@ public:
   TString muon_IsoSF_loose_key = "";
   TString muon_IsoSF_tight_key = "";
 
-  TString electron_looseID_SF_Key = "Default";
+  TString electron_looseID_SF_Key = "passLooseID";
   TString muon_recoSF_key = "Default";
 
   vector<TString> TriggerList;
