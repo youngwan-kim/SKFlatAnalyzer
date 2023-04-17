@@ -1,11 +1,15 @@
 #include "WRTau_Core.h"
 
 bool WRTau_Core::isBoostedPreselection(const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons){
-  return (isPreselection(taus) && hasAtLeast1AK8Jets(fatjets) && hasAtLeast1Leptons(LooseLeptons));
+  return ( (isPreselection(taus) && hasAtLeast1Leptons(LooseLeptons)) && !isResolvedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons) && hasAtLeast1AK8Jets(fatjets));
+}
+
+bool WRTau_Core::isBoostedPreselectionTest(const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons){
+  return ( (isPreselection(taus) && hasAtLeast1Leptons(LooseLeptons))  && !hasAtLeast2AK4Jets(jets) && hasAtLeast1AK8Jets(fatjets));
 }
 
 bool WRTau_Core::isResolvedPreselection(const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons){
-  return (isPreselection(taus) && hasAtLeast2AK4Jets(jets) && hasAtLeast1Leptons(TightLeptons));
+  return ( (isPreselection(taus) && hasAtLeast1Leptons(LooseLeptons)) && hasAtLeast2AK4Jets(jets) && hasAtLeast1Leptons(TightLeptons));
 }
 
 double WRTau_Core::GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double pt,bool GetFromDM){
@@ -156,7 +160,7 @@ std::vector<Tau> WRTau_Core::VetoLeptonsFromTaus(const std::vector<Lepton *> lep
 
 }
 
-void WRTau_Core::FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons, double weight){
+void WRTau_Core::FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons, double weight){
 
   if(!isPreselection(taus)){
     cout << "[WRTauCore::FillPreselHists] Wrong preselection region, no hadronic taus" << endl;
@@ -169,15 +173,35 @@ void WRTau_Core::FillPreselHists(TString region,const std::vector<Tau>& taus, co
     FillLeptonPlots(TightLeptons,region+"/HighPtTight",weight);
     FillLeptonPlots(LooseLeptons,region+"/HighPtLoose",weight);
     FillJetPlots(jets,fatjets,region+"/Jets",weight);
+    FillJetPlots(bjets,fatjets,region+"/BJets",weight);
+
+    FillHist(region+"/nTightLeptons",TightLeptons.size(),weight,10,0.,10.);
+    FillHist(region+"/nLooseLeptons",LooseLeptons.size(),weight,10,0.,10.);
     FillHist(region+"/nFatJet",fatjets.size(),weight,10,0.,10.);
     FillHist(region+"/nJets",jets.size(),weight,10,0.,10.);
+    FillHist(region+"/nTaus",taus.size(),weight,10,0.,10.);
+    FillHist(region+"/nBJets",bjets.size(),weight,10,0.,10.);
+    
+
+    double dRtJ0 = fatjets.size()<1? -1.:fatjets.at(0).DeltaR(taus.at(0));
+    double dRtj0 = jets.size()<1? -1.:jets.at(0).DeltaR(taus.at(0));
+    double dRtj1 = jets.size()<2? -1.:jets.at(1).DeltaR(taus.at(0));
+    double dRtl0_loose =  LooseLeptons.size()<1? -1.:LooseLeptons.at(0)->DeltaR(taus.at(0));
+    double dRtl0_tight =  TightLeptons.size()<1? -1.:TightLeptons.at(0)->DeltaR(taus.at(0));
+
+    if(dRtJ0>0) FillHist(region+"/dRtJ0",dRtJ0,weight,60,0.,6.);
+    if(dRtj0>0) FillHist(region+"/dRtj0",dRtj0,weight,60,0.,6.);
+    if(dRtj1>0) FillHist(region+"/dRtj1",dRtj1,weight,60,0.,6.);
+    if(dRtl0_loose>0) FillHist(region+"/dRtl0_loose",dRtl0_loose,weight,60,0.,6.);
+    if(dRtl0_tight>0) FillHist(region+"/dRtl0_tight",dRtl0_tight,weight,60,0.,6.);
+
   }
 
 }
 
 void WRTau_Core::FillMassHists(TString region,const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons, double weight){
 
-  bool isRightSelection = isBoostedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons) || isResolvedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons);
+  bool isRightSelection = isBoostedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons) || isResolvedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons) || isBoostedPreselectionTest(taus,jets,fatjets,LooseLeptons,TightLeptons);
 
   if(!isRightSelection){
     cout << "[WRTauCore::FillMassHists] Wrong selection region" << endl;
@@ -209,17 +233,43 @@ void WRTau_Core::FillMassHists(TString region,const Particle METv, const std::ve
   if(taus.size()>0 && (LooseLeptons.size()>0 || TightLeptons.size()>0)){
     if(LooseLeptons.size()>0){
       Particle thll = taus.at(0) + *LooseLeptons.at(0);
+      Particle thll_MET = thll + METv;
       double thll_MT = MT(thll,METv);
+      double MET2ST_loose = (METv.Pt()*METv.Pt())/GetST(LooseLeptons,taus,jets,fatjets, METv);
+      FillHist(region+"/Mthll",thll.M(),weight,5000,0.,5000.);
+      FillHist(region+"/Mthllmet",thll_MET.M(),weight,5000,0.,5000.);
       FillHist(region+"/MTtauhlooselep",thll_MT,weight,5000,0.,5000.);
+      FillHist(region+"/MET2ST_loose",MET2ST_loose,weight,5000,0.,5000.);
+      FillHist(region+"/ST_loose",GetST(LooseLeptons,taus,jets,fatjets, METv),weight,5000,0.,5000.);
     }
     if(TightLeptons.size()>0){
       Particle thlt = taus.at(0) + *TightLeptons.at(0);
+      Particle thlt_MET = thlt+METv;
       double thlt_MT = MT(thlt,METv);
+      double MET2ST_tight = (METv.Pt()*METv.Pt())/GetST(TightLeptons,taus,jets,fatjets, METv);
+      FillHist(region+"/Mthlt",thlt.M(),weight,5000,0.,5000.);
+      FillHist(region+"/Mthltmet",thlt_MET.M(),weight,5000,0.,5000.);
       FillHist(region+"/MTtauhtightlep",thlt_MT,weight,5000,0.,5000.);
+      FillHist(region+"/MET2ST_tight",MET2ST_tight,weight,5000,0.,5000.);
+      FillHist(region+"/ST_tight",GetST(TightLeptons,taus,jets,fatjets, METv),weight,5000,0.,5000.);
     }
   }
 
 }
+
+/*void WRTau_Core::FillChannelHists(TString region,const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons, double weight){
+
+  TString channelregion = region;
+  std::vector<Lepton*> leptons_region;
+  if(isBoostedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons) || isBoostedPreselectionTest(taus,jets,fatjets,LooseLeptons,TightLeptons);){
+    leptons_region = LooseLeptons;
+    if(leptons.at(0)->IsElectron()){
+      FillPreselHists(region+"_ElTau",taus,jets,fatjets,)
+    }
+  }
+  elif()
+
+}*/
 
 void WRTau_Core::CopyHist(TString histname0, TString histname1){
 
@@ -233,6 +283,33 @@ void WRTau_Core::CopyHist(TString histname0, TString histname1){
   TH1D *h = (TH1D*)h_tmp->Clone(histname1);
   h->SetDirectory(NULL);
   maphist_TH1D[histname1] = h;
+
+}
+
+double WRTau_Core::GetST(std::vector<Electron> electrons, std::vector<Muon> muons,  std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv){
+
+  double _st(0.);
+  for(const auto &el : electrons) _st += el.Pt();
+  for(const auto &mu : muons) _st += mu.Pt();
+  for(const auto &ta : taus) _st += ta.Pt();
+  for(const auto &j : jets) _st += j.Pt();
+  for(const auto &J : fatjets) _st += J.Pt();
+  _st += METv.Pt();
+
+  return _st;
+
+}
+
+double WRTau_Core::GetST(std::vector<Lepton *> leptons,  std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv){
+
+  double _st(0.);
+  for(const auto &j : jets) _st += j.Pt();
+  for(const auto &J : fatjets) _st += J.Pt();
+  for(const auto &ta : taus) _st += ta.Pt();
+  for(const auto lep : leptons) _st += lep->Pt();
+  _st += METv.Pt();
+
+  return _st;
 
 }
 

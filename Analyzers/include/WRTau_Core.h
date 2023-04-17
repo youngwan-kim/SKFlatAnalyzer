@@ -23,6 +23,10 @@ public:
   bool isBoostedPreselection(const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
                              const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                              const std::vector<Lepton *> TightLeptons);
+
+  bool isBoostedPreselectionTest(const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
+                             const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
+                             const std::vector<Lepton *> TightLeptons);
   
   bool isResolvedPreselection(const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
                              const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
@@ -35,13 +39,20 @@ public:
   std::vector<Lepton*> VetoTauFromLeptons(const std::vector<Lepton *> leptons, const std::vector<Tau>& taus, double dR=0.4);
   std::vector<Tau> VetoLeptonsFromTaus(const std::vector<Lepton *> leptons, const std::vector<Tau>& taus, double dR=0.4);
 
+  // Variables
+  double GetST(std::vector<Electron> electrons, std::vector<Muon> muons, std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv);
+  double GetST(std::vector<Lepton *> leptons,  std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv);
+
   // Filling basic histograms after preselection (requiring >1 hadronic tau with pT>190 GeV)
-  void FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
+  void FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight); 
   void FillMassHists(TString region, const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight);
+  /*void FillChannelHists(TString region, const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
+                       const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
+                       const std::vector<Lepton *> TightLeptons, double weight);*/                       
   void CopyHist(TString histname0, TString histname1);
 
   // Others

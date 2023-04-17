@@ -195,6 +195,8 @@ public:
   Particle AddFatJetAndLepton(const FatJet& fatjet, const Lepton& lep);
   Jet GetClosestJet(const std::vector<Jet>& jets, const Muon& muon);
   Jet GetClosestJet(const std::vector<Jet>& jets, const Electron& electron);
+  vector<Jet> SelectBJets(vector<Jet> jetColl, JetTagging::Parameters jtp);
+
 
   //==== GenMatching
 

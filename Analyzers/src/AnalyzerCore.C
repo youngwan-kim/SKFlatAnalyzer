@@ -1182,6 +1182,7 @@ double AnalyzerCore::GetPrefireWeight(int sys){
 
 }
 
+
 double AnalyzerCore::GetPileUpWeight(int N_pileup, int syst){
   if(IsDATA) return 1.;
   else return mcCorr->GetPileUpWeight(N_pileup, syst);
@@ -2441,6 +2442,19 @@ Jet AnalyzerCore::GetClosestJet(const std::vector<Jet>& jets, const Muon& muon){
   int closestJetIndex = min_element(dRJet.begin(),dRJet.end())-dRJet.begin();
   
   return jets.at(closestJetIndex);
+
+}
+
+vector<Jet>  AnalyzerCore::SelectBJets(vector<Jet> jetColl, JetTagging::Parameters jtp){
+
+  vector<Jet> output_jets;
+
+  for(unsigned int ijet =0; ijet < jetColl.size(); ijet++){
+    if( jetColl[ijet].GetTaggerResult(jtp.j_Tagger) <= mcCorr->GetJetTaggingCutValue(jtp.j_Tagger, jtp.j_WP) ) continue;
+    output_jets.push_back( jetColl.at(ijet) );
+  }
+  std::sort(output_jets.begin(),       output_jets.end(),        PtComparing);
+  return output_jets;
 
 }
 
