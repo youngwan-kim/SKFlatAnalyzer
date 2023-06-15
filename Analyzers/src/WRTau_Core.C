@@ -276,7 +276,7 @@ void WRTau_Core::CopyHist(TString histname0, TString histname1){
   TH1D *h_tmp = GetHist1D(histname0);
   
   if(!h_tmp){
-    cout << "[WRTauCore::CopyHist] Wrong original histogram" << endl;
+    cout << "[WRTauCore::CopyHist] Wrong original histogram : " << histname0 << endl;
     return;
   }
 
@@ -313,6 +313,318 @@ double WRTau_Core::GetST(std::vector<Lepton *> leptons,  std::vector<Tau> taus, 
 
 }
 
+LHE WRTau_Core::GetClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs){
+
+  double min_dR = 0.1;
+  LHE lhe_closest;
+  //cout << "[WRTau_Core::GetClosestTauLHE] Start" << endl;
+  for(unsigned int i=0; i<LHEs.size(); i++){
+
+    LHE lhe = LHEs.at(i);
+    //==== Status 1
+    if( lhe.Status() != 1 ) continue;
+    //==== dR matching
+    if( lhe.DeltaR( tau ) < min_dR ){
+      min_dR = lhe.DeltaR( tau ) ;
+      lhe_closest = lhe;
+    }
+
+  }
+  //cout << "[WRTau_Core::GetClosestTauLHE] End" << endl;
+  return lhe_closest;
+}
+
+Gen WRTau_Core::GetClosestTauGen(const Tau tau, const std::vector<Gen>& gens){
+
+  double min_dR = 0.1;
+  Gen gen_closest;
+  //cout << "[WRTau_Core::GetClosestTauGen] Start" << endl;
+  for(unsigned int i=2; i<gens.size(); i++){
+
+    Gen gen = gens.at(i);
+    // no requirements for gen status to be 1 as taus are unstable ; they have status!=1
+    //if(abs(gen.PID())!=15) continue;
+    if(gen.Status()!=1) continue;
+    if(gen.MotherIndex()<0) continue;
+    if(gen.DeltaR(tau)<min_dR){
+      min_dR = gen.DeltaR(tau);
+      gen_closest = gen;
+    }
+
+  }
+
+  //cout << "[WRTau_Core::GetClosestTauGen] End" << endl;
+  return gen_closest;
+
+}
+
+void WRTau_Core::FillClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs, TString region,double weight){
+
+  LHE lhe_closest = GetClosestTauLHE(tau,LHEs);
+  if(abs(lhe_closest.ID())==15){
+    FillHist(region+"/ClosestTauLHEpID_isTau",0.,weight,2,0.,2.);
+  }
+  else FillHist(region+"/ClosestTauLHEpID_isTau",1.,weight,2,0.,2.);
+  FillHist(region+"/ClosestTauLHEpID",lhe_closest.ID(),weight,100,-50.,50.);
+
+}
+
+void WRTau_Core::FillClosestTauGen(const Tau tau, const std::vector<Gen>& gens, TString region,double weight){
+
+  Gen gen_closest = GetClosestTauGen(tau,gens);
+  if(abs(gen_closest.PID())==15){
+    FillHist(region+"/ClosestTauGenID_isTau",0.,weight,2,0.,2.);
+  }
+  else FillHist(region+"/ClosestTauGenID_isTau",1.,weight,2,0.,2.);
+  FillHist(region+"/ClosestTauGenID",gen_closest.PID(),weight,100,-50.,50.);
+
+  //cout << "[WRTau_Core::FillClosestTauGen] Start" << endl;
+  int TauType(0);
+  TauType = GetTauType(tau,gens);
+  FillHist(region+"/TauType",TauType,weight,14,-7,7);
+  //cout << "[WRTau_Core::FillClosestTauGen] End" << endl;
+
+}
+
+
+int WRTau_Core::GetTauType(const Tau tau, const std::vector<Gen>& gens){
+
+  // ==== Type
+  // ==== 1 : EWPrompt Tau
+  // ==== 2 : Hadronic Prompt Tau 
+  // ==== 2 : Signal Daughter Tau (BSM)
+  // ==== 3 : EW Nonprompt Daughter Tau 
+  // ==== 4 : Hadronic Nonprompt Daughter Tau 
+  // ==== -1 : Unmatched (Both Gen & LHE)
+  // ==== -2 : Unmatched but has matched LHE (debugging)
+  // ==== -3 : Hadronic Misid (Light flavor jet fakes)
+  // ==== -4 : Leptonic Misid (Light lepton fakes)
+  // ==== -5 : Debug flag
+  // ==== ----------------------------------------------------
+  // ==== 0 : Error
+  // ==== >0 : Non-fake
+  // ==== <0 : Fakes (Unmatched or misid.)
+
+  //LHE lhe_closest = GetClosestTauLHE(tau,LHEs);
+  Gen gen_closest = GetClosestTauGen(tau,gens);
+
+  //cout << "[WRTau_Core::GetTauType] Start" << endl;
+  int TauType = 0, MatchedTruthIdx = -1;
+  if(gen_closest.IsEmpty()) TauType = -1;
+  else{
+    MatchedTruthIdx = gen_closest.Index();
+    //cout << "[WRTau_Core::GetTauType] MatchedTruthIdx : " << MatchedTruthIdx << endl;
+    TauType = GetTauType_Public(MatchedTruthIdx, gens);
+  }
+  //cout << "[WRTau_Core::GetTauType] End : " << TauType << endl;
+
+  return TauType;
+
+}
+
+int WRTau_Core::GetTauType_Public(int TruthIdx, const std::vector<Gen>& TruthColl){
+
+  // ==== Type
+  // ==== 1 : EWPrompt Tau
+  // ==== 2 : Hadronic Prompt Tau 
+  // ==== 2 : Signal Daughter Tau (BSM)
+  // ==== 3 : EW Nonprompt Daughter Tau 
+  // ==== 4 : Hadronic Nonprompt Daughter Tau 
+  // ==== -1 : Unmatched (Both Gen & LHE)
+  // ==== -2 : Unmatched but has matched LHE (debugging)
+  // ==== -3 : Hadronic Misid (Light flavor jet fakes)
+  // ==== -4 : Leptonic Misid (Light lepton fakes)
+  // ==== -5 : Debug flag
+  // ==== ----------------------------------------------------
+  // ==== 0 : Error
+  // ==== >0 : Non-fake
+  // ==== <0 : Fakes (Unmatched or misid.)
+
+  if(TruthIdx<2) return 0;
+
+  //cout << "[WRTau_Core::GetTauType_Public] Point1, TruthIdx " <<  TruthIdx  <<  endl;
+  int TauType = 0;
+  int PID = 0, MPID = 0, GrMPID = 0;
+  vector<int> my_history, mom_history, grmom_history;
+  int LastSelfIdx=-1, MotherIdx=-1, LastSelfMIdx=-1, GrMotherIdx=-1, LastSelfGrMIdx=-1;
+  int Status_orig=0, MStatus_orig=0, MStatus_last=0, GrMStatus_orig=0, GrMStatus_last=0;
+  bool HadronicOrigin = false;
+
+  my_history = TrackGenSelfHistory(TruthColl.at(TruthIdx), TruthColl);
+  LastSelfIdx = my_history[0];
+  MotherIdx = my_history[1];
+
+  //cout << "[WRTau_Core::GetTauType_Public] Point1, LastSelfIdx " <<  LastSelfIdx  <<  endl;
+  //Status_orig = TruthColl.at(LastSelfIdx).Status();
+  //HadronicOrigin = IsFromHadron(TruthColl.at(TruthIdx), TruthColl);
+
+  //cout << "[WRTau_Core::GetTauType_Public] Point2" << endl;
+
+  /*if(   MotherIdx!=-1   ){ mom_history  = TrackGenSelfHistory(TruthColl.at(MotherIdx), TruthColl);
+                           LastSelfMIdx = mom_history[0];
+                           GrMotherIdx  = mom_history[1];
+                           MPID         = TruthColl.at(MotherIdx).PID();
+                           MStatus_orig = TruthColl.at(LastSelfMIdx).Status();
+                           MStatus_last = TruthColl.at(MotherIdx).Status();
+                         }*/
+
+  //cout << "[WRTau_Core::GetTauType_Public] Point3" << endl;
+
+  /*if(  GrMotherIdx!=-1  ){ grmom_history  = TrackGenSelfHistory(TruthColl.at(GrMotherIdx), TruthColl);
+                           LastSelfGrMIdx = grmom_history[0];
+                           GrMPID         = TruthColl.at(GrMotherIdx).PID();
+                           GrMStatus_orig = TruthColl.at(LastSelfGrMIdx).Status();
+                           GrMStatus_last = TruthColl.at(GrMotherIdx).Status();
+                         }*/
+  
+  //cout << "[WRTau_Core::GetTauType_Public] Point4" << endl;
+
+  bool HasTauAncestor = false;
+  int TauAncestorIndex = -1;
+
+  //cout << "[WRTau_Core::GetTauType_Public] Point5" << endl;
+  vector<int> FirstTauAncestorHistory = GetTauAncestor(TruthColl.at(TruthIdx),TruthColl);
+  //cout << "[WRTau_Core::GetTauType_Public] Point6" << endl;
+  if(FirstTauAncestorHistory[1]!=-1){
+    HasTauAncestor = true;
+    TauAncestorIndex = FirstTauAncestorHistory[1];
+  }
+
+  //cout << "[WRTau_Core::GetTauType_Public] Point7" << endl;
+  if(TruthIdx == -1)                                                                                  TauType = 0;
+  else if(HasTauAncestor){ 
+    
+    // Has a tau ancestor ; track tau again for radiation correction etc.
+    //PID = TruthColl.at(TruthIdx).PID();
+    vector<int> OriginTauHistory = TrackGenSelfHistory(TruthColl.at(TauAncestorIndex), TruthColl);
+    int TauMotherIndex = OriginTauHistory[1];
+    
+    if(TauMotherIndex == -1)                                                                          TauType = -5; // Case study debug flag
+    else{
+
+      int TauMotherPID = TruthColl.at(TauMotherIndex).PID();
+      int TauMotherStatus = TruthColl.at(TauMotherIndex).Status();
+
+      if(fabs(TauMotherPID) == 23 || fabs(TauMotherPID) == 24 || fabs(TauMotherPID) == 25)            TauType = 1;
+      else if(IsSignalPID(TauMotherPID))                                                              TauType = 3;
+      else if(TauMotherStatus>20 && TauMotherStatus<30)                                               TauType = 1;
+      else if(fabs(TauMotherPID)>50)                                                                  TauType = 4; // 4)
+      
+    }
+
+  }
+  else{ // Doesn't even have tau ancestor : Misid section
+    
+    PID = TruthColl.at(TruthIdx).PID();
+    if( fabs(PID) == 11 || fabs(PID) == 13 )                                                          TauType = -4;
+    else if( (fabs(PID)>=1 && fabs(PID)<=5) || fabs(PID) == 21 )                                      TauType = -3;
+    else if( fabs(PID)==22 ){
+      vector<int> GenMatchPhotonHistory = TrackGenSelfHistory(TruthColl.at(TruthIdx), TruthColl);
+      int PhotonMotherIndex = GenMatchPhotonHistory[1];
+      if(PhotonMotherIndex == -1)                                                                     TauType = -5;
+      else{
+        if(IsFromHadron(TruthColl.at(PhotonMotherIndex),TruthColl))                                   TauType = -3;
+      }
+    }
+  }
+
+  return TauType;
+  
+  // 1) Offshell EW mediators are not tracked ;
+  // 2) Prompt Onshell EW mediators 
+  // 3) Nonprompt onshell EW mediators
+  // 4) had > ta + X , ta > had + v
+
+}
+
+
+vector<int> WRTau_Core::GetTauAncestor(const Gen& me, const std::vector<Gen>& gens){
+
+  int myindex = me.Index();
+
+  //cout << "[WRTau_Core::GetTauAncestor] Init (currentindex) : " << myindex << endl;
+
+  if(myindex<2){
+    //cout << "[WRTau_Core::GetTauAncestor] Exception (currentindex) : " << myindex << endl;
+    vector<int> out = {myindex,-1};
+    return out;
+  }
+
+  int currentidx = myindex;
+  int motherindex = me.MotherIndex();
+
+  //cout << "[WRTau_Core::GetTauAncestor] Start" << endl;
+  while(fabs(gens.at(motherindex).PID()) != 15 ){
+
+    currentidx = motherindex;
+    motherindex = gens.at(motherindex).MotherIndex();
+
+    //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx,motheridx)=" << currentidx << "," << motherindex << endl;
+    //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx_PID,motheridx_PID)=" << gens.at(currentidx).PID() << "," << gens.at(motherindex).PID() << endl;
+
+    if(currentidx<=2 || motherindex <= 0){
+      motherindex = -1;
+      break;
+    }
+    else if(fabs(gens.at(motherindex).PID())==15) break;
+  }
+
+  //cout << "[WRTau_Core::GetTauAncestor] Final (currentidx,motheridx)=" << currentidx << "," << motherindex << endl;
+  //cout << "[WRTau_Core::GetTauAncestor] Final (currentidx_PID,motheridx_PID)=" << gens.at(currentidx).PID() << "," << gens.at(motherindex).PID() << endl;
+  //cout << "[WRTau_Core::GetTauAncestor] End" << endl;
+
+  vector<int> out = {currentidx, motherindex};
+
+  return out;
+
+}
+
+vector<Tau> WRTau_Core::TauPromptOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens){
+
+  if(IsDATA) return taus;
+
+  std::vector<Tau> out;
+
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(GetTauType(taus.at(i), gens)<=0) continue;
+    out.push_back(taus.at(i));
+  }
+
+  return out;
+
+}
+
+vector<Tau> WRTau_Core::TauFakeOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens){
+
+  if(IsDATA) return taus;
+
+  std::vector<Tau> out;
+
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(GetTauType(taus.at(i), gens)>=0) continue;
+    out.push_back(taus.at(i));
+  }
+
+  return out;
+
+}
+
+vector<Tau> WRTau_Core::TauErrorOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens){
+
+  if(IsDATA) return taus;
+
+  std::vector<Tau> out;
+
+  for(unsigned int i=0; i<taus.size(); i++){
+    if(GetTauType(taus.at(i), gens)!=0) continue;
+    out.push_back(taus.at(i));
+  }
+
+  return out;
+
+}
+
+
 TDirectory* WRTau_Core::GetTempDir_WRTauCore(){
 
     gROOT->cd(); 
@@ -331,6 +643,66 @@ TDirectory* WRTau_Core::GetTempDir_WRTauCore(){
     }
     std::cout << "[TDirectoryHelper::GetTempDirectory()] histDir name = " << histDir->GetName() << std::endl;
     return histDir;
+
+}
+
+std::vector<Electron> WRTau_Core::ElectronPromptOnly_Tau(const std::vector<Electron>& electrons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return electrons;
+
+  std::vector<Electron> out;
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    if(GetLeptonType(electrons.at(i), gens)<=0 && GetLeptonType(electrons.at(i), gens) != -3) continue;
+    out.push_back( electrons.at(i) );
+  }
+
+  return out;
+
+}
+
+std::vector<Electron> WRTau_Core::ElectronNonPromptOnly_Tau(const std::vector<Electron>& electrons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return electrons;
+
+  std::vector<Electron> out;
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    if(GetLeptonType(electrons.at(i), gens)>=0 || GetLeptonType(electrons.at(i), gens) != -3) continue;
+    out.push_back( electrons.at(i) );
+  }
+
+  return out;
+
+}
+
+std::vector<Muon> WRTau_Core::MuonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return muons;
+
+  std::vector<Muon> out;
+
+  for(unsigned int i=0; i<muons.size(); i++){ // continue if not ( prompt(<0) OR -3 ) 
+    if(!(GetLeptonType(muons.at(i), gens)>0 || GetLeptonType(muons.at(i), gens) == -3)) continue;
+    out.push_back( muons.at(i) );
+  }
+
+  return out;
+
+}
+
+std::vector<Muon> WRTau_Core::MuonNonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return muons;
+
+  std::vector<Muon> out;
+
+  for(unsigned int i=0; i<muons.size(); i++){
+    if(GetLeptonType(muons.at(i), gens)>0 || GetLeptonType(muons.at(i), gens) == -3) continue;
+    out.push_back( muons.at(i) );
+  }
+
+  return out;
 
 }
 

@@ -1,0 +1,14 @@
+
+
+-- Schedd: tamsa2.snu.ac.kr : <172.30.1.200:9618?... @ 06/13/23 11:32:19
+OWNER    BATCH_NAME                                              SUBMITTED   DONE   RUN    IDLE  TOTAL JOB_IDS
+youngwan ZTauTau_2017_TTLL_TauHLT__NonpromptLepton__PromptTau   6/12 13:15      3     12      _     15 310729.0-14
+youngwan ZTauTau_2017_TTLJ_TauHLT__PromptLepton__NonpromptTau   6/12 13:15      _     15      _     15 310730.0-14
+youngwan ZTauTau_2017_TTLL_TauHLT__PromptLepton__PromptTau      6/12 13:15      _     15      _     15 310731.0-14
+youngwan ZTauTau_2017_TTLL_TauHLT__PromptLepton__NonpromptTau   6/12 13:15      _     15      _     15 310734.0-14
+youngwan ZTauTau_2017_WWW_TauHLT__PromptLepton__PromptTau       6/12 13:15      4     11      _     15 310824.1-14
+
+Total for query: 68 jobs; 0 completed, 0 removed, 0 idle, 68 running, 0 held, 0 suspended 
+Total for youngwan: 68 jobs; 0 completed, 0 removed, 0 idle, 68 running, 0 held, 0 suspended 
+Total for all users: 685 jobs; 0 completed, 0 removed, 313 idle, 370 running, 2 held, 0 suspended
+

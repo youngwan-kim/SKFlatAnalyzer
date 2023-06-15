@@ -3,26 +3,40 @@
 
 void ZTauTau::initializeAnalyzer(){
 
+  vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
+  vJet_vec = {2,4,5}; vEl_vec = {8,13}; vMu_vec = {18,21};
+
+  for(const auto &vjet : vJet_vec){
+    tauidsftool_map[vjet] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+  }
 
   // HLT_DoubleMediumChargedIsoPFTau40_Trk1_eta2p1_Reg_v
   // HLT_DoubleMediumChargedIsoPFTau40_Trk1_TightID_eta2p1_Reg_v8
   if(DataYear==2017){
-    Triggers = {"HLT_DoubleTightChargedIsoPFTau40_Trk1_TightID_eta2p1_Reg_v"};
+    Triggers = {"HLT_IsoMu27_v"};
   }
 
 }
 
 void ZTauTau::executeEvent(){
 
+  FillTimer("START_EV");
+
   AnalyzerParameter param;
 
   param.Name = "ZTauTau";
+  param.Muon_ID_SF_Key = "NUM_TightID_DEN_TrackerMuons";
   param.Electron_Veto_ID = "passVetoID";
   param.Muon_Veto_ID = "POGLoose";
   param.syst_ = AnalyzerParameter::Central;
-  AllTaus = GetAllTaus();
+
+  beginEvent();
+
+  FillTimer("GetAllObjects_beginEventCall");
 
   executeEventFromParameter(param);
+
+  FillTimer("END_EV");
 
 }
 
@@ -32,23 +46,9 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
 
   Event ev = GetEvent();
 
-  vector<int> vJet_vec = {5,6};   //vL,L,M,T,vT
-  vector<int> vEl_vec = {11,12,13};     //L,M,T 
-  vector<int> vMu_vec = {19,20,21};     //L,M,T
+  FillTimer("GetEvents");
 
-  // if(param.Name == "WRTau_BkgSingleLeptonTrg")
-  
-  vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
-  vJet_vec = {0,2,4,5}; vEl_vec = {8,10,12,13}; vMu_vec = {18,20,21};
-  
-
-  map<int,TString> idname_map = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
-                                 {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
-                                 {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
-
-  map<int,std::string> idname_map_str = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
-                                 {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
-                                 {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
+  Particle METv = ev.GetMETVector();
 
   double weight(1.);
 
@@ -57,29 +57,42 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
     else weight *= MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(0) * GetPileUpWeight(nPileUp,0);
   }
 
-  vector<Tau> this_AllTaus = AllTaus;
-  vector<Electron> this_AllElectrons = AllElectrons;
-  vector<Muon> this_AllMuons = AllMuons;
+  vector<Tau> this_AllTaus = All_Taus;
+  vector<Muon> this_AllMuons;
+  vector<Electron> this_AllElectrons;
 
-  vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 40., 2.4) ;
-  vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 50., 2.4);
+  //cout << "nAllMu " << AllMuons.size() << endl;
+
+  if(HasFlag("PromptLepton")){
+    this_AllMuons = MuonPromptOnly(All_Muons,All_Gens);
+    this_AllElectrons = ElectronPromptOnly(All_Electrons,All_Gens);
+  }
+
+  else if(HasFlag("NonpromptLepton")){
+    this_AllMuons = MuonNonPromptOnly(All_Muons,All_Gens);
+    this_AllElectrons = ElectronNonPromptOnly(All_Electrons,All_Gens);
+  }
+  
+  else{
+    this_AllMuons = All_Muons;
+    this_AllElectrons = All_Electrons;
+  }
+
+  FillTimer("LeptonTruthMatching");
+
+  //cout << "nThisAllMu " << this_AllMuons.size() << endl;
+
+  vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 30., 2.4) ;
+  vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 30., 2.4);
   vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
-
-  /*cout << "==All==" << endl;
-  cout << this_AllTaus.size() << endl;
-  for(const auto &th : this_AllTaus){
-    cout << std::bitset<27>(th.IDBit()).to_string() << " " << th.DecayMode() << " " << th.Pt() << " " << th.Eta() << endl;
-  }*/
-
-
   vector<Tau> taus_lepVeto = VetoLeptonsFromTaus(VetoLeps,this_AllTaus);
 
-  /*cout << "==LepVeto==" << endl;
-  cout << taus_lepVeto.size() << endl;
-  for(const auto &th : taus_lepVeto){
-    cout << std::bitset<27>(th.IDBit()).to_string() << " " << th.DecayMode() << " " << th.Pt() << " " << th.Eta() << endl;
-  }*/
+  vector<Muon> muons = SelectMuons(this_AllMuons,"POGTight",30,2.4);
+  vector<Lepton *> muons_lep = MakeLeptonPointerVector(muons);
 
+  FillTimer("ObjectSelection");
+
+  //cout << "nMu " << muons.size() << endl;
 
   for(unsigned int i=0; i<vJet_vec.size(); i++){
     for(unsigned int j=0; j<vEl_vec.size(); j++){
@@ -87,44 +100,121 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
 
         TString idname = "vJet"+idname_map[vJet_vec.at(i)]+"_vEl"+idname_map[vEl_vec.at(j)]+"_vMu"+idname_map[vMu_vec.at(k)];
         TString path = param.Name+"/"+idname;
-        vector<Tau> taus = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
-        //vector<Tau> taus = SelectTaus_varWP(taus_lepVeto,i,j,k,50,2.4);
+        taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
+        
+        taus.clear();
+
+        if(HasFlag("NonpromptTau")) taus = TauFakeOnly(taus_temp,All_Gens);
+        else if(HasFlag("PromptTau")) taus = TauPromptOnly(taus_temp,All_Gens);
+        else taus = taus_temp;
+
+        FillTimer("TauTruthMatching_"+idname);
+
         std::sort(taus.begin(),taus.end(),PtComparing);
+        std::sort(muons.begin(),muons.end(),PtComparing);
 
-        /*cout << "---"<< idname <<"---" << endl;
-        cout << taus.size() << endl;
-        for(const auto &th : taus){
-          cout << std::bitset<27>(th.IDBit()).to_string() << " " << th.DecayMode() << " " << th.Pt() << " " << th.Eta() << endl;
-        }*/
-
+        FillTimer("SortObjects_"+idname);
+        //cout << "test1 @" << idname  << endl;
 
         if(!ev.PassTrigger(Triggers)) continue;
+
         FillHist(path+"/Cutflow",0,weight,10,0.,10.);
-        if(taus.size()!=2) continue;
+        FillHist(path+"/nMuons",muons.size(),weight,10,0.,10.);
+        FillHist(path+"/nTaus",taus.size(),weight,10,0.,10.);
+        //cout << "test2 @" << idname  << endl;
+        if(!(taus.size()>0 && muons.size()>0)) continue;
         FillHist(path+"/Cutflow",1,weight,10,0.,10.);
-        if(taus.at(1).Pt()<45) continue;
+        //cout << "test3 @" << idname  << endl;
+        if(taus.at(0).Pt()<35) continue;
         FillHist(path+"/Cutflow",2,weight,10,0.,10.);
+        //cout << "test4 @" << idname  << endl;
 
         double tau_weight(1.);
+        double weight_muon = 1.0;
+
+        if(taus.at(0).Charge()*muons.at(0).Charge()>0) continue;
+        FillHist(path+"/Cutflow",3,weight,10,0.,10.);
+
+        if(METv.Pt()>50) continue;
+        FillHist(path+"/Cutflow",4,weight,10,0.,10.);
+
+        Particle Zcand = taus.at(0)+muons.at(0);
+        double mTtaul = MT(Zcand,METv);
+
+        if(!(Zcand.M() > 75 && Zcand.M() < 105 )) continue;
+        FillHist(path+"/Cutflow",5,weight,10,0.,10.);
+
+        FillTimer("EventSelection_"+idname);
 
         if(!IsDATA){
-          //cout << "===" << endl;
-          for(const auto &tau : taus){
-            std::string str_Era = "UL"+std::to_string(DataYear);
-            if(!HasFlag("TauSFMethodB")) tau_weight *= GetTauIDSF(idname_map[vJet_vec.at(i)],idname_map[vEl_vec.at(j)],tau.DecayMode(),tau.Pt());
-            if(HasFlag("TauSFMethodB")){
-              TauIDSFTool *tauSFTool_VSJet = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)]);
-              tau_weight *= tauSFTool_VSJet->getSFvsPT(tau.Pt());
-            }
-            //cout << idname_map[vJet_vec.at(i)] << " " << idname_map[vEl_vec.at(j)] << " " << idname_map[vMu_vec.at(j)] << " " << tau.IDBit() << " " << tau.DecayMode() << " "  << tau.Pt() << " " << tau_weight << endl;
+          if(HasFlag("PromptLepton")){  
+            weight_muon *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key,muons.at(0).Eta(),muons.at(0).Pt());
+            weight_muon *= mcCorr->MuonTrigger_SF("POGTight","IsoMu27",muons);
+          }
+          else if(HasFlag("unweighted") || HasFlag("NonpromptLepton")){
+            weight_muon = 1.;
+          }
+          else{
+            weight_muon *= mcCorr->MuonID_SF(param.Muon_ID_SF_Key,muons.at(0).Eta(),muons.at(0).Pt());
+            weight_muon *= mcCorr->MuonTrigger_SF("POGTight","IsoMu27",muons);
           }
         }
 
-        Particle Zcand = taus.at(0)+taus.at(1);
+        FillTimer("LeptonWeight_"+idname);
 
-        FillHist(path+"/dRtt",taus.at(0).DeltaR(taus.at(1)),weight,60,0.,6.);
-        FillHist(path+"/ZCandMass",Zcand.M(),weight*tau_weight,180,0.,180.);
-        FillHist(path+"/ZCandMass_noTauWeight",Zcand.M(),weight,180,0.,180.);
+        if(!IsDATA){
+          
+          // TAU POG ID SF 
+          // https://github.com/cms-tau-pog/TauIDSFs/tree/master#c
+          
+          if(!HasFlag("unweighted")){
+
+            if(HasFlag("PromptTau")){
+              
+              FillTimer("TauWeightStart"+idname);
+              std::string str_Era = "UL"+std::to_string(DataYear);
+              tauSFTool_VSJet = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)]);
+              FillTimer("CallTauIDSFTool"+idname);
+              tau_weight *= tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt());
+              FillTimer("GetTauWeight"+idname);
+              //cout << tauSFTool_VSJet << endl;
+              delete tauSFTool_VSJet;
+              tauSFTool_VSJet = nullptr;
+              //cout << tauSFTool_VSJet << endl;
+
+            }
+
+            if(HasFlag("NonpromptTau")) tau_weight = 1.0;
+
+            /*tau_weight *= GetTauIDSF(idname_map[vJet_vec.at(i)],idname_map[vEl_vec.at(j)],taus.at(0).DecayMode(),taus.at(0).Pt());
+            cout << tau_weight << endl;*/
+
+            // cout << "[TauSF] (vJet,vEl,vMu)" << tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt()) << "," << tau_weight_DM << endl;
+          
+          }
+
+          else if(HasFlag("unweighted")) tau_weight *= 1.;
+          
+          if(HasFlag("noTauWeight")) tau_weight = 1.;
+
+        }
+
+        FillTimer("TauWeight_"+idname);
+        weight *= weight_muon*weight_tau;
+
+        
+        //cout << "test6 @" << idname  << endl;
+        //cout << "nMu " << muons.size() << endl;
+        //cout << "nTau " << taus.size() << endl;
+
+        //cout << "test7 @" << idname  << endl;
+        FillLeptonPlots(muons_lep,path,weight);
+        FillHist(path+"/dRtm",taus.at(0).DeltaR(muons.at(0)),weight,60,0.,6.);
+        //cout << "test8 @" << idname  << endl;
+        FillHist(path+"/ZCandMass",Zcand.M(),weight,60,75.,105.);
+        FillHist(path+"/ZCandMT",mTtaul,weight,150,0.,150.);
+
+        //FillHist(path+"/ZCandMass_noTauWeight",Zcand.M(),weight,180,0.,180.);
 
       }
     }

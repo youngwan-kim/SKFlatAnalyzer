@@ -73,6 +73,24 @@ bool Tau::PassID(TString ID) const{
       return true;
     }
   }
+
+  if(ID=="TightFakeStudyID"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!( passTIDvJet() )) return false;
+      return true;
+    }
+  }
+
+  if(ID=="LooseFakeStudyID"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!( passVVVLIDvJet() && !passTIDvJet() )) return false;
+      return true;
+    }
+  }
   
   return false;
 }

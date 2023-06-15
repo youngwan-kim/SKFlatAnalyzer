@@ -11,6 +11,23 @@ public:
   WRTau_Core();
   ~WRTau_Core();
 
+  std::string DeepTauVSjet = "DeepTau2017v2p1VSjet";
+  std::string DeepTauVSe = "DeepTau2017v2p1VSe";
+  std::string DeepTauVSmu = "DeepTau2017v2p1VSmu";
+
+  map<int,TString> idname_map = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
+                                 {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
+                                 {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
+
+  map<int,std::string> idname_map_str = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
+                                 {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
+                                 {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
+
+  // cache tauidsftool once during initialization
+  map<int,TauIDSFTool*> tauidsftool_map = {{0,NULL},{1,NULL},{2,NULL},{3,NULL},{4,NULL},{5,NULL},{6,NULL}}
+
+  vector<int> vJet_vec; vector<int> vEl_vec; vector<int> vMu_vec;
+
   TDirectory *histDir;
   TH1D *TauIDSFHist;
 
@@ -38,6 +55,22 @@ public:
   std::vector<FatJet> VetoTauFromFatJets(const std::vector<FatJet>& fatjets, const std::vector<Tau>& taus, double dR=0.8);
   std::vector<Lepton*> VetoTauFromLeptons(const std::vector<Lepton *> leptons, const std::vector<Tau>& taus, double dR=0.4);
   std::vector<Tau> VetoLeptonsFromTaus(const std::vector<Lepton *> leptons, const std::vector<Tau>& taus, double dR=0.4);
+  std::vector<Electron> ElectronPromptOnly_Tau(const std::vector<Electron>& electrons, const std::vector<Gen>& gens);
+  std::vector<Electron> ElectronNonPromptOnly_Tau(const std::vector<Electron>& electrons, const std::vector<Gen>& gens);
+  std::vector<Muon> MuonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
+  std::vector<Muon> MuonNonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
+
+  // Truth Matching
+  LHE GetClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs);
+  Gen GetClosestTauGen(const Tau tau, const std::vector<Gen>& gens);
+  void FillClosestTauGen(const Tau tau, const std::vector<Gen>& gens, TString region,double weight);
+  void FillClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs, TString region,double weight);
+  int GetTauType(const Tau tau, const std::vector<Gen>& gens);
+  int GetTauType_Public(int TruthIdx, const std::vector<Gen>& TruthColl);
+  vector<int> GetTauAncestor(const Gen& me, const std::vector<Gen>& gens);
+  vector<Tau> TauPromptOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
+  vector<Tau> TauFakeOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
+  vector<Tau> TauErrorOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
 
   // Variables
   double GetST(std::vector<Electron> electrons, std::vector<Muon> muons, std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv);

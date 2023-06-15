@@ -6,6 +6,7 @@
 #include "TMath.h"
 #include "TH3.h"
 #include <sstream>      
+#include <ctime>
 
 #include "SKFlatNtuple.h"
 #include "Event.h"
@@ -63,6 +64,12 @@ public:
 
   Event GetEvent();
 
+  vector<Tau> All_Taus;
+  vector<Jet> All_Jets;
+  vector<FatJet> All_FatJets;
+  vector<Muon> All_Muons;
+  vector<Electron> All_Electrons;
+  vector<Gen> All_Gens;
 
   std::vector<Electron> GetAllElectrons();
   std::vector<Electron> GetElectrons(TString id, double ptmin, double fetamax, bool vetoHEM = false);
@@ -83,6 +90,8 @@ public:
   std::vector<Lepton *> MakeLeptonPointerVector(const std::vector<Tau>& taus, double TightIso=-999, bool UseMini=false);
   std::vector<Lepton *> CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons);
   std::vector<Lepton *> CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons, const std::vector<Tau>& taus);
+
+  void beginEvent();
 
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin, double fetamax);
@@ -168,6 +177,15 @@ public:
   //==== NewErrorSet/ProdCentral
   double GetPDFReweight(int member);
 
+  // ==== TIMING MAP
+
+  std::map< TString, double > TimingMap;
+  std::map< TString, double > TimerMap;
+  std::map< TString, TString> TimeTagMatcher;
+  void AddTimerStamp(TString tag);
+  void FillTimer(TString tag);
+  string run_timestamp;
+
   //================
   //==== Functions
   //================
@@ -179,11 +197,13 @@ public:
   bool HasFlag(TString flag);
   std::vector<Muon> MuonWithoutGap(const std::vector<Muon>& muons);
   std::vector<Muon> MuonPromptOnly(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
+  std::vector<Muon> MuonNonPromptOnly(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
   std::vector<Muon> MuonUsePtCone(const std::vector<Muon>& muons);
   Muon MuonUsePtCone(const Muon& muon);
   Particle UpdateMET(const Particle& METv, const std::vector<Muon>& muons);
   std::vector<Muon> MuonApplyPtCut(const std::vector<Muon>& muons, double ptcut);
   std::vector<Electron> ElectronPromptOnly(const std::vector<Electron>& electrons, const std::vector<Gen>& gens);
+  std::vector<Electron> ElectronNonPromptOnly(const std::vector<Electron>& electrons, const std::vector<Gen>& gens);
   std::vector<Electron> ElectronUsePtCone(const std::vector<Electron>& electrons);
   Electron ElectronUsePtCone(const Electron& electron);
   std::vector<Electron> ElectronApplyPtCut(const std::vector<Electron>& electrons, double ptcut);

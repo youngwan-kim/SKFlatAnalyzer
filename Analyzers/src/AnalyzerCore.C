@@ -11,6 +11,12 @@ AnalyzerCore::AnalyzerCore(){
   muonGE = new GeneralizedEndpoint();
   muonGEScaleSyst = new GEScaleSyst();
 
+  TimeTagMatcher.clear();
+  TimerMap.clear();
+  TimerMap["LATEST"] = std::clock();
+  TimingMap.clear();
+  TimingMap["start"] = std::clock();
+
 }
 
 AnalyzerCore::~AnalyzerCore(){
@@ -166,6 +172,19 @@ std::vector<Muon> AnalyzerCore::GetMuons(TString id, double ptmin, double fetama
   return out;
 
 }
+
+void AnalyzerCore::beginEvent(){
+  
+  if(!IsData) All_Gens = GetGens();  
+  All_Taus      = GetAllTaus();
+  All_Jets      = GetAllJets();
+  All_FatJets   = GetAllFatJets();
+  All_Muons     = GetAllMuons();
+  All_Electrons = GetAllElectrons();
+
+  return;
+}
+
 
 std::vector<Electron> AnalyzerCore::GetAllElectrons(){
 
@@ -1292,6 +1311,22 @@ std::vector<Muon> AnalyzerCore::MuonPromptOnly(const std::vector<Muon>& muons, c
 
 }
 
+std::vector<Muon> AnalyzerCore::MuonNonPromptOnly(const std::vector<Muon>& muons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return muons;
+
+  std::vector<Muon> out;
+
+  for(unsigned int i=0; i<muons.size(); i++){
+    if(GetLeptonType(muons.at(i), gens)>=0) continue;
+    out.push_back( muons.at(i) );
+  }
+
+  return out;
+
+}
+
+
 std::vector<Muon> AnalyzerCore::MuonUsePtCone(const std::vector<Muon>& muons){
 
   std::vector<Muon> out;
@@ -1362,6 +1397,21 @@ std::vector<Electron> AnalyzerCore::ElectronPromptOnly(const std::vector<Electro
 
   for(unsigned int i=0; i<electrons.size(); i++){
     if(GetLeptonType(electrons.at(i), gens)<=0) continue;
+    out.push_back( electrons.at(i) );
+  }
+
+  return out;
+
+}
+
+std::vector<Electron> AnalyzerCore::ElectronNonPromptOnly(const std::vector<Electron>& electrons, const std::vector<Gen>& gens){
+
+  if(IsDATA) return electrons;
+
+  std::vector<Electron> out;
+
+  for(unsigned int i=0; i<electrons.size(); i++){
+    if(GetLeptonType(electrons.at(i), gens)>=0) continue;
     out.push_back( electrons.at(i) );
   }
 
@@ -2472,3 +2522,47 @@ Jet AnalyzerCore::GetClosestJet(const std::vector<Jet>& jets, const Electron& el
 
 }
 
+void  AnalyzerCore::AddTimerStamp(TString tag){
+  
+  if (TimingMap.find(tag) == TimingMap.end()) TimingMap[tag] = std::clock();
+  
+  return;
+
+}
+
+void  AnalyzerCore::FillTimer(TString inittag){
+  
+  TString tag = "";
+  if (TimeTagMatcher.find(inittag) == TimeTagMatcher.end()) {
+    tag = TString(std::to_string(TimeTagMatcher.size())) +"_"+inittag;
+    TimeTagMatcher[inittag] = tag;
+  }
+  else{
+    auto itr = TimeTagMatcher.find(inittag);
+    tag = itr->second;
+  }
+
+  if (TimerMap.find(tag) == TimerMap.end()) {
+    auto itr = TimerMap.find("LATEST");
+    double last_time = itr->second;
+    TimerMap[tag] = (std::clock() - last_time)/ CLOCKS_PER_SEC;
+  }
+  else{
+    auto itr = TimerMap.find("LATEST");
+    auto itr2= TimerMap.find(tag);
+    TimerMap[tag]= itr2->second + ( (std::clock() - itr->second)/ CLOCKS_PER_SEC);
+  }
+  TimerMap["LATEST"] =std::clock() ;
+  
+  if(_jentry==0) return;
+
+  if(_jentry%10000==0){
+    vector<TString> TimerLabels;
+    for(auto i: TimeTagMatcher) TimerLabels.push_back(i.first);
+    for(auto i : TimerMap) {
+      if(i.first != "LATEST")    cout << i.first << " processing time = " << i.second << endl;
+    }
+  }
+
+  return;
+}

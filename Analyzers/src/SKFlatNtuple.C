@@ -47,6 +47,7 @@ void SKFlatNtuple::Loop(){
       cout << "[SKFlatNtuple::Loop RUNNING] " << jentry << "/" << nentries << " ("<<100.*jentry/nentries<<" %) @ " << printcurrunttime() << endl;
     }
 
+    _jentry = jentry;
     if(fChain->GetEntry(jentry)<0) exit(EIO);
 
     beginEvent();
@@ -65,6 +66,7 @@ void SKFlatNtuple::Loop(){
 
 SKFlatNtuple::SKFlatNtuple(){
   MaxEvent = -1;
+  _jentry= 0;
   NSkipEvent = 0;
   LogEvery = 1000;
   IsDATA = false;

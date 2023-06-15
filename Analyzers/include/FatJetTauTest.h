@@ -1,9 +1,9 @@
-#ifndef WRTau_SR_Test_h
-#define WRTau_SR_Test_h
+#ifndef FatJetTauTest_h
+#define FatJetTauTest_h
 
 #include "WRTau_Core.h"
 
-class WRTau_SR_Test : public WRTau_Core {
+class FatJetTauTest : public WRTau_Core {
 
 public:
 
@@ -23,10 +23,8 @@ public:
   vector<Gen> AllGens;
   vector<LHE> AllLHEs;
 
-  TauIDSFTool *tauIDSFtool = NULL;
-
-  WRTau_SR_Test();
-  ~WRTau_SR_Test();
+  FatJetTauTest();
+  ~FatJetTauTest();
 
   std::string DeepTauVSjet = "DeepTau2017v2p1VSjet";
   std::string DeepTauVSe = "DeepTau2017v2p1VSe";
@@ -46,7 +44,6 @@ public:
 
 
   vector<TString> trigger;
-
 
 };
 

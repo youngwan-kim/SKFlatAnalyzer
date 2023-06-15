@@ -18,6 +18,7 @@
 #pragma link C++ class WRTau_SR_Test+;
 #pragma link C++ class WRTau_SR_Debug+;
 #pragma link C++ class WRTau_CR+;
+#pragma link C++ class TauQCDFakeStudy+;
 #pragma link C++ class ZTauTau+;
 #pragma link C++ class LeptonicTauStudy+;
 #pragma link C++ class TauolaValidation+;
