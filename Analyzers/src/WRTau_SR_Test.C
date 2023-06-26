@@ -2,6 +2,16 @@
 
 void WRTau_SR_Test::initializeAnalyzer(){
 
+  vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
+  vJet_vec = {3,4,5}; vEl_vec = {9,13}; vMu_vec = {18,21};
+  
+
+  for(const auto &vjet : vJet_vec){
+    for(const auto &vel : vEl_vec){
+      std::pair<int,int> idpair = std::make_pair(vjet,vel);
+      tauidsftool_map[idpair] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+    }
+  }
 
   if(DataYear==2017){
 
@@ -17,7 +27,7 @@ void WRTau_SR_Test::initializeAnalyzer(){
 void WRTau_SR_Test::executeEvent(){
 
 
-  FillTimer("START_EV");
+  //FillTimer("START_EV");
 
   AnalyzerParameter param;
 
@@ -84,7 +94,7 @@ void WRTau_SR_Test::executeEvent(){
 
   executeEventFromParameter(param);
 
-  FillTimer("END_EV");
+  //FillTimer("END_EV");
   
 }
 
@@ -96,26 +106,6 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
   Particle METv = ev.GetMETVector();
 
   double weight(1.);
-
-  vector<int> vJet_vec = {5,6};   //vL,L,M,T,vT
-  vector<int> vEl_vec = {11,12,13};     //L,M,T 
-  vector<int> vMu_vec = {19,20,21};     //L,M,T
-
-  // if(param.Name == "WRTau_BkgSingleLeptonTrg")
-  
-  vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
-  //vJet_vec = {4,5}; vEl_vec = {9,13}; vMu_vec = {17,20,21};
-  vJet_vec = {3,4,5}; vEl_vec = {9,13}; vMu_vec = {18,21};
-  
-
-  map<int,TString> idname_map = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
-                                 {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
-                                 {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
-
-  map<int,std::string> idname_map_str = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
-                                         {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
-                                         {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
-
 
   bool PassTrg(false);
 
@@ -186,7 +176,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
 
   vector<Lepton *> leptons_tmp = CombineLeptonPointerVector(electrons,muons);
   vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
-  vector<Lepton *> LooseLeps_tmp = CombineLeptonPointerVector(electrons_loose,muons_loose);;
+  vector<Lepton *> LooseLeps_tmp = CombineLeptonPointerVector(electrons_loose,muons_loose);
   
   //cout << "AllMuons , AllEles : " << AllMuons.size() << " " << AllElectrons.size() <<  endl;
   //cout << "TightMuons , VetoMuons , LooseMuons : " << muons.size() << " " << muons_veto.size() << " " << muons_loose.size() << endl;
@@ -255,6 +245,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
         
         int NBJets(0);
         vector<Jet> bjets = SelectBJets(jets,param_jetsM);
+        std::pair<std::vector<Lepton *>,std::vector<Lepton *>> test = std::make_pair(LooseLeps,leptons);
 
         //cout << NBJets << endl;
 
@@ -329,18 +320,10 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
           
           if(!HasFlag("unweighted")){
 
-            std::string str_Era = "UL"+std::to_string(DataYear);
+            std::pair<int,int> idpair = std::make_pair(vJet_vec.at(i),vEl_vec.at(j));
 
-            FillTimer("TauWeightStart"+idname);
-            TauIDSFTool *tauSFTool_VSJet = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)]);
-            TauIDSFTool *tauSFTool_VSJet_DM = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)],true);
-            FillTimer("CallTauIDSFTool"+idname);
-            double tau_weight_DM = tauSFTool_VSJet_DM->getSFvsDM(taus.at(0).Pt(),taus.at(0).DecayMode());
-            FillTimer("GetTauWeightDM"+idname);
-            tau_weight *= tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt());
+            tau_weight *= tauidsftool_map[idpair]->getSFvsPT(taus.at(0).Pt());
             FillTimer("GetTauWeight"+idname);
-
-            if(HasFlag("ApplyTauDMSF")) tau_weight *= tau_weight_DM;
             if(HasFlag("NonpromptTau")) tau_weight = 1.0;
 
             /*tau_weight *= GetTauIDSF(idname_map[vJet_vec.at(i)],idname_map[vEl_vec.at(j)],taus.at(0).DecayMode(),taus.at(0).Pt());
@@ -374,8 +357,8 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
         bool hasAtLeast1AK8Jets = fatjets.size()>0;
         bool hasAtLeast1TightLeptons = leptons.size()>0;
         bool hasAtLeast1LooseLeptons = LooseLeps.size()>0;
-        bool isWJetsCR(true);
-        bool isQCDrichCR(true);
+        bool _isWJetsCR(false);
+        bool _isQCDrichCR(false);
 
         //isResolvedPreselection = hasAtLeast2AK4Jets && (leptons.size()>0);
         //isBoostedPreselection = hasAtLeast1AK8Jets && (LooseLeps.size()>0);
@@ -383,7 +366,9 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
         _isStrictResolvedPreselection = hasAtLeast2AK4Jets && leptons.size()==1;
         _isBoostedPreselection = !_isResolvedPreselection && hasAtLeast1AK8Jets;
         _isBoostedPreselectionTest = !hasAtLeast2AK4Jets && hasAtLeast1AK8Jets;
-        
+        _isWJetsCR = leptons.size()==1 ;
+
+
         if(_isBoostedPreselection){
           for(const auto &lep : LooseLeps){
             if(fatjets.at(0).DeltaR(*lep)<0.8){
@@ -431,7 +416,7 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
           }
         }
 
-        if(isWJetsCR){
+        if(_isWJetsCR){
 
           region = "WJetsCR";
           region_path = path+"/"+region;
@@ -463,8 +448,6 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
             FillPreselHists(region_path+"_MuTau",taus,jets,bjets,fatjets,LooseLeps,leptons,weight_WJets);
             FillMassHists(region_path+"_MuTau",METv,taus,jets,fatjets,LooseLeps,leptons,weight_WJets);
           }
-
-          continue;
 
         }
 

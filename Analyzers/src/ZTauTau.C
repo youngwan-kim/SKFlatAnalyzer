@@ -7,7 +7,10 @@ void ZTauTau::initializeAnalyzer(){
   vJet_vec = {2,4,5}; vEl_vec = {8,13}; vMu_vec = {18,21};
 
   for(const auto &vjet : vJet_vec){
-    tauidsftool_map[vjet] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+    for(const auto &vel : vEl_vec){
+      std::pair<int,int> idpair = std::make_pair(vjet,vel);
+      tauidsftool_map[idpair] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+    }
   }
 
   // HLT_DoubleMediumChargedIsoPFTau40_Trk1_eta2p1_Reg_v
@@ -20,7 +23,7 @@ void ZTauTau::initializeAnalyzer(){
 
 void ZTauTau::executeEvent(){
 
-  FillTimer("START_EV");
+  //FillTimer("START_EV");
 
   AnalyzerParameter param;
 
@@ -32,11 +35,11 @@ void ZTauTau::executeEvent(){
 
   beginEvent();
 
-  FillTimer("GetAllObjects_beginEventCall");
+  //FillTimer("GetAllObjects_beginEventCall");
 
   executeEventFromParameter(param);
 
-  FillTimer("END_EV");
+  //FillTimer("END_EV");
 
 }
 
@@ -46,7 +49,7 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
 
   Event ev = GetEvent();
 
-  FillTimer("GetEvents");
+  //FillTimer("GetEvents");
 
   Particle METv = ev.GetMETVector();
 
@@ -78,7 +81,7 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
     this_AllElectrons = All_Electrons;
   }
 
-  FillTimer("LeptonTruthMatching");
+  //FillTimer("LeptonTruthMatching");
 
   //cout << "nThisAllMu " << this_AllMuons.size() << endl;
 
@@ -90,7 +93,7 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
   vector<Muon> muons = SelectMuons(this_AllMuons,"POGTight",30,2.4);
   vector<Lepton *> muons_lep = MakeLeptonPointerVector(muons);
 
-  FillTimer("ObjectSelection");
+  //FillTimer("ObjectSelection");
 
   //cout << "nMu " << muons.size() << endl;
 
@@ -108,13 +111,12 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
         else if(HasFlag("PromptTau")) taus = TauPromptOnly(taus_temp,All_Gens);
         else taus = taus_temp;
 
-        FillTimer("TauTruthMatching_"+idname);
+        //FillTimer("TauTruthMatching_"+idname);
 
         std::sort(taus.begin(),taus.end(),PtComparing);
         std::sort(muons.begin(),muons.end(),PtComparing);
 
-        FillTimer("SortObjects_"+idname);
-        //cout << "test1 @" << idname  << endl;
+        //FillTimer("SortObjects_"+idname);
 
         if(!ev.PassTrigger(Triggers)) continue;
 
@@ -129,9 +131,6 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
         FillHist(path+"/Cutflow",2,weight,10,0.,10.);
         //cout << "test4 @" << idname  << endl;
 
-        double tau_weight(1.);
-        double weight_muon = 1.0;
-
         if(taus.at(0).Charge()*muons.at(0).Charge()>0) continue;
         FillHist(path+"/Cutflow",3,weight,10,0.,10.);
 
@@ -141,10 +140,12 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
         Particle Zcand = taus.at(0)+muons.at(0);
         double mTtaul = MT(Zcand,METv);
 
-        if(!(Zcand.M() > 75 && Zcand.M() < 105 )) continue;
+        if(!(Zcand.M() > 50 && Zcand.M() < 130 )) continue;
         FillHist(path+"/Cutflow",5,weight,10,0.,10.);
 
-        FillTimer("EventSelection_"+idname);
+        //FillTimer("EventSelection_"+idname);
+
+        double weight_muon(1.),weight_tau(1.);
 
         if(!IsDATA){
           if(HasFlag("PromptLepton")){  
@@ -160,7 +161,7 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
           }
         }
 
-        FillTimer("LeptonWeight_"+idname);
+        //FillTimer("LeptonWeight_"+idname);
 
         if(!IsDATA){
           
@@ -171,50 +172,29 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
 
             if(HasFlag("PromptTau")){
               
-              FillTimer("TauWeightStart"+idname);
-              std::string str_Era = "UL"+std::to_string(DataYear);
-              tauSFTool_VSJet = new TauIDSFTool(str_Era,DeepTauVSjet,idname_map_str[vJet_vec.at(i)]);
-              FillTimer("CallTauIDSFTool"+idname);
-              tau_weight *= tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt());
-              FillTimer("GetTauWeight"+idname);
-              //cout << tauSFTool_VSJet << endl;
-              delete tauSFTool_VSJet;
-              tauSFTool_VSJet = nullptr;
-              //cout << tauSFTool_VSJet << endl;
-
+              //FillTimer("GetTauWeightStart_"+idname);
+              std::pair<int,int> idpair = std::make_pair(vJet_vec.at(i),vEl_vec.at(j));
+              weight_tau *= tauidsftool_map[idpair]->getSFvsPT(taus.at(0).Pt());
+              //FillTimer("GetTauWeightEnd_"+idname);
             }
 
-            if(HasFlag("NonpromptTau")) tau_weight = 1.0;
+            if(HasFlag("NonpromptTau")) weight_tau = 1.0;
 
-            /*tau_weight *= GetTauIDSF(idname_map[vJet_vec.at(i)],idname_map[vEl_vec.at(j)],taus.at(0).DecayMode(),taus.at(0).Pt());
-            cout << tau_weight << endl;*/
-
-            // cout << "[TauSF] (vJet,vEl,vMu)" << tauSFTool_VSJet->getSFvsPT(taus.at(0).Pt()) << "," << tau_weight_DM << endl;
-          
           }
 
-          else if(HasFlag("unweighted")) tau_weight *= 1.;
+          else if(HasFlag("unweighted")) weight_tau *= 1.;
           
-          if(HasFlag("noTauWeight")) tau_weight = 1.;
+          if(HasFlag("noTauWeight")) weight_tau = 1.;
 
         }
 
-        FillTimer("TauWeight_"+idname);
         weight *= weight_muon*weight_tau;
 
-        
-        //cout << "test6 @" << idname  << endl;
-        //cout << "nMu " << muons.size() << endl;
-        //cout << "nTau " << taus.size() << endl;
-
-        //cout << "test7 @" << idname  << endl;
         FillLeptonPlots(muons_lep,path,weight);
         FillHist(path+"/dRtm",taus.at(0).DeltaR(muons.at(0)),weight,60,0.,6.);
-        //cout << "test8 @" << idname  << endl;
-        FillHist(path+"/ZCandMass",Zcand.M(),weight,60,75.,105.);
-        FillHist(path+"/ZCandMT",mTtaul,weight,150,0.,150.);
+        FillHist(path+"/ZCandMass",Zcand.M(),weight,80,50.,130.);
+        FillHist(path+"/ZCandMT",mTtaul,weight,200,0.,200.);
 
-        //FillHist(path+"/ZCandMass_noTauWeight",Zcand.M(),weight,180,0.,180.);
 
       }
     }

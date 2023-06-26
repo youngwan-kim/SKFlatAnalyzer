@@ -19,11 +19,13 @@ class TauQCDFakeStudy
 class TauStudy
 class TauolaValidation
 class WRStudy
+class WRTau_Analyzer
 class WRTau_CR
 class WRTau_Core
 class WRTau_SR
 class WRTau_SR_Debug
 class WRTau_SR_Test
+class WRTau_SignalStudy
 class ZTauTau
 header AnalyzerCore.h
 header ExampleRun.h
@@ -44,9 +46,11 @@ header TauQCDFakeStudy.h
 header TauStudy.h
 header TauolaValidation.h
 header WRStudy.h
+header WRTau_Analyzer.h
 header WRTau_CR.h
 header WRTau_Core.h
 header WRTau_SR.h
 header WRTau_SR_Debug.h
 header WRTau_SR_Test.h
+header WRTau_SignalStudy.h
 header ZTauTau.h

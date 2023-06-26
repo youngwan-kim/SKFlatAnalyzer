@@ -3,6 +3,7 @@
 
 #include "AnalyzerCore.h"
 #include "TauIDSFTool.h"
+#include <set>
 
 class WRTau_Core : public AnalyzerCore {
 
@@ -24,12 +25,57 @@ public:
                                  {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
 
   // cache tauidsftool once during initialization
-  map<int,TauIDSFTool*> tauidsftool_map = {{0,NULL},{1,NULL},{2,NULL},{3,NULL},{4,NULL},{5,NULL},{6,NULL}}
+  map<std::pair<int,int>,TauIDSFTool*> tauidsftool_map;
+  map<std::pair<int,int>,TauIDSFTool*> tauidsftool_highpT_map;
 
   vector<int> vJet_vec; vector<int> vEl_vec; vector<int> vMu_vec;
 
   TDirectory *histDir;
   TH1D *TauIDSFHist;
+
+  // vars
+  enum Channel{
+    E=0,
+    EE=1,
+    EEE=2,
+    EEEE=3,
+    Mu=10,
+    MuMu=11,
+    MuMuMu=12,
+    MuMuMuMu=13,
+    EMu=15,
+    EMuL=16,
+    EMuLL=17,
+    LL=18,
+
+    TauE=20,
+    TauMu=21
+  };
+
+  enum SearchRegion{
+    BaselinePreselection,
+    ResolvedPreselection,
+    BoostedPreselection,
+    ResolvedLowMassControlRegion,
+    BoostedLowMassControlRegion,
+    ResolvedLowMassControlRegionMass1,
+    BoostedLowMassControlRegionMass1,
+    ResolvedSignalRegion,
+    BoostedSignalRegion,
+    ResolvedSignalRegionMass1,
+    BoostedSignalRegionMass1,
+    WJetsControlRegion,
+    QCDEnrichedControlRegion,
+    //Generator level regions ()
+    GenDebug     = 100,
+    GenTauHTauH  = 101,
+    GenTauHTauEl = 102,
+    GenTauHTauMu = 103,
+    GenTauElTauH = 104,
+    GenTauMuTauH = 105,
+    GenTauLTauL  = 106,
+  };
+
 
   // Regions
   const inline bool isPreselection(const std::vector<Tau>& taus){ return (taus.size()>0); };
@@ -63,6 +109,7 @@ public:
   // Truth Matching
   LHE GetClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs);
   Gen GetClosestTauGen(const Tau tau, const std::vector<Gen>& gens);
+  std::map<WRTau_Core::SearchRegion,bool> getGenLevelChannelMap(const std::vector<Gen>& gens);
   void FillClosestTauGen(const Tau tau, const std::vector<Gen>& gens, TString region,double weight);
   void FillClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs, TString region,double weight);
   int GetTauType(const Tau tau, const std::vector<Gen>& gens);
@@ -71,22 +118,50 @@ public:
   vector<Tau> TauPromptOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
   vector<Tau> TauFakeOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
   vector<Tau> TauErrorOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
+  Gen GetClosestGenJet(const std::vector<Gen>& gens, const Jet jet);
+  Gen GetClosestGenJet(const std::vector<Gen>& gens, const FatJet jet);
+  Gen GetStableTauDaughter(const Gen me,const std::vector<Gen>& gens);
+  std::pair<Gen,Gen> GetSignalGenTaus(const std::vector<Gen>& gens);
+  int GetDaughterIndex(Gen me,const std::vector<Gen>& gens);
+  std::vector<int> GetDaughterIndexVector(Gen me,const std::vector<Gen>& gens);
+  //Gen GetSignalGenLepton(const std::vector<Gen>& gens);
+  //Gen GetSignalGenJets(const std::vector<Gen>& gens);
 
   // Variables
   double GetST(std::vector<Electron> electrons, std::vector<Muon> muons, std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv);
   double GetST(std::vector<Lepton *> leptons,  std::vector<Tau> taus, std::vector<Jet> jets, std::vector<FatJet> fatjets, Particle METv);
 
+  std::pair<Particle,Particle> GetNeutrinos(const Particle METv,const Particle p1,const Particle p2);
+
   // Filling basic histograms after preselection (requiring >1 hadronic tau with pT>190 GeV)
+  WRTau_Core::Channel GetChannel(const std::vector<Lepton *> leps);
+  TString GetChannelString(WRTau_Core::Channel channel);
+  std::string GetRegionString(WRTau_Core::SearchRegion region);
+  map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                                               const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons);
+  double GetResolvedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons,bool ignoreMET);
+  double GetBoostedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons,bool ignoreMET);
+  double GetResolvedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  double GetBoostedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedSRMassN_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  double GetBoostedSRMassN_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  
+  //map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+  //                                             const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons); // TODO Implement getregion with gen level version
+  void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
+                        TString fillpath, double MCweight, int TauVsJetIndex, int TauVsElIndex,bool highpT);
   void FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight); 
   void FillMassHists(TString region, const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight);
-  /*void FillChannelHists(TString region, const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
-                       const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
-                       const std::vector<Lepton *> TightLeptons, double weight);*/                       
+  std::vector<Lepton *> ChooseLeptonColl(WRTau_Core::SearchRegion region, std::pair<std::vector<Lepton *>,std::vector<Lepton *>> LeptonPair);
   void CopyHist(TString histname0, TString histname1);
+  double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps,int TauVsJetIndex,int TauVsElIndex, bool highpT);
+
+
 
   // Others
   TDirectory* GetTempDir_WRTauCore();

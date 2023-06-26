@@ -2,7 +2,7 @@
 
 void WRTau_FakeRate::initializeAnalyzer(){
 
-  HNL_LeptonCore::initializeAnalyzer();
+  //WRTau_Core::initializeAnalyzer();
 
   TString AnalyzerPath=getenv("SKFlat_WD"), SKFlatV = getenv("SKFlatV");
   TString FilePath="/data/"+SKFlatV+"/"+GetEra()+"/FakeRate/NvtxSF/";
@@ -20,7 +20,7 @@ void WRTau_FakeRate::executeEvent(){
   // setup list of IDs
   //************************************************///
   vector<pair<TString, TString> > MuIDs; vector<pair<TString, TString> > ELIDs;
-  vector<HNL_LeptonCore::Channel> channel;
+  vector<WRTau_Core::Channel> channel;
   vector<TString> paramnames;
   
   TString           era="2016";
@@ -32,41 +32,23 @@ void WRTau_FakeRate::executeEvent(){
   //                  PassConversionVeto() IsGsfCtfScPixChargeConsistent Pass_TriggerEmulation
   // HNLoose_17028 : Pass_HNLoose2016(0.6, 0.2, 0.1, 10.) && MVA(-0.1, 0.1, -0.1) PassConversionVeto() IsGsfCtfScPixChargeConsistent Pass_TriggerEmulation
 
-  ELIDs.push_back(make_pair("HNL_ULID_"+era, "HNL_ULID_FO_"+era));
-  paramnames.push_back("HNL_ULID_"+era  );                                                                                                                    
+  // ELIDs.push_back(make_pair("HNL_ULID_"+era, "HNL_ULID_FO_"+era));
+  ELIDs.push_back(make_pair("passHEEPID", "passVetoID"));  // FIXME : fix to WRTau Electron IDs
+  paramnames.push_back("WRTau_ULID");                                                                                                                    
 
 
   for (auto i: ELIDs) {
     channel.push_back(EE);
-    MuIDs.push_back(make_pair("HNVeto2016","HNLoose_17028"));
+    MuIDs.push_back(make_pair("POGHighPt","POGLoose")); //
   }
     
-  MuIDs.push_back(make_pair("HNL_ULID_"+era, "HNL_ULID_FO_"+era));
-  paramnames.push_back("HNL_ULID_"+era  );
-  
-
-  // MUON IDS
-  /*MuIDs.push_back(make_pair("HNTightPFIsoMedium","HNLoosePOG"));
-  MuIDs.push_back(make_pair("HNTightPFIsoTight","HNLoosePOG"));
-  MuIDs.push_back(make_pair("HNTightPFIsoVeryTight","HNLoosePOG"));
-  MuIDs.push_back(make_pair("HNTightPFIsoVeryVeryTight","HNLoosePOG"));
-  MuIDs.push_back(make_pair("HNTight_17028","HNLoose_17028"));
-  MuIDs.push_back(make_pair("HNTightV2","HNLooseV1"));
-  MuIDs.push_back(make_pair("HNLooseMVA","HNLooseMVA"));
-  
-  paramnames.push_back("POGTightWithMediumIso");
-  paramnames.push_back("POGTightWithTightIso");
-  paramnames.push_back("POGTightWithVeryTightIso");
-  paramnames.push_back("POGTightWithVeryVeryTightIso");
-  paramnames.push_back("HNTight_17028");
-  paramnames.push_back("HNTightV2");
-  paramnames.push_back("HNMVA");*/
-
+  MuIDs.push_back(make_pair("POGHighPtWithLooseTrkIso", "POGLoose"));
+  paramnames.push_back("WRTau_ULID");
  
   int iel= MuIDs.size() - channel.size();
   for (int i =0; i < iel; i++){
     channel.push_back(MuMu);
-    ELIDs.push_back(make_pair("HNVetoMVA","HNLoose_17028"));
+    ELIDs.push_back(make_pair("CutBasedLooseNoIso","passVetoID"));
   }
 
   if( paramnames.size() != ELIDs.size()) return;

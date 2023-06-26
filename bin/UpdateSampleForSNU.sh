@@ -12,8 +12,9 @@ fi
 
 SEARCHDIR=$(realpath $1)
 if [ ! -z "$2" ];then
-    echo "Dry-run..."
-    DRY=true
+    #echo "Alias set"
+    ALIAS= "$2"
+	echo "Alias set : $ALIAS"
 fi
 
 ## find /gv0/DATA/SKFlat/Run2UltraLegacy_v1/2017/DATA/SingleElectron/periodB/210120_042549/ -type f |sort -V > $SKFlat_WD/data/Run2UltraLegacy_v1/2017/Sample/ForSNU/
@@ -88,11 +89,11 @@ while read line <&3; do
 	fi
     fi
     echo "find $SOURCE -type f|sort -V > $TARGET"
-    if [ "$DRY" != "true" ]; then
+    #if [ "$DRY" != "true" ]; then
 	read -p "exec? (y/n): " YES
 	if [ "$YES" = "y" ];then
 	    find $SOURCE -type f|sort -V > $TARGET
 	fi
-    fi
+
 done 3< <(find $SEARCHDIR -type d|grep $SKFlatV|sort -V)
 #done 3< <(find $SEARCHDIR -type d|grep $SKFlatV|sort -V|egrep -v "TypeI|private|sherpa")
