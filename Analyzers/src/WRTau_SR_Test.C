@@ -8,8 +8,10 @@ void WRTau_SR_Test::initializeAnalyzer(){
 
   for(const auto &vjet : vJet_vec){
     for(const auto &vel : vEl_vec){
-      std::pair<int,int> idpair = std::make_pair(vjet,vel);
-      tauidsftool_map[idpair] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+      for(const auto &vmu : vMu_vec){
+        std::tuple<int,int,int> idtuple = std::make_tuple(vjet,vel,vmu);
+        tauidsftool_map[idtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+      }
     }
   }
 
@@ -320,9 +322,9 @@ void WRTau_SR_Test::executeEventFromParameter(AnalyzerParameter param){
           
           if(!HasFlag("unweighted")){
 
-            std::pair<int,int> idpair = std::make_pair(vJet_vec.at(i),vEl_vec.at(j));
+            std::tuple<int,int,int> idtuple = std::make_tuple(vJet_vec.at(i),vEl_vec.at(j),vMu_vec[k]);
 
-            tau_weight *= tauidsftool_map[idpair]->getSFvsPT(taus.at(0).Pt());
+            tau_weight *= tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt());
             FillTimer("GetTauWeight"+idname);
             if(HasFlag("NonpromptTau")) tau_weight = 1.0;
 

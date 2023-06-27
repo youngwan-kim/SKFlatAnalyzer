@@ -8,8 +8,10 @@ void ZTauTau::initializeAnalyzer(){
 
   for(const auto &vjet : vJet_vec){
     for(const auto &vel : vEl_vec){
-      std::pair<int,int> idpair = std::make_pair(vjet,vel);
-      tauidsftool_map[idpair] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+      for(const auto &vmu : vMu_vec){
+        std::tuple<int,int,int> idtuple = std::make_tuple(vjet,vel,vmu);
+        tauidsftool_map[idtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+      }
     }
   }
 
@@ -173,8 +175,8 @@ void ZTauTau::executeEventFromParameter(AnalyzerParameter param){
             if(HasFlag("PromptTau")){
               
               //FillTimer("GetTauWeightStart_"+idname);
-              std::pair<int,int> idpair = std::make_pair(vJet_vec.at(i),vEl_vec.at(j));
-              weight_tau *= tauidsftool_map[idpair]->getSFvsPT(taus.at(0).Pt());
+              std::tuple<int,int,int> idtuple = std::make_tuple(vJet_vec.at(i),vEl_vec.at(j),vMu_vec.at(k));
+              weight_tau *= tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt());
               //FillTimer("GetTauWeightEnd_"+idname);
             }
 

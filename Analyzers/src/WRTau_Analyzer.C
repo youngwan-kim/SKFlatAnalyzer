@@ -5,13 +5,7 @@ void WRTau_Analyzer::initializeAnalyzer(){
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
   vJet_vec = {3,4,5}; vEl_vec = {9,13}; vMu_vec = {18,21};
   
-
-  for(const auto &vjet : vJet_vec){
-    for(const auto &vel : vEl_vec){
-      std::pair<int,int> IDpair = std::make_pair(vjet,vel);
-      tauidsftool_map[IDpair] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet],idname_map_str[vel],false,false,false,true);
-    }
-  }
+  GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
   if(DataYear==2017){
 
@@ -106,6 +100,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
     this_AllElectrons = AllElectrons;
   }
 
+
   vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50., 2.4) ;
   vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 50., 2.4) ;
   vector<Muon> muons_loose = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4) ;
@@ -124,9 +119,11 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
     for(unsigned int j=0; j<vEl_vec.size(); j++){
       for(unsigned int k=0; k<vMu_vec.size(); k++){
 
+
+        std::tuple<int,int,int> IDtuple = std::make_tuple(vJet_vec[i],vEl_vec[j],vMu_vec[k]);
         TString idname = "vJet"+idname_map[vJet_vec.at(i)]+"_vEl"+idname_map[vEl_vec.at(j)]+"_vMu"+idname_map[vMu_vec.at(k)];
         TString path = param.Name+"/"+idname;
-        vector<Tau> taus_temp = SelectTaus_varWP(this_AllTaus,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
+        vector<Tau> taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
         
         /*FillHist(path+"/AllTaus",AllTaus.size(),weight,10,0.,10.);
         FillHist(path+"/LepVetoTaus",taus_lepVeto.size(),weight,10,0.,10.);
@@ -210,7 +207,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
-        FillPassingRegions(map_regions,METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,vJet_vec.at(i),vEl_vec.at(j),true);
+        FillPassingRegions(map_regions,METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
         
       }
     }

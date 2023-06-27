@@ -12,6 +12,23 @@ bool WRTau_Core::isResolvedPreselection(const std::vector<Tau>& taus, const std:
   return ( (isPreselection(taus) && hasAtLeast1Leptons(LooseLeptons)) && hasAtLeast2AK4Jets(jets) && hasAtLeast1Leptons(TightLeptons));
 }
 
+void WRTau_Core::GetTauIDSFTools(const std::vector<int> vJet_vec,const std::vector<int> vEl_vec,const std::vector<int> vMu_vec){
+
+  for(const auto &vjet : vJet_vec){
+    for(const auto &vel : vEl_vec){
+      for(const auto &vmu : vMu_vec){
+        std::tuple<int,int,int> IDtuple = std::make_tuple(vjet,vel,vmu);
+        tauidsftool_map[IDtuple]     = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet],idname_map_str[vel],false,false,false,true);
+        tauidsftool_vEl_map[IDtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSe,idname_map_str[vel],idname_map_str[vel]);
+        tauidsftool_vMu_map[IDtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSmu,idname_map_str[vmu],idname_map_str[vel]);
+      }
+    }
+  }
+
+  return;
+
+}
+
 double WRTau_Core::GetTauIDSF(TString vsJetWP, TString vsEleWP, int DM, double pt,bool GetFromDM){
 
   double sf(1.);
@@ -953,8 +970,8 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool hasAtLeast1TightLeptons = TightLeptons.size()>0;
   bool hasAtLeast1LooseLeptons = LooseLeptons.size()>0;
 
-  _isBaselinePreselection = taus.size()>0 && taus.at(0).Pt()>190 && hasAtLeast1LooseLeptons;
-  _isResolvedPreselection = hasAtLeast2AK4Jets && hasAtLeast1TightLeptons;
+  _isBaselinePreselection = taus.size()>0 && taus.at(0).Pt()>190 && LooseLeptons.size()==0;
+  _isResolvedPreselection = hasAtLeast2AK4Jets && TightLeptons.size()==0;
   _isBoostedPreselection = !_isResolvedPreselection && hasAtLeast1AK8Jets;
 
 
@@ -1044,9 +1061,9 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
 
 
 
-void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
-                        TString fillpath, double MCweight, int TauVsJetIndex,int TauVsElIndex,bool highpT){
+                        TString fillpath, double MCweight,std::tuple<int,int,int> idtuple, bool highpT){
   
   for(auto const& region : m_region){
 
@@ -1060,10 +1077,10 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       TString label_channel = label + "_"+GetChannelString(ch);
 
       std::vector<TString> fillstr = {label,label_channel};
-
-      double weight = GetMatchedWeight(taus,leptons,TauVsJetIndex,TauVsElIndex,highpT) * MCweight;
+      
+      double weight = GetMatchedWeight(taus,leptons,idtuple,highpT) * MCweight;
+      weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
       if(HasFlag("unweighted")) weight = 1;
-
 
       for(const auto str : fillstr){
 
@@ -1131,7 +1148,28 @@ std::vector<Lepton *> WRTau_Core::ChooseLeptonColl(WRTau_Core::SearchRegion regi
 
 }
 
-double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps,int TauVsJetIndex,int TauVsElIndex,bool highpT){
+double WRTau_Core::GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens){
+
+  double w = 1.0;
+
+  if(HasFlag("NonpromptLepton")){
+    
+    if(GetChannel(leps) == WRTau_Core::TauE){
+      int genmatch = fabs(GetLeptonType(*leps.at(0),gens));
+      w *= tauidsftool_vEl_map[idtuple]->getSFvsEta(leps.at(0)->Eta(),genmatch);
+    }
+
+    else if(GetChannel(leps) == WRTau_Core::TauMu){
+      int genmatch = fabs(GetLeptonType(*leps.at(0),gens))+1;
+      w *= tauidsftool_vMu_map[idtuple]->getSFvsEta(leps.at(0)->Eta(),genmatch);
+    }
+  }
+
+  return w;
+
+}
+
+double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps,std::tuple<int,int,int> idtuple,bool highpT){
 
   if(IsDATA) return 1.0;
   
@@ -1140,11 +1178,10 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
 
     double w_tau(1.0), w_lepton(1.0);
 
-    std::pair<int,int> idpair = std::make_pair(TauVsJetIndex,TauVsElIndex);
 
     if(!HasFlag("NonpromptTau")){
-      if(highpT) w_tau = tauidsftool_map[idpair]->getHighPTSFvsPT(taus.at(0).Pt());
-      else w_tau = tauidsftool_map[idpair]->getSFvsPT(taus.at(0).Pt());
+      if(highpT) w_tau = tauidsftool_map[idtuple]->getHighPTSFvsPT(taus.at(0).Pt());
+      else w_tau = tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt());
     }
     if(!HasFlag("NonpromptLepton")){
 
@@ -1153,8 +1190,11 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
         w_lepton *= mcCorr->ElectronReco_SF(leps.at(0)->Eta(),leps.at(0)->Pt());
       }
 
+      // TODO : implement to get AnalyzerParam info for general input of SF WPs
+
       else if(GetChannel(leps) == WRTau_Core::TauMu){
         w_lepton *= mcCorr->MuonID_SF("NUM_HighPtID_DEN_TrackerMuons",leps.at(0)->Eta(),leps.at(0)->Pt());
+        w_lepton *= mcCorr->MuonISO_SF("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut",leps.at(0)->Eta(),leps.at(0)->Pt());
       }
     
     }

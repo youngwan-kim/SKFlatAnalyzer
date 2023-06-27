@@ -4,6 +4,7 @@
 #include "AnalyzerCore.h"
 #include "TauIDSFTool.h"
 #include <set>
+#include <tuple>
 
 class WRTau_Core : public AnalyzerCore {
 
@@ -25,8 +26,9 @@ public:
                                  {17,"VVLoose"},{18,"VLoose"},{19,"Loose"},{20,"Medium"},{21,"Tight"}};
 
   // cache tauidsftool once during initialization
-  map<std::pair<int,int>,TauIDSFTool*> tauidsftool_map;
-  map<std::pair<int,int>,TauIDSFTool*> tauidsftool_highpT_map;
+  map<std::tuple<int,int,int>,TauIDSFTool*> tauidsftool_map;
+  map<std::tuple<int,int,int>,TauIDSFTool*> tauidsftool_vEl_map;
+  map<std::tuple<int,int,int>,TauIDSFTool*> tauidsftool_vMu_map;
 
   vector<int> vJet_vec; vector<int> vEl_vec; vector<int> vMu_vec;
 
@@ -148,9 +150,9 @@ public:
   
   //map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
   //                                             const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons); // TODO Implement getregion with gen level version
-  void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+  void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
-                        TString fillpath, double MCweight, int TauVsJetIndex, int TauVsElIndex,bool highpT);
+                        TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
   void FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight); 
@@ -159,8 +161,11 @@ public:
                        const std::vector<Lepton *> TightLeptons, double weight);
   std::vector<Lepton *> ChooseLeptonColl(WRTau_Core::SearchRegion region, std::pair<std::vector<Lepton *>,std::vector<Lepton *>> LeptonPair);
   void CopyHist(TString histname0, TString histname1);
-  double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps,int TauVsJetIndex,int TauVsElIndex, bool highpT);
 
+  // weights
+  void GetTauIDSFTools(const std::vector<int> vJet_vec,const std::vector<int> vEl_vec,const std::vector<int> vMu_vec);
+  double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps, std::tuple<int,int,int> idtuple, bool highpT);
+  double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
 
 
   // Others

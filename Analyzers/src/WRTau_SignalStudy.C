@@ -8,8 +8,10 @@ void WRTau_SignalStudy::initializeAnalyzer(){
 
   for(const auto &vjet : vJet_vec){
     for(const auto &vel : vEl_vec){
-      std::pair<int,int> idpair = std::make_pair(vjet,vel);
-      tauidsftool_map[idpair] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+      for(const auto &vmu : vMu_vec){
+        std::tuple<int,int,int> idtuple = std::make_tuple(vjet,vel,vmu);
+        tauidsftool_map[idtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet]);
+      }
     }
   }
 
