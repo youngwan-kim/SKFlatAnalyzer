@@ -73,9 +73,11 @@ public:
 
   std::vector<Electron> GetAllElectrons();
   std::vector<Electron> GetElectrons(TString id, double ptmin, double fetamax, bool vetoHEM = false);
+  std::vector<Electron> GetElectrons(AnalyzerParameter param, TString id, double ptmin, double fetamax ,bool Run_Fake=false, bool vetoHEM=false);
 
   std::vector<Muon> GetAllMuons();
   std::vector<Muon> GetMuons(TString id, double ptmin, double fetamax);
+  std::vector<Muon> GetMuons(AnalyzerParameter param, TString id, double ptmin, double fetamax,bool Run_Fake=false);
 
   std::vector<Tau> GetAllTaus();
   std::vector<Tau> GetTaus(TString id, double ptmin, double fetamax);
@@ -91,11 +93,16 @@ public:
   std::vector<Lepton *> CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons);
   std::vector<Lepton *> CombineLeptonPointerVector(const std::vector<Electron>& electrons, const std::vector<Muon>& muons, const std::vector<Tau>& taus);
 
+  double GetIsoFromID(TString type_lep, TString id, double eta, double pt);
+
   void beginEvent();
 
   std::vector<Jet> GetAllJets();
   std::vector<Jet> GetJets(TString id, double ptmin, double fetamax);
+  std::vector<Jet> GetJets(AnalyzerParameter param,TString ID, double ptmin, double fetamax);
   std::vector<Jet> GetBJets(vector<Jet> jetColl, JetTagging::Parameters jtp);
+  double  GetBJetSF(AnalyzerParameter param,vector<Jet> jets, JetTagging::Parameters jtp);
+  Particle UpdateMETSmearedJet(const Particle& METv, const std::vector<Jet>& jets);
 
   std::vector<FatJet> GetAllFatJets();
   std::vector<FatJet> GetFatJets(TString id, double ptmin, double fetamax);
@@ -157,7 +164,9 @@ public:
   void initializeAnalyzerTools();
 
   //==== MCweight
+  void FillWeightHist(TString label, double _weight);
   double MCweight(bool usesign=true, bool norm_1invpb=true) const;
+  double GetKFactor();
 
   //==== Prefire
   double GetPrefireWeight(int sys);
@@ -213,9 +222,14 @@ public:
   std::vector<FatJet> FatJetsVetoLeptonInside(const std::vector<FatJet>& jets, const std::vector<Lepton *> leps, double dR=0.8);
   std::vector<Jet> JetsAwayFromPhoton(const std::vector<Jet>& jets, const std::vector<Photon>& photons, double mindr);
   Particle AddFatJetAndLepton(const FatJet& fatjet, const Lepton& lep);
+  
   Jet GetClosestJet(const std::vector<Jet>& jets, const Muon& muon);
   Jet GetClosestJet(const std::vector<Jet>& jets, const Electron& electron);
+  
   vector<Jet> SelectBJets(vector<Jet> jetColl, JetTagging::Parameters jtp);
+  vector<Jet> SelectBJets(AnalyzerParameter param, vector<Jet> jets, JetTagging::Parameters jtp);
+  vector<Jet> SelectLJets(AnalyzerParameter param, vector<Jet> jets, JetTagging::Parameters jtp);
+
 
 
   //==== GenMatching
@@ -225,6 +239,15 @@ public:
   static Gen GetGenMatchedLepton(const Lepton& lep, const std::vector<Gen>& gens);
   static Gen GetGenMatchedPhoton(const Lepton& lep, const std::vector<Gen>& gens);
   static vector<int> TrackGenSelfHistory(const Gen& me, const std::vector<Gen>& gens);
+
+  int  GenMatchedIdx(const Lepton& Lep, std::vector<Gen>& truthColl);
+  int  GetNearPhotonIdx(const Lepton& Lep, std::vector<Gen>& TruthColl);
+  int  LastSelfMotherIdx(int TruthIdx,std::vector<Gen>& TruthColl);
+  int  FirstNonSelfMotherIdx(int TruthIdx, std::vector<Gen>& TruthColl);
+  bool HasHadronicAncestor(int TruthIdx, std::vector<Gen>& TruthColl);
+  bool IsFinalPhotonSt23(std::vector<Gen>& TruthColl);
+  int  GetPrElType_InSameSCRange(int TruthIdx, std::vector<Gen>& TruthColl, TString Option="");
+
   bool IsFromHadron(const Gen& me, const std::vector<Gen>& gens);
   int GetLeptonType(const Lepton& lep, const std::vector<Gen>& gens);
   int GetLeptonType_Public(int TruthIdx, const std::vector<Gen>& TruthColl);
@@ -233,6 +256,18 @@ public:
   int  GetPrElType_InSameSCRange_Public(int TruthIdx, const std::vector<Gen>& TruthColl);
   bool IsSignalPID(int pid);
   bool FindHEMElectron(Electron electron);
+
+  // JH
+
+  int  GetPartonType_JH(int TruthIdx, std::vector<Gen>& TruthColl);
+  int  GetLeptonType_JH(int TruthIdx, std::vector<Gen>& TruthColl);
+  int  GetLeptonType_JH(const Lepton& Lep, std::vector<Gen>& TruthColl);
+  int  GetPhotonType_JH(int PhotonIdx, std::vector<Gen>& TruthColl);
+  int  GetFakeLepSrcType(const Lepton& Lep, vector<Jet>& JetColl);
+
+  //
+  bool IsCF(Electron el, std::vector<Gen> gens);
+  bool IsCF(Muon mu, std::vector<Gen> gens);
 
   //==== Plotting
 
@@ -244,8 +279,8 @@ public:
   TH2D* GetHist2D(TString histname);
   TH3D* GetHist3D(TString histname);
 
-  void FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max);
-  void FillHist(TString histname, double value, double weight, int n_bin, double *xbins);
+  void FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max,TString label="");
+  void FillHist(TString histname, double value, double weight, int n_bin, double *xbins,TString label="");
   void FillHist(TString histname,
                 double value_x, double value_y,
                 double weight,

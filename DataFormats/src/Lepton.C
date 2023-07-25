@@ -13,6 +13,8 @@ Lepton::Lepton() : Particle() {
   j_MiniRelIso = -999.;
   j_ptcone = -999.;
   j_LeptonFlavour = NONE;
+  j_LeptonType = -999;
+  j_LeptonIsCF = false;
 }
 
 Lepton::~Lepton(){
@@ -38,6 +40,25 @@ void Lepton::SetRelIso(double r){
   j_RelIso = r;
 }
 
+void Lepton::SetLeptonIsCF(bool t){
+  j_LeptonIsCF= t;
+}
+
+void Lepton::SetJetPtRel(double ptrel){
+
+  j_lep_jetptrel = ptrel;
+}
+
+void Lepton::SetJetPtRatio(double ptr){
+
+  j_lep_jetptratio = ptr;
+}
+
+void Lepton::SetCloseJetFlavour(int flav){
+
+  j_lep_jetflavour = flav;
+}
+
 void Lepton::SetMiniIso(double ch, double nh, double ph, double pu, double rho, double EA){
 
   double r_mini = miniIsoDr();
@@ -46,6 +67,10 @@ void Lepton::SetMiniIso(double ch, double nh, double ph, double pu, double rho, 
   double correctedIso = ch + std::max(0.0, nh + ph - correction);
   j_MiniRelIso = correctedIso/this->Pt();
 
+}
+
+void Lepton::SetLeptonType(int t){
+  j_LeptonType= t;
 }
 
 void Lepton::SetLeptonFlavour(Flavour f){

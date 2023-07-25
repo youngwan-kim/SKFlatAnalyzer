@@ -35,6 +35,22 @@ public:
   TDirectory *histDir;
   TH1D *TauIDSFHist;
 
+  enum TheRunEra{
+    y2016B,y2016C,y2016D,y2016E,y2016F,y2016G,y2016H,
+    y2017B,y2017C,y2017D,y2017E,y2017F,
+    y2018A,y2018B,y2018C,y2018D,
+    y2016MC,
+    y2017MC,
+    y2018MC,
+    yUL2016B,yUL2016C,yUL2016D,yUL2016E,yUL2016F,yUL2016Flate,yUL2016G,yUL2016H,
+    yUL2017B,yUL2017C,yUL2017D,yUL2017E,yUL2017F,
+    yUL2018A,yUL2018B,yUL2018C,yUL2018D,
+    yUL2016MCAPV,
+    yUL2016MCnonAPV,
+    yUL2017MC,
+    yUL2018MC
+  };
+
   // vars
   enum Channel{
     E=0,
@@ -69,13 +85,17 @@ public:
     WJetsControlRegion,
     QCDEnrichedControlRegion,
     //Generator level regions ()
-    GenDebug     = 100,
-    GenTauHTauH  = 101,
-    GenTauHTauEl = 102,
-    GenTauHTauMu = 103,
-    GenTauElTauH = 104,
-    GenTauMuTauH = 105,
-    GenTauLTauL  = 106,
+    GenDebug                    = 100,
+    GenTauHTauH                 = 101,
+    GenTauHTauEl                = 102,
+    GenTauHTauMu                = 103,
+    GenTauElTauH                = 104,
+    GenTauMuTauH                = 105,
+    GenTauLTauL                 = 106,
+    GenResolvedElSignalRegion   = 107,
+    GenResolvedMuSignalRegion   = 108,
+    GenBoostedElSignalRegion    = 109,
+    GenBoostedMuSignalRegion    = 110,
   };
 
 
@@ -107,6 +127,11 @@ public:
   std::vector<Electron> ElectronNonPromptOnly_Tau(const std::vector<Electron>& electrons, const std::vector<Gen>& gens);
   std::vector<Muon> MuonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
   std::vector<Muon> MuonNonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
+
+  // MET
+  Particle GetvMET(TString METType, AnalyzerParameter param);
+  Particle GetvMET(TString METType);
+  std::pair<double,double> METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false);
 
   // Truth Matching
   LHE GetClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs);
@@ -141,6 +166,7 @@ public:
   std::string GetRegionString(WRTau_Core::SearchRegion region);
   map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                                                const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons);
+  map<WRTau_Core::SearchRegion,bool> GetGenRegion(const std::vector<Gen>& gens);
   double GetResolvedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons,bool ignoreMET);
   double GetBoostedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons,bool ignoreMET);
   double GetResolvedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
@@ -163,6 +189,7 @@ public:
   void CopyHist(TString histname0, TString histname1);
 
   // weights
+  double SetupWeight(Event ev, AnalyzerParameter param);
   void GetTauIDSFTools(const std::vector<int> vJet_vec,const std::vector<int> vEl_vec,const std::vector<int> vMu_vec);
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps, std::tuple<int,int,int> idtuple, bool highpT);
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);

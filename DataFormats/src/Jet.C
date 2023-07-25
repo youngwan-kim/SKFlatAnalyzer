@@ -30,6 +30,8 @@ Jet::Jet() : Particle() {
   j_bJetNN_res=-999.;
   j_cJetNN_corr=1.;
   j_cJetNN_res=-999.;
+  j_PxUnSmeared=-999.;
+  j_PyUnSmeared=-999.;
   
   j_tightJetID=false;
   j_tightLepVetoJetID=false;
@@ -96,6 +98,15 @@ void Jet::SetTightJetID(double b){
 void Jet::SetTightLepVetoJetID(double b){
   j_tightLepVetoJetID = b;
 }
+
+void Jet::SetPxUnSmeared(double px){
+  j_PxUnSmeared=px;
+}
+
+void Jet::SetPyUnSmeared(double py){
+  j_PyUnSmeared=py;
+}
+
 
 bool Jet::PassID(TString ID) const {
 

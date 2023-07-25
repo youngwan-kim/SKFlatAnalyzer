@@ -242,6 +242,8 @@ public :
    vector<float>   *electron_phIso03;
    vector<float>   *electron_puChIso03;
    vector<bool>    *electron_passConversionVeto;
+   vector<bool>    *electron_is_cf;
+   vector<int>      *electron_lepton_type;
    vector<bool>    *electron_isGsfCtfScPixChargeConsistent;
    vector<bool>    *electron_isGsfScPixChargeConsistent;
    vector<bool>    *electron_isGsfCtfChargeConsistent;
@@ -352,6 +354,8 @@ public :
    vector<float>   *muon_TuneP_charge;
    vector<float>   *muon_roch_sf;
    vector<float>   *muon_roch_sf_up;
+   vector<bool>    *muon_is_cf;
+   vector<int>     *muon_lepton_type;
    vector<float>   *muon_PfChargedHadronMiniIso;
    vector<float>   *muon_PfNeutralHadronMiniIso;
    vector<float>   *muon_PfGammaMiniIso;
@@ -638,6 +642,8 @@ public :
    TBranch        *b_electron_phIso03;   //!
    TBranch        *b_electron_puChIso03;   //!
    TBranch        *b_electron_passConversionVeto;   //!
+   TBranch        *b_electron_is_cf;
+   TBranch        *b_electron_lepton_type;
    TBranch        *b_electron_isGsfCtfScPixChargeConsistent;   //!
    TBranch        *b_electron_isGsfScPixChargeConsistent;   //!
    TBranch        *b_electron_isGsfCtfChargeConsistent;   //!
@@ -684,6 +690,8 @@ public :
    TBranch        *b_muon_ismedium_hip;   //!
    TBranch        *b_muon_ismedium_nohip;   //!
    TBranch        *b_muon_dB;   //!
+   TBranch        *b_muon_is_cf;
+   TBranch        *b_muon_lepton_type;
    TBranch        *b_muon_phi;   //!
    TBranch        *b_muon_eta;   //!
    TBranch        *b_muon_pt;   //!

@@ -162,8 +162,10 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         vector<Jet> jets_tauVeto = VetoTauFromJets(this_AllJets,taus); 
         vector<FatJet> fatjets_tmp = VetoTauFromFatJets(this_AllFatJets,taus);
-        vector<Lepton *> LooseLeptons = VetoTauFromLeptons(LooseLeptons_tmp,taus);
-        vector<Lepton *> TightLeptons = VetoTauFromLeptons(leptons_tmp,taus);
+        //vector<Lepton *> LooseLeptons = VetoTauFromLeptons(LooseLeptons_tmp,taus);
+        //vector<Lepton *> TightLeptons = VetoTauFromLeptons(leptons_tmp,taus);
+        vector<Lepton *> LooseLeptons = LooseLeptons_tmp;
+        vector<Lepton *> TightLeptons = leptons_tmp;
 
         vector<Jet> jets_lepVeto_tauVeto = JetsVetoLeptonInside(jets_tauVeto,electrons_veto,muons_veto,0.4);
         vector<Jet> jets = SelectJets(jets_lepVeto_tauVeto, param.Jet_ID, 40., 2.4);
@@ -203,7 +205,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         if(taus.at(0).Pt()<190) continue;
         FillHist(path+"/Cutflow",3.,weight,10,0.,10.);
 
-        if(LooseLeptons.size()<1) continue;
+        if(LooseLeptons.size()!=1) continue;
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);

@@ -93,7 +93,7 @@ void WRTau_FakeRate::executeEvent(){
     //     param.WriteOutVerbose = 2;  Run Main ID and make  only FR 
     //     param.WriteOutVerbose = 3;  Run Main ID and make  only FR + PR
     //     param.WriteOutVerbose = 0;  makes NVertx plots
-    param.WriteOutVerbose= -2; // 0 means only make FR  1 means FR+PR  2 means SR+PR + CR plots  3 means makes NVertx plots
+    param.WriteOutVerbose= -3; // 0 means only make FR  1 means FR+PR  2 means SR+PR + CR plots  3 means makes NVertx plots
    
     
     if(param.WriteOutVerbose >=0){
@@ -111,7 +111,7 @@ void WRTau_FakeRate::executeEvent(){
   } 
 }
 
-void WRTau_FakeRate::executeEventFromParameter(AnalyzerParameter param, TString El_ID, HNL_LeptonCore::Channel channel){
+void WRTau_FakeRate::executeEventFromParameter(AnalyzerParameter param, TString El_ID, WRTau_Core::Channel channel){
 
   
   //cout << "executeEventFromParameter " << GetChannelString(channel) << " " << El_ID  << endl;
@@ -120,18 +120,20 @@ void WRTau_FakeRate::executeEventFromParameter(AnalyzerParameter param, TString 
   // setup event level objects
   Event ev = GetEvent();
 
-  double weight = SetupWeight(ev, param) / ev.GetTriggerLumi("Full");
+
+
+  double weight = SetupWeight(ev, param) / ev.GetTriggerLumi("Full"); // FIXME
   if(IsData) weight = 1;
   
   if(!PassMETFilter()) return;
 
   
-  std::vector<Electron> loose_electrons     = GetElectrons( param,param.Electron_Loose_ID, 9.5, 2.5,false) ;
-  std::vector<Muon>     loose_muons         = GetMuons    ( param,param.Muon_Loose_ID, 5, 2.4, false);
+  std::vector<Electron> loose_electrons     = GetElectrons( param, param.Electron_Loose_ID, 9.5, 2.5,false) ;
+  std::vector<Muon>     loose_muons         = GetMuons    ( param, param.Muon_Loose_ID, 5, 2.4, false);
   
   //cout << "loose_electrons = " << loose_electrons.size() << " loose_muons " << loose_muons.size() << endl;
 
-  std::vector<Jet> jets_tmp     = GetJets   ( param, "tight", 30., 2.7);
+  std::vector<Jet> jets_tmp     = GetJets   ( "tight", 30., 2.7);
   std::vector<Jet> jets; 
   for(unsigned int ijet =0; ijet < jets_tmp.size(); ijet++){
     bool jetok=true;
@@ -196,7 +198,7 @@ void WRTau_FakeRate::RunM(std::vector<Electron> loose_el,  std::vector<Muon> loo
     return;
   }
 
-  if (param.Muon_Tight_ID != "HNTightV2") return;
+  //if (param.Muon_Tight_ID != "HNTightV2") return;
 
   MakeDiLepPlots(MuMu,param, ev, leps,blepsT,param.Name+channel_s,event_weight);
 
@@ -334,7 +336,7 @@ void WRTau_FakeRate::RunE( std::vector<Electron> loose_el, std::vector<Muon> loo
   }
 
 
-  if (param.Electron_Tight_ID != "HNTightV2") return;
+  //if (param.Electron_Tight_ID != "HNTightV2") return;
 
   MakeDiLepPlots(EE,param, ev, leps,blepsT,param.Name+channel_s,event_weight);
   
@@ -443,7 +445,7 @@ double WRTau_FakeRate::ApplyNvtxReweight(int NPV, TString Key){
 }
 
 
-void WRTau_FakeRate::MakeDiLepPlots(HNL_LeptonCore::Channel channel, AnalyzerParameter param, Event ev, std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight){
+void WRTau_FakeRate::MakeDiLepPlots(WRTau_Core::Channel channel, AnalyzerParameter param, Event ev, std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight){
 
   if(leps.size() != 2) return;
   if(!blepsT[0] || !blepsT[1]) return;
@@ -587,7 +589,7 @@ void WRTau_FakeRate::MakeDiLepPlots(HNL_LeptonCore::Channel channel, AnalyzerPar
 
 
 
-void WRTau_FakeRate::MakeNVertexDistPrescaledTrig(HNL_LeptonCore::Channel channel, AnalyzerParameter param, Event ev, std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight){
+void WRTau_FakeRate::MakeNVertexDistPrescaledTrig(WRTau_Core::Channel channel, AnalyzerParameter param, Event ev, std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight){
   
 
   if(leps.size() != 2) return;
@@ -1019,7 +1021,6 @@ void WRTau_FakeRate::GetFakeRates(std::vector<Lepton *> leps,std::vector<bool> b
   float lep_eta =   fabs(leps[0]->Eta());
   float lep_reliso  = leps[0]->RelIso();
   float lep_ip3d    = fabs(leps[0]->IP3D()/leps[0]->IP3Derr());
-  float lep_mva     =  leps[0]->lep_mva();
   float lep_dxy     = fabs(leps[0]->dXY());
   
   //if(lep_jet_ptratio > 100.) lep_jet_ptratio = 99.;
@@ -1112,7 +1113,6 @@ void WRTau_FakeRate::GetFakeRates(std::vector<Lepton *> leps,std::vector<bool> b
 	FillHist((prefix + "_reliso").Data(), lep_reliso, weight_pt*prescale_lep, 50, 0., 1.);
 	FillHist((prefix + "_dXY").Data(),    lep_dxy, weight_pt*prescale_lep, 50, 0., 1.);
 	FillHist((prefix + "_IP3D").Data(),   lep_ip3d, weight_pt*prescale_lep, 50, 0., 10.);
-	FillHist((prefix + "_mva").Data(),    lep_mva, weight_pt*prescale_lep, 50, -1., 1.);
 	FillHist((prefix + "_pt_eta").Data(), lep_pt, lep_eta,weight_pt*prescale_lep, nbin_pt, ptbins, nbin_eta , etabins);
 	FillHist((prefix + "_pt").Data(),     lep_pt, weight_pt*prescale_lep, nbin_pt, ptbins, "p_{T} (GeV)");
 	FillHist((prefix + "_eta").Data(),    lep_eta, weight_pt*prescale_lep , nbin_eta, etabins,"#eta");
@@ -1175,7 +1175,6 @@ void WRTau_FakeRate::FillRegionPlots( TString plot_dir, TString region,  std::ve
   float lep_reliso  = lep1.RelIso();
   float lep_minireliso  = lep1.MiniRelIso();
   float lep_ip3d    = fabs(lep1.IP3D()/lep1.IP3Derr());
-  float lep_mva     =  lep1.lep_mva();
   float lep_dxy     = fabs(lep1.dXY());
 
   if(els.size() > 0)   FillHist( plot_dir +  "/RegionPlots_"+ region+ "/NMissingHits", els[0].NMissingHits(), w, 5, 0., 5.);
@@ -1185,7 +1184,6 @@ void WRTau_FakeRate::FillRegionPlots( TString plot_dir, TString region,  std::ve
   FillHist( plot_dir +  "/RegionPlots_"+ region+ "/MiniReliso", lep_minireliso, w, 50, 0., 1.);
   FillHist( plot_dir +  "/RegionPlots_"+ region+ "/dXY",    lep_dxy, w, 100, 0., 0.5);
   FillHist( plot_dir +  "/RegionPlots_"+ region+ "/IP3D",   lep_ip3d, w, 50, 0., 10.);
-  FillHist( plot_dir +  "/RegionPlots_"+ region+ "/Mva",    lep_mva, w, 50, -1., 1.);
 
 
 

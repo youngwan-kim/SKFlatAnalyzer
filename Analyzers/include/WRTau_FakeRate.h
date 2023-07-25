@@ -9,7 +9,7 @@ class WRTau_FakeRate  : public WRTau_Core {
  public:
 
   void initializeAnalyzer();
-  void executeEventFromParameter(AnalyzerParameter param, TString El_ID, HNL_LeptonCore::Channel channel);
+  void executeEventFromParameter(AnalyzerParameter param, TString El_ID, WRTau_Core::Channel channel);
   void RunE(std::vector<Electron> electrons, std::vector<Muon> muons, std::vector<Jet> jets,AnalyzerParameter param,  float w);
   void RunM(std::vector<Electron> electrons, std::vector<Muon> muons, std::vector<Jet> jets, AnalyzerParameter param,  float w);
 
@@ -23,14 +23,14 @@ class WRTau_FakeRate  : public WRTau_Core {
   void FillRegionPlots( TString plot_dir, TString region,    std::vector<Jet> jets,  std::vector<Electron> els, std::vector<Muon> mus, Particle  met,  double w);
 
   double ApplyNvtxReweight(int Nvtx, TString Key);
-  void MakeNVertexDistPrescaledTrig(HNL_LeptonCore::Channel channel, AnalyzerParameter param, Event ev,std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight);				  
+  void MakeNVertexDistPrescaledTrig(WRTau_Core::Channel channel, AnalyzerParameter param, Event ev,std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight);				  
 				    
   void GetFakeRates(std::vector<Lepton *> leps,std::vector<bool> blepsT,  AnalyzerParameter param,TString tightlabel,  std::vector<Jet> jets,  TString tag,float event_weight, float isocut);
 					   
   void GetFakeRateAndPromptRates(AnalyzerParameter param, std::vector<Lepton *> leps,std::vector<bool> blepsT, std::vector<Jet>    jetCollTight, TString label, float event_weight, float isocut);
 
   
-  void MakeDiLepPlots(HNL_LeptonCore::Channel channel, AnalyzerParameter param, Event ev, std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight);
+  void MakeDiLepPlots(WRTau_Core::Channel channel, AnalyzerParameter param, Event ev, std::vector<Lepton *> leps,std::vector<bool> blepsT,  TString label, float event_weight);
 				    
     
   float GetPrescale( std::vector<Lepton *> leps);

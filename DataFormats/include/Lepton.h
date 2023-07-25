@@ -9,6 +9,20 @@ public:
   Lepton();
   ~Lepton();
 
+
+  void SetJetPtRel(double ptrel);
+  void SetJetPtRatio(double ptr);
+  void SetCloseJetFlavour(int flav);
+  inline double CloseJet_Ptrel()   const {return j_lep_jetptrel;}
+  inline double CloseJet_Ptratio() const {return j_lep_jetptratio;}
+  inline int CloseJet_FlavourInt()  const {return j_lep_jetflavour;}
+  inline TString CloseJet_Flavour()  const {
+    if(j_lep_jetflavour == 5) return "HF_B";
+    if(j_lep_jetflavour == 4) return "HF_C";
+    if(j_lep_jetflavour == 0) return "LF";
+    return "Pileup";
+  }
+
   void SetdXY(double dXY, double dXYerr);
   inline double dXY() const {return j_dXY;}
   inline double dXYerr() const {return j_dXYerr;}
@@ -29,6 +43,13 @@ public:
   //==== SUSY mini Iso has same formula for Muon and Electron
   void SetMiniIso(double ch, double nh, double ph, double pu, double rho, double EA);
   inline double MiniRelIso() const {return j_MiniRelIso;}
+
+  inline int LeptonGenType() const {return j_LeptonType;}
+  void SetLeptonType(int t);
+
+  inline bool LeptonIsCF() const {return j_LeptonIsCF;}
+  void SetLeptonIsCF(bool t);
+
 
   enum Flavour{
     NONE, ELECTRON, MUON, TAU
@@ -70,7 +91,12 @@ private:
 
   double j_RelIso, j_MiniRelIso;
   double j_ptcone;
+  double j_LeptonType;  
+  bool j_LeptonIsCF;
   Flavour j_LeptonFlavour;
+
+  double j_lep_jetptrel,j_lep_jetptratio;
+  int j_lep_jetflavour;
 
   ClassDef(Lepton,1)
 

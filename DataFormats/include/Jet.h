@@ -41,6 +41,18 @@ public:
   void SetCJetNNCorrection(double cJetNN_corr, double cJetNN_res);
   inline double CJetNNCorrection() const { return j_cJetNN_corr; }
   inline double CJetNNResolution() const { return j_cJetNN_res; }
+  inline double ChargedEmEnergyFraction() const { return j_chargedEmEnergyFraction;}
+    inline double ChargedHadEnergyFraction() const { return j_chargedHadronEnergyFraction;}
+  inline double NeutralEmEnergyFraction() const { return j_neutralEmEnergyFraction;}
+  inline double NeutralHadEnergyFraction() const { return j_neutralHadronEnergyFraction;}
+  inline double MuonEnergyFraction() const { return j_muonEnergyFraction;}
+
+
+  void SetPxUnSmeared(double px);
+  void SetPyUnSmeared(double py);
+  inline double PxUnSmeared()  const { return j_PxUnSmeared;}
+  inline double PyUnSmeared()  const { return j_PyUnSmeared;}
+  
 
   void SetTightJetID(double b);
   void SetTightLepVetoJetID(double b);
@@ -80,6 +92,8 @@ private:
   double j_bJetNN_res;
   double j_cJetNN_corr;
   double j_cJetNN_res;
+  double j_PxUnSmeared;
+  double j_PyUnSmeared;
   bool j_tightJetID, j_tightLepVetoJetID;
 
   ClassDef(Jet,1)

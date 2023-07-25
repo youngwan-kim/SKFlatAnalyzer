@@ -54,6 +54,8 @@ AnalyzerParameter::AnalyzerParameter(){
 
   MCCorrrectionIgnoreNoHist = false;
 
+  WriteOutVerbose = 0;
+
   Electron_Tight_ID = "passTightID";
   Electron_Loose_ID = "passLooseID";
   Electron_Veto_ID = "passVetoID";
@@ -91,11 +93,69 @@ TString AnalyzerParameter::GetSystType(){
   else if(syst_==Syst::JetEnDown){
     return "JetEnDown";
   }
+  else if(syst_==Syst::PrefireUp){
+    return "PrefireUp";
+  }
+  else if(syst_==Syst::PrefireDown){
+    return "PrefireDown";
+  }
+  else if(syst_==Syst::PUUp){
+    return "PUUp";
+  }
+  else if(syst_==Syst::PUDown){
+    return "PUDown";
+  }
+
+  else if(syst_==Syst::JetPUIDUp){
+    return "JetPUIDUp";
+  }
+  else if(syst_==Syst::JetPUIDDown){
+    return "JetPUIDDown";
+  }
+  else if(syst_==Syst::JetMassSmearUp){
+    return "JetMassSmearUp";
+  }
+  else if(syst_==Syst::JetMassSmearDown){
+    return "JetMassSmearDown";
+  }
+  else if(syst_==Syst::MuonRecoSFUp){
+    return "MuonRecoSFUp";
+  }
+  else if(syst_==Syst::MuonRecoSFDown){
+    return "MuonRecoSFDown";
+  }
+  
   else if(syst_==Syst::MuonEnUp){
     return "MuonEnUp";
   }
   else if(syst_==Syst::MuonEnDown){
     return "MuonEnDown";
+  }
+  
+  else if(syst_==Syst::MuonIDSFUp){
+    return "MuonIDSFUp";
+  }
+  else if(syst_==Syst::MuonIDSFDown){
+    return "MuonIDSFDown";
+  }
+  else if(syst_==Syst::MuonISOSFUp){
+
+    return "MuonISOSFUp";
+ }
+  else if(syst_==Syst::MuonISOSFDown){
+    return "MuonISOSFDown";
+  }
+  else if(syst_==Syst::MuonTriggerSFUp){
+    return "MuonTriggerSFUp";
+  }
+  else if(syst_==Syst::MuonTriggerSFDown){
+    return "MuonTriggerSFDown";
+  }
+  else if(syst_==Syst::ElectronRecoSFUp){
+    return "ElectronRecoSFUp";
+  }
+  else if(syst_==Syst::ElectronRecoSFDown){
+    return "ElectronRecoSFDown";
   }
   else if(syst_==Syst::ElectronResUp){
     return "ElectronResUp";
@@ -109,6 +169,50 @@ TString AnalyzerParameter::GetSystType(){
   else if(syst_==Syst::ElectronEnDown){
     return "ElectronEnDown";
   }
+  else if(syst_==Syst::ElectronIDSFUp){
+    return "ElectronIDSFUp";
+  }
+  else if(syst_==Syst::ElectronIDSFDown){
+    return "ElectronIDSFDown";
+  }
+  else if(syst_==Syst::ElectronTriggerSFUp){
+    return "ElectronTriggerSFUp";
+  }
+  else if(syst_==Syst::ElectronTriggerSFDown){
+    return "ElectronTriggerSFDown";
+  }
+  else if(syst_==Syst::BTagSFHTagUp){
+    return "BTagSFHTagUp";
+  }
+  else if(syst_==Syst::BTagSFHTagDown){
+    return "BTagSFHTagDown";
+  }
+  else if(syst_==Syst::BTagSFLTagUp){
+    return "BTagSFLTagUp";
+  }
+  else if(syst_==Syst::BTagSFLTagDown){
+    return "BTagSFLTagDown";
+  }
+  else if(syst_==Syst::METUnclUp){
+    return "METUnclUp";
+  }
+  else if(syst_==Syst::METUnclDown){
+    return "METUnclDown";
+  }
+  else if(syst_==Syst::CFUp){
+    return "CFUp";
+  }
+  else if(syst_==Syst::CFDown){
+    return "CFDown";
+  }
+  else if(syst_==Syst::FRUp){
+    return "FRUp";
+  }
+  else if(syst_==Syst::FRDown){
+    return "FRDown";
+  }
+
+
   else{
     cout << "[AnalyzerParameter::GetSystType] Wrong Syst" << endl;
     exit(ENODATA);

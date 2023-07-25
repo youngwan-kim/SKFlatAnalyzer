@@ -32,13 +32,33 @@ public:
 
   TString Jet_ID, FatJet_ID;
 
+  int SystDir_PU,WriteOutVerbose;
+
   enum Syst{
     Central,
     JetResUp, JetResDown,
     JetEnUp, JetEnDown,
-    MuonEnUp, MuonEnDown,
-    ElectronResUp, ElectronResDown,
-    ElectronEnUp, ElectronEnDown,
+    
+    JetMassUp,JetMassDown,
+    JetMassSmearUp,JetMassSmearDown,
+    MuonRecoSFUp,MuonRecoSFDown,
+    MuonEnUp,MuonEnDown,
+    MuonIDSFUp,MuonIDSFDown,
+    MuonISOSFUp,MuonISOSFDown,
+    MuonTriggerSFUp,MuonTriggerSFDown,
+    ElectronRecoSFUp,ElectronRecoSFDown,
+    ElectronResUp,ElectronResDown,
+    ElectronEnUp,ElectronEnDown,
+    ElectronIDSFUp,ElectronIDSFDown,
+    ElectronTriggerSFUp,ElectronTriggerSFDown,
+    BTagSFHTagUp,BTagSFHTagDown,
+    BTagSFLTagUp,BTagSFLTagDown,
+    METUnclUp,METUnclDown,
+    CFUp,CFDown,
+    FRUp,FRDown,
+    PrefireUp,PrefireDown,
+    PUUp,PUDown,
+    JetPUIDUp, JetPUIDDown,
     NSyst
   };
   Syst syst_;
