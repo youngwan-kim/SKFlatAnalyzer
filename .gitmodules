@@ -2,3 +2,6 @@
 	path = external/GEScaleSyst
 	url = git@github.com:jedori0228/GEScaleSyst.git
 	branch = ForSKFlatAnalyzer
+[submodule "WRTauUtilities"]
+	path = WRTauUtilities
+	url = https://github.com/youngwan-kim/WRTauUtilities.git
