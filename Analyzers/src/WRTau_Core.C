@@ -759,10 +759,10 @@ std::string WRTau_Core::GetRegionString(WRTau_Core::SearchRegion region){
   if (region == WRTau_Core::BaselinePreselection)               region_string="BaselinePreselection";
   if (region == WRTau_Core::ResolvedPreselection)               region_string="ResolvedPreselection";
   if (region == WRTau_Core::BoostedPreselection)                region_string="BoostedPreselection";
-  if (region == WRTau_Core::ResolvedLowMassControlRegion)       region_string="ResolvedLowMassControlRegionMass1";
-  if (region == WRTau_Core::BoostedLowMassControlRegion)        region_string="BoostedLowMassControlRegionMass1";
-  if (region == WRTau_Core::ResolvedLowMassControlRegionMass1)  region_string="ResolvedLowMassControlRegion";
-  if (region == WRTau_Core::BoostedLowMassControlRegionMass1)   region_string="BoostedLowMassControlRegion";
+  if (region == WRTau_Core::ResolvedLowMassControlRegion)       region_string="ResolvedLowMassControlRegion";
+  if (region == WRTau_Core::BoostedLowMassControlRegion)        region_string="BoostedLowMassControlRegion";
+  if (region == WRTau_Core::ResolvedLowMassControlRegionMass1)  region_string="ResolvedLowMassControlRegionMass1";
+  if (region == WRTau_Core::BoostedLowMassControlRegionMass1)   region_string="BoostedLowMassControlRegionMass1";
   if (region == WRTau_Core::ResolvedSignalRegion)               region_string="ResolvedSignalRegion";
   if (region == WRTau_Core::BoostedSignalRegion)                region_string="BoostedSignalRegion";
   if (region == WRTau_Core::ResolvedSignalRegionMass1)          region_string="ResolvedSignalRegionMass1";
@@ -1024,14 +1024,14 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
       }
       if(*min_element(dRlj.begin(),dRlj.end())<0.4) _isResolvedSignalRegion = false;
       else{
-        std::pair<Particle,Particle> neutrinos = GetNeutrinos(METv,(Particle)taus.at(0),(Particle)*TightLeptons.at(0));
-        Particle wr1 = taus.at(0) + *TightLeptons.at(0) + jets.at(0) + jets.at(1) + neutrinos.first + neutrinos.second;
-        Particle wr = taus.at(0) + *TightLeptons.at(0) + jets.at(0) + jets.at(1);
-        if(wr.M()<800) _isResolvedLowMassControlRegion = true ; // TODO : study mass cut optimization ; make a submethod to vary mass cuts and check significance in 2D
-        else if(wr.M()>800) _isResolvedSignalRegion = true;
+        double mwr1 = GetResolvedSRMass_RecoNeutrino(METv,taus,jets,TightLeptons);
+        double mwr  = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
+        
+        if(mwr<800) _isResolvedLowMassControlRegion = true ; // TODO : study mass cut optimization ; make a submethod to vary mass cuts and check significance in 2D
+        else if(mwr>800) _isResolvedSignalRegion = true;
 
-        if(wr1.M()<800) _isResolvedLowMassControlRegionMass1 = true;
-        else if(wr1.M()>800) _isResolvedSignalRegionMass1 = true;
+        if(mwr1<800) _isResolvedLowMassControlRegionMass1 = true;
+        else if(mwr1>800) _isResolvedSignalRegionMass1 = true;
       }
     }  
   }
@@ -1057,15 +1057,20 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
         if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
       }
       if(leptons_BoostedSR.size()>0){
-        std::pair<Particle,Particle> neutrinos = GetNeutrinos(METv,(Particle)taus.at(0),(Particle)*leptons_BoostedSR.at(0));
-        Particle wr = taus.at(0) + AddFatJetAndLepton(fatjet_BoostedSR,*leptons_BoostedSR.at(0));
-        Particle wr1 = taus.at(0) + AddFatJetAndLepton(fatjet_BoostedSR,*leptons_BoostedSR.at(0)) + neutrinos.first + neutrinos.second ;
-        double MT_wr = MT(wr,METv);
-        if(wr.M()<800) _isBoostedLowMassControlRegion = true ;
-        else if(wr.M()>800) _isBoostedSignalRegion = true;
+        
+        double mwr1 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
+        double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
 
-        if(wr1.M()<800) _isBoostedLowMassControlRegionMass1 = true ;
-        else if(wr1.M()>800) _isBoostedSignalRegionMass1 = true;
+        if(mwr<800) _isBoostedLowMassControlRegion = true ;
+        else if(mwr>800) _isBoostedSignalRegion = true;
+
+        if(mwr1<800) _isBoostedLowMassControlRegionMass1 = true ;
+        else if(mwr1>800) _isBoostedSignalRegionMass1 = true;
+
+        cout << "-----" << endl;
+        cout << "mwr,mwr1 : " << mwr << " , " << mwr1 << endl;
+        cout << "isLMCR,isLMCR1 : " << _isBoostedLowMassControlRegion << " , " << _isBoostedLowMassControlRegionMass1 << endl;
+        
       }
     }
   }
@@ -1136,7 +1141,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
         FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
 
-        if(region.first == WRTau_Core::BoostedPreselection || region.first == WRTau_Core::BoostedLowMassControlRegion || region.first == WRTau_Core::BoostedSignalRegion){
+        if(region.first == WRTau_Core::BoostedPreselection || region.first == WRTau_Core::BoostedLowMassControlRegion || region.first == WRTau_Core::BoostedLowMassControlRegionMass1 || region.first == WRTau_Core::BoostedSignalRegion){
 
           double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
           double M2 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
@@ -1149,7 +1154,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
         }
 
-        if(region.first == WRTau_Core::ResolvedPreselection || region.first == WRTau_Core::ResolvedLowMassControlRegion || region.first == WRTau_Core::ResolvedSignalRegion){
+        if(region.first == WRTau_Core::ResolvedPreselection || region.first == WRTau_Core::ResolvedLowMassControlRegion || region.first == WRTau_Core::ResolvedLowMassControlRegionMass1  || region.first == WRTau_Core::ResolvedSignalRegion){
           
           double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
           double M2 = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);

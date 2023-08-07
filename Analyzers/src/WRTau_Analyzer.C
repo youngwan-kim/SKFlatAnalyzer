@@ -208,6 +208,17 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         if(LooseLeptons.size()!=1) continue;
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
+        if(HasFlag("DeltaTest")){
+          if(LooseLeptons.at(0)->IsMuon()){
+            FillHist(path+"/Baseline_MuTau/dRMETmu",LooseLeptons.at(0)->DeltaR(METv),weight,650,0,6.5);
+            FillHist(path+"/Baseline_MuTau/dPhiMETmu",LooseLeptons.at(0)->DeltaPhi(METv),weight,650,0,6.5);
+            FillHist(path+"/Baseline_MuTau/dRMETtau",taus.at(0).DeltaR(METv),weight,650,0,6.5);
+            FillHist(path+"/Baseline_MuTau/dPhiMETtau",taus.at(0).DeltaPhi(METv),weight,650,0,6.5);
+            FillHist(path+"/Baseline_MuTau/dRmutau",taus.at(0).DeltaR(*LooseLeptons.at(0)),weight,650,0,6.5);
+            FillHist(path+"/Baseline_MuTau/dPhimutau",taus.at(0).DeltaPhi(*LooseLeptons.at(0)),weight,650,0,6.5);
+          }
+          continue;
+        }
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
         FillPassingRegions(map_regions,METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
         
