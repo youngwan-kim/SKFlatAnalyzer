@@ -35,6 +35,7 @@ public:
   vector<TString> SingleMuonTriggers;
   vector<TString> SingleTauTriggers;
 
+  vector<WRTau_Core::SearchRegion> RegionOfInterest;
 
   vector<TString> trigger;
 

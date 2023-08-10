@@ -16,6 +16,11 @@ void WRTau_Analyzer::initializeAnalyzer(){
 
   }
 
+  RegionOfInterest = {WRTau_Core::BoostedPreselection,
+                      WRTau_Core::BoostedLowMassControlRegion,
+                      WRTau_Core::BoostedLowMassControlRegionMass1,
+                      };
+
 }
 
 void WRTau_Analyzer::executeEvent(){
@@ -206,6 +211,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         FillHist(path+"/Cutflow",3.,weight,10,0.,10.);
 
         if(LooseLeptons.size()!=1) continue;
+        if(!LooseLeptons.at(0)->IsMuon()) continue; // concentrate on muon channel first 
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
         if(HasFlag("DeltaTest")){
@@ -220,8 +226,16 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           continue;
         }
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
-        FillPassingRegions(map_regions,METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
         
+        for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
+          FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+        }
+
+        if(HasFlag("LSFOpt")){
+          map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.5,0.65,0.7,0.75,0.8,0.85},fatjets);
+          FillPassingRegions(LSFOptCutMap,METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+        }
+
       }
     }
   }

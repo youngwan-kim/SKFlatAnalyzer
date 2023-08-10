@@ -71,6 +71,7 @@ public:
   };
 
   enum SearchRegion{
+    None,
     BaselinePreselection,
     ResolvedPreselection,
     BoostedPreselection,
@@ -97,6 +98,11 @@ public:
     GenBoostedElSignalRegion    = 109,
     GenBoostedMuSignalRegion    = 110,
   };
+
+  vector<WRTau_Core::SearchRegion> BoostedRegions = {WRTau_Core::BoostedLowMassControlRegionMass1,
+                                                     WRTau_Core::BoostedLowMassControlRegion,
+                                                     WRTau_Core::BoostedSignalRegion,
+                                                     WRTau_Core::BoostedSignalRegionMass1};
 
 
   // Regions
@@ -167,6 +173,7 @@ public:
   map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                                                const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons);
   map<WRTau_Core::SearchRegion,bool> GetGenRegion(const std::vector<Gen>& gens);
+
   double GetResolvedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons,bool ignoreMET);
   double GetBoostedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons,bool ignoreMET);
   double GetResolvedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
@@ -179,12 +186,19 @@ public:
   void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
                         TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
+  void FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, bool> m_LSFCut,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
+                        TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
+  void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,WRTau_Core::SearchRegion r,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
+                        TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
   void FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight); 
   void FillMassHists(TString region, const Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, 
                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, 
                        const std::vector<Lepton *> TightLeptons, double weight);
+  map<pair<WRTau_Core::SearchRegion,double>, bool>  LSFCutter(map<WRTau_Core::SearchRegion,bool> m_region,vector<double> LSFCuts,std::vector<FatJet> fatjets);
   std::vector<Lepton *> ChooseLeptonColl(WRTau_Core::SearchRegion region, std::pair<std::vector<Lepton *>,std::vector<Lepton *>> LeptonPair);
   void CopyHist(TString histname0, TString histname1);
 
