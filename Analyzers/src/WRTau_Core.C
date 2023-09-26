@@ -1067,9 +1067,9 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
         if(mwr1<800) _isBoostedLowMassControlRegionMass1 = true ;
         else if(mwr1>800) _isBoostedSignalRegionMass1 = true;
 
-        cout << "-----" << endl;
-        cout << "mwr,mwr1 : " << mwr << " , " << mwr1 << endl;
-        cout << "isLMCR,isLMCR1 : " << _isBoostedLowMassControlRegion << " , " << _isBoostedLowMassControlRegionMass1 << endl;
+        //cout << "-----" << endl;
+        //cout << "mwr,mwr1 : " << mwr << " , " << mwr1 << endl;
+        //cout << "isLMCR,isLMCR1 : " << _isBoostedLowMassControlRegion << " , " << _isBoostedLowMassControlRegionMass1 << endl;
         
       }
     }
@@ -1188,7 +1188,12 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
         vector<Lepton *> leptons = ChooseLeptonColl(cutregion,PairVecLeps);
 
         WRTau_Core::Channel ch = GetChannel(leptons);
-        TString label = fillpath+"/"+GetRegionString(cutregion) + "_LSF"+ std::to_string(cut); 
+        
+        TString cutval = std::to_string(cut);
+        cutval.Remove(cutval.Length() - 4, 4);
+        cutval.ReplaceAll(".", "p");
+
+        TString label = fillpath+"/"+GetRegionString(cutregion) + "_LSF"+ cutval; 
         TString label_channel = label + "_"+GetChannelString(ch);
 
         std::vector<TString> fillstr = {label,label_channel};
