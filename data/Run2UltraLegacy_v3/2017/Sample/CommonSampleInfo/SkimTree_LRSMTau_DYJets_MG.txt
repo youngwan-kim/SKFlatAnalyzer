@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+SkimTree_LRSMTau_DYJets_MG	DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8	FIXMECROSSSECTION	21358	21358.0	2.135800000000e+04
