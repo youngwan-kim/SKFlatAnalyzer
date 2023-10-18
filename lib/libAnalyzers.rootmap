@@ -14,6 +14,7 @@ class SkimTree_HNFake
 class SkimTree_HNMultiLep
 class SkimTree_HighPt1LJets
 class SkimTree_LRSMHighPt
+class SkimTree_LRSMTau
 class SkimTree_SS2lOR3l
 class TauQCDFakeStudy
 class TauStudy
@@ -27,6 +28,7 @@ class WRTau_SR
 class WRTau_SR_Debug
 class WRTau_SR_Test
 class WRTau_SignalStudy
+class WRTau_TauFake
 class ZTauTau
 header AnalyzerCore.h
 header ExampleRun.h
@@ -42,6 +44,7 @@ header SkimTree_HNFake.h
 header SkimTree_HNMultiLep.h
 header SkimTree_HighPt1LJets.h
 header SkimTree_LRSMHighPt.h
+header SkimTree_LRSMTau.h
 header SkimTree_SS2lOR3l.h
 header TauQCDFakeStudy.h
 header TauStudy.h
@@ -55,4 +58,5 @@ header WRTau_SR.h
 header WRTau_SR_Debug.h
 header WRTau_SR_Test.h
 header WRTau_SignalStudy.h
+header WRTau_TauFake.h
 header ZTauTau.h

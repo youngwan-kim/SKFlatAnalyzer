@@ -20,6 +20,7 @@
 #pragma link C++ class WRTau_CR+;
 #pragma link C++ class WRTau_Analyzer+;
 #pragma link C++ class WRTau_FakeRate+;
+#pragma link C++ class WRTau_TauFake+;
 #pragma link C++ class WRTau_SignalStudy+;
 #pragma link C++ class TauQCDFakeStudy+;
 #pragma link C++ class ZTauTau+;
@@ -28,6 +29,7 @@
 #pragma link C++ class SKFlatValidation+;
 #pragma link C++ class SkimTree_SS2lOR3l+;
 #pragma link C++ class SkimTree_LRSMHighPt+;
+#pragma link C++ class SkimTree_LRSMTau+;
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class SkimTree_HNFake+;
 #pragma link C++ class SkimTree_HighPt1LJets+;

@@ -84,7 +84,8 @@ public:
     ResolvedSignalRegionMass1,
     BoostedSignalRegionMass1,
     WJetsControlRegion,
-    QCDEnrichedControlRegion,
+    QCDEnrichedControlRegionAK4,
+    QCDEnrichedControlRegionAK8,
     //Generator level regions ()
     GenDebug                    = 100,
     GenTauHTauH                 = 101,
@@ -206,6 +207,7 @@ public:
   double SetupWeight(Event ev, AnalyzerParameter param);
   void GetTauIDSFTools(const std::vector<int> vJet_vec,const std::vector<int> vEl_vec,const std::vector<int> vMu_vec);
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Lepton *> leps, std::tuple<int,int,int> idtuple, bool highpT);
+  double GetMatchedWeight(const std::vector<Tau>& taus, std::tuple<int,int,int> idtuple, bool highpT);
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
 
 

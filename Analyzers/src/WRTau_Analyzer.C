@@ -3,7 +3,7 @@
 void WRTau_Analyzer::initializeAnalyzer(){
 
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
-  vJet_vec = {3,4,5}; vEl_vec = {9,13}; vMu_vec = {18,21};
+  vJet_vec = {5}; vEl_vec = {9,13}; vMu_vec = {18,21};
   
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
@@ -19,6 +19,7 @@ void WRTau_Analyzer::initializeAnalyzer(){
   RegionOfInterest = {WRTau_Core::BoostedPreselection,
                       WRTau_Core::BoostedLowMassControlRegion,
                       WRTau_Core::BoostedLowMassControlRegionMass1,
+                      WRTau_Core::BoostedSignalRegion
                       };
 
 }
@@ -175,6 +176,10 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         vector<Jet> jets_lepVeto_tauVeto = JetsVetoLeptonInside(jets_tauVeto,electrons_veto,muons_veto,0.4);
         vector<Jet> jets = SelectJets(jets_lepVeto_tauVeto, param.Jet_ID, 40., 2.4);
         vector<FatJet> fatjets = SelectFatJets(fatjets_tmp,param.FatJet_ID,200.,2.4);
+        if(HasFlag("AK8PuppiCorr")){ 
+          vector<FatJet> fatjets_puppi = puppiCorr->Correct(fatjets);
+          fatjets = fatjets_puppi;
+        }
         vector<Jet> bjets = SelectBJets(jets,param_jetsM);
 
         std::sort(bjets.begin(),bjets.end(),PtComparing);
@@ -232,7 +237,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
 
         if(HasFlag("LSFOpt")){
-          map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.5,0.65,0.7,0.75,0.8,0.85},fatjets);
+          map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85},fatjets);
           FillPassingRegions(LSFOptCutMap,METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
         }
 
