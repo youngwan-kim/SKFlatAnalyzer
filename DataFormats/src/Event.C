@@ -262,6 +262,10 @@ bool Event::IsPDForTrigger(TString trig, TString PD){
       if(PD=="SinglePhoton") return true;
       else return false;
     }
+    else if(trig=="HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"){
+      if(PD=="Tau") return true;
+      else return false;
+    }
     else{
       cout << "[Event::IsPDForTrigger] trig = " << trig << endl;
       cout << "[Event::IsPDForTrigger] PD = " << PD << endl;

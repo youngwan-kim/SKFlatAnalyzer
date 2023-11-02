@@ -6,18 +6,6 @@ void SkimTree_LRSMTau::initializeAnalyzer(){
   cout << "[SkimTree_LRSMTau::initializeAnalyzer()] gDirectory = " << gDirectory->GetName() << endl;
   newtree = fChain->CloneTree(0);
 
-  if( MCSample.Contains("DY") ){
-    cout << "[SkimTree_LRSMTau::initializeAnalyzer()] This is DY sample, so saving gen_* and LHE_* for Z-pt reweighting" << endl;
-  }
-  else{
-    cout << "[SkimTree_LRSMTau::initializeAnalyzer()] Throwing away gen_* and LHE_*" << endl;
-    if(!IsDATA){
-      newtree->SetBranchStatus("gen_*",0);
-      newtree->SetBranchStatus("LHE_*",0);
-      newtree->SetBranchStatus("gen_weight",1); // for MCweight()
-    }
-  }
-
   triggers.clear();
   if(DataYear==2016){
     triggers = {

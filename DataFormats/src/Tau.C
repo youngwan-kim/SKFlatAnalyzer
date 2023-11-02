@@ -74,20 +74,28 @@ bool Tau::PassID(TString ID) const{
     }
   }
 
+  
+  if(ID=="FakeBase"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+    }
+  }
+
   if(ID=="TightFakeStudyID"){
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
       if(!( fabs(dZ())<0.2 )) return false;
-      if(!( passTIDvJet() )) return false;
+      if(!( passLIDvJet() && passTIDvJet() && passTIDvEl() && passTIDvMu() )) return false;
       return true;
     }
   }
 
-  if(ID=="LooseFakeStudyID"){
+  if(ID=="LooseFakeStudyID"){ //loose but not tight
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
       if(!( fabs(dZ())<0.2 )) return false;
-      if(!( passVVVLIDvJet() && !passTIDvJet() )) return false;
+      if(!( passLIDvJet() && !passTIDvJet() && passTIDvEl() && passTIDvMu() )) return false;
       return true;
     }
   }

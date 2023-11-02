@@ -624,7 +624,7 @@ vector<Tau> WRTau_Core::TauPromptOnly(const std::vector<Tau>& taus, const std::v
   std::vector<Tau> out;
 
   for(unsigned int i=0; i<taus.size(); i++){
-    if(GetTauType(taus.at(i), gens)<=0) continue;
+    if(GetTauType(taus.at(i), gens)<0) continue;
     out.push_back(taus.at(i));
   }
 
@@ -639,11 +639,27 @@ vector<Tau> WRTau_Core::TauFakeOnly(const std::vector<Tau>& taus, const std::vec
   std::vector<Tau> out;
 
   for(unsigned int i=0; i<taus.size(); i++){
-    if(GetTauType(taus.at(i), gens)>=0) continue;
+    if(GetTauType(taus.at(i), gens)>0) continue;
     out.push_back(taus.at(i));
   }
 
   return out;
+
+}
+
+bool WRTau_Core::IsFakeTau(const Tau tau, const std::vector<Gen>& gens){
+  
+  if(IsDATA) return false;
+  if(GetTauType(tau,gens)>0) return true;
+  else false;
+
+}
+
+bool WRTau_Core::IsPromptTau(const Tau tau, const std::vector<Gen>& gens){
+  
+  if(IsDATA) return false;
+  if(GetTauType(tau,gens)<0) return true;
+  else false;
 
 }
 
@@ -1058,11 +1074,12 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
       }
       if(leptons_BoostedSR.size()>0 && fatjet_BoostedSR.LSF()>0.6){
         
-        double mwr1 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
+        //double mwr1 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
         double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
+        double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
 
-        if(mwr<800) _isBoostedLowMassControlRegion = true ;
-        else if(mwr>800) _isBoostedSignalRegion = true;
+        if(mwr<250) _isBoostedLowMassControlRegion = true ;
+        else if(mwr>250) _isBoostedSignalRegion = true;
 
         if(mwr1<800) _isBoostedLowMassControlRegionMass1 = true ;
         else if(mwr1>800) _isBoostedSignalRegionMass1 = true;
@@ -1393,20 +1410,21 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
       if(highpT) w_tau = tauidsftool_map[idtuple]->getHighPTSFvsPT(taus.at(0).Pt());
       else w_tau = tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt());
     }
-    if(!HasFlag("NonpromptLepton")){
+    if(leps.size()>0){
+      if(!HasFlag("NonpromptLepton")){
 
-      if(GetChannel(leps) == WRTau_Core::TauE){
-        w_lepton *= mcCorr->ElectronID_SF("HEEP",leps.at(0)->Eta(),leps.at(0)->Pt());
-        w_lepton *= mcCorr->ElectronReco_SF(leps.at(0)->Eta(),leps.at(0)->Pt());
+        if(GetChannel(leps) == WRTau_Core::TauE){
+          w_lepton *= mcCorr->ElectronID_SF("HEEP",leps.at(0)->Eta(),leps.at(0)->Pt());
+          w_lepton *= mcCorr->ElectronReco_SF(leps.at(0)->Eta(),leps.at(0)->Pt());
+        }
+
+        // TODO : implement to get AnalyzerParam info for general input of SF WPs
+
+        else if(GetChannel(leps) == WRTau_Core::TauMu){
+          w_lepton *= mcCorr->MuonID_SF("NUM_HighPtID_DEN_TrackerMuons",leps.at(0)->Eta(),leps.at(0)->Pt());
+          w_lepton *= mcCorr->MuonISO_SF("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut",leps.at(0)->Eta(),leps.at(0)->Pt());
+        }
       }
-
-      // TODO : implement to get AnalyzerParam info for general input of SF WPs
-
-      else if(GetChannel(leps) == WRTau_Core::TauMu){
-        w_lepton *= mcCorr->MuonID_SF("NUM_HighPtID_DEN_TrackerMuons",leps.at(0)->Eta(),leps.at(0)->Pt());
-        w_lepton *= mcCorr->MuonISO_SF("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut",leps.at(0)->Eta(),leps.at(0)->Pt());
-      }
-    
     }
 
     return w_tau * w_lepton;

@@ -11,11 +11,8 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
 
-  map<WRTau_Core::SearchRegion,bool> GetQCDFakeRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets,const std::vector<FatJet>& fatjets);
-  void FillPassingFakeRegions(map<WRTau_Core::SearchRegion,bool> m,TString fillpath,Particle METv, const std::vector<Tau>& taus,
-                                          double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
-
-
+  map<WRTau_Core::SearchRegion,std::pair<bool,bool>> GetQCDFakeRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets,const std::vector<FatJet>& fatjets);
+  void FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m,TString fillpath,const std::vector<Tau>& taus,const std::vector<Gen>& gens,double MCweight, bool highpT);
 
   vector<TString> TriggerList;
   vector<TString> SingleLeptonTriggers;
@@ -26,7 +23,9 @@ public:
   vector<Muon> AllMuons;
   vector<Tau> AllTaus;
   vector<Jet> AllJets;
+  vector<Gen> AllGens;
   vector<FatJet> AllFatJets;
+  vector<Electron> AllElectrons;
 
   WRTau_TauFake();
   ~WRTau_TauFake();
