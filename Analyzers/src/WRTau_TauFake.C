@@ -75,7 +75,8 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   vector<Muon> this_AllMuons = AllMuons;
   vector<Electron> this_AllElectrons = AllElectrons;
 
-  vector<Tau> this_AllTaus = SelectTaus(AllTaus,"FakeBase",50.,2.4);
+  vector<Tau> this_AllTaus = SelectTaus(AllTaus,"NoCut",50.,2.4);
+  //cout << this_AllTaus.size() << endl ;
   //vector<Tau> this_AllTaus = TauFakeOnly(this_AllTaus_tmp,AllGens);
   //vector<Tau> this_AllTaus_Prompt = TauPromptOnly(this_AllTaus_tmp,AllGens);
 
@@ -147,12 +148,22 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
       if(taupT > 1000.) taupT = 999.;
       if(tauAbsEta > 2.5) tauAbsEta = 2.499;
       
-      if(IsPromptTau(taus.at(0),gens)) tag = "Prompt";
-      else if(IsFakeTau(taus.at(0),gens)) tag = "Fake";
+      if(!IsDATA){
+          if(GetTauType(taus.at(0),gens)==0){
+            cout << "========================" << endl;
+            cout << GetTauType(taus.at(0),gens) << endl;
+            cout << GetClosestTauGen(taus.at(0),gens).Index() << endl;
+            cout << GetClosestTauGen(taus.at(0),gens).PID() << endl;
+            cout << "========================" << endl;
+          }
+        if(IsPromptTau(taus.at(0),gens)) tag = "Prompt";
+        else if(IsFakeTau(taus.at(0),gens)) tag = "Fake";
+      }
+      else tag = "Data";
 
       if(region.second.first){
         label += "/"+GetRegionString(region.first)+"_"+tag+"Loose";
-        if(IsPromptTau(taus.at(0),gens)){
+        if(!IsDATA && IsPromptTau(taus.at(0),gens)){
           tuple<int,int,int> tauid(3,13,21);
           weight *= GetMatchedWeight(taus,tauid,highpT); 
         }
@@ -160,7 +171,7 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
       }
       else if(region.second.second){
         label += "/"+GetRegionString(region.first)+"_"+tag+"Tight";
-        if(IsPromptTau(taus.at(0),gens)){
+        if(!IsDATA && IsPromptTau(taus.at(0),gens)){
           tuple<int,int,int> tauid(5,13,21);
           weight *= GetMatchedWeight(taus,tauid,highpT); 
         }

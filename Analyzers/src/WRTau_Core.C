@@ -523,7 +523,7 @@ int WRTau_Core::GetTauType_Public(int TruthIdx, const std::vector<Gen>& TruthCol
   //cout << "[WRTau_Core::GetTauType_Public] Point5" << endl;
   vector<int> FirstTauAncestorHistory = GetTauAncestor(TruthColl.at(TruthIdx),TruthColl);
   //cout << "[WRTau_Core::GetTauType_Public] Point6" << endl;
-  if(FirstTauAncestorHistory[1]!=-1){
+  if(FirstTauAncestorHistory[1]>0){
     HasTauAncestor = true;
     TauAncestorIndex = FirstTauAncestorHistory[1];
   }
@@ -598,17 +598,24 @@ vector<int> WRTau_Core::GetTauAncestor(const Gen& me, const std::vector<Gen>& ge
     motherindex = gens.at(motherindex).MotherIndex();
 
     //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx,motheridx)=" << currentidx << "," << motherindex << endl;
-    //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx_PID,motheridx_PID)=" << gens.at(currentidx).PID() << "," << gens.at(motherindex).PID() << endl;
+    //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx_PID)=" << gens.at(currentidx).PID() << endl;
+    if(motherindex != -1) cout << "[WRTau_Core::GetTauAncestor] Loop (motheridx_PID)=" << "," << gens.at(motherindex).PID() << endl;
 
-    if(currentidx<=2 || motherindex <= 0){
+
+    if(currentidx <= 2 || motherindex < 0){
       motherindex = -1;
       break;
     }
-    else if(fabs(gens.at(motherindex).PID())==15) break;
+    else if(motherindex == 0){
+      motherindex = 0 ;
+      break;
+    }
+    else if(fabs(gens.at(motherindex).PID()) == 15) break;
   }
 
   //cout << "[WRTau_Core::GetTauAncestor] Final (currentidx,motheridx)=" << currentidx << "," << motherindex << endl;
-  //cout << "[WRTau_Core::GetTauAncestor] Final (currentidx_PID,motheridx_PID)=" << gens.at(currentidx).PID() << "," << gens.at(motherindex).PID() << endl;
+  //cout << "[WRTau_Core::GetTauAncestor] Final (currentidx_PID)=" << gens.at(currentidx).PID() << endl;
+  //if(motherindex!=-1) cout << "[WRTau_Core::GetTauAncestor] Final (motheridx_PID)=" << "," << gens.at(motherindex).PID() << endl;
   //cout << "[WRTau_Core::GetTauAncestor] End" << endl;
 
   vector<int> out = {currentidx, motherindex};
@@ -650,7 +657,7 @@ vector<Tau> WRTau_Core::TauFakeOnly(const std::vector<Tau>& taus, const std::vec
 bool WRTau_Core::IsFakeTau(const Tau tau, const std::vector<Gen>& gens){
   
   if(IsDATA) return false;
-  if(GetTauType(tau,gens)>0) return true;
+  if(GetTauType(tau,gens)<0) return true;
   else false;
 
 }
@@ -658,7 +665,7 @@ bool WRTau_Core::IsFakeTau(const Tau tau, const std::vector<Gen>& gens){
 bool WRTau_Core::IsPromptTau(const Tau tau, const std::vector<Gen>& gens){
   
   if(IsDATA) return false;
-  if(GetTauType(tau,gens)<0) return true;
+  if(GetTauType(tau,gens)>0) return true;
   else false;
 
 }

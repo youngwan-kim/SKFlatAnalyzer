@@ -79,6 +79,7 @@ bool Tau::PassID(TString ID) const{
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
       if(!( fabs(dZ())<0.2 )) return false;
+      return true;
     }
   }
 
