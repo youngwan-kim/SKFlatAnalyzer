@@ -150,14 +150,17 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
       
       if(!IsDATA){
           if(GetTauType(taus.at(0),gens)==0){
-            cout << "========================" << endl;
-            cout << GetTauType(taus.at(0),gens) << endl;
-            cout << GetClosestTauGen(taus.at(0),gens).Index() << endl;
-            cout << GetClosestTauGen(taus.at(0),gens).PID() << endl;
-            cout << "========================" << endl;
+            //cout << "========================" << endl;
+            //cout << GetTauType(taus.at(0),gens) << endl;
+            //cout << GetClosestTauGen(taus.at(0),gens).Index() << endl;
+            //cout << GetClosestTauGen(taus.at(0),gens).PID() << endl;
+            //cout << "========================" << endl;
           }
-        if(IsPromptTau(taus.at(0),gens)) tag = "Prompt";
-        else if(IsFakeTau(taus.at(0),gens)) tag = "Fake";
+        if(GetTauType(taus.at(0),gens)>0) tag = "Prompt";
+        else if(GetTauType(taus.at(0),gens)<0) tag = "Fake";
+        //if(HasFlag("Debug")) cout << IsPromptTau(taus.at(0),gens) << " " << IsFakeTau(taus.at(0),gens) << endl;
+        //if(HasFlag("Debug")) cout << tag  << endl;
+        else return;
       }
       else tag = "Data";
 

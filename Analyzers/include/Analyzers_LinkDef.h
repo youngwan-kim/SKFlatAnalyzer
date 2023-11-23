@@ -21,6 +21,7 @@
 #pragma link C++ class WRTau_Analyzer+;
 #pragma link C++ class WRTau_FakeRate+;
 #pragma link C++ class WRTau_TauFake+;
+#pragma link C++ class WRTau_SingleLepton+;
 #pragma link C++ class WRTau_SignalStudy+;
 #pragma link C++ class TauQCDFakeStudy+;
 #pragma link C++ class ZTauTau+;

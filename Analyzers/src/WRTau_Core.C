@@ -599,7 +599,7 @@ vector<int> WRTau_Core::GetTauAncestor(const Gen& me, const std::vector<Gen>& ge
 
     //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx,motheridx)=" << currentidx << "," << motherindex << endl;
     //cout << "[WRTau_Core::GetTauAncestor] Loop (currentidx_PID)=" << gens.at(currentidx).PID() << endl;
-    if(motherindex != -1) cout << "[WRTau_Core::GetTauAncestor] Loop (motheridx_PID)=" << "," << gens.at(motherindex).PID() << endl;
+    //if(motherindex != -1) cout << "[WRTau_Core::GetTauAncestor] Loop (motheridx_PID)=" << "," << gens.at(motherindex).PID() << endl;
 
 
     if(currentidx <= 2 || motherindex < 0){
@@ -1706,7 +1706,8 @@ double WRTau_Core::SetupWeight(Event ev, AnalyzerParameter param){
   //  double dyRW =   mcCorr->GetOfficialDYReweight(GetGens(),0);
   //  FillWeightHist("DYReWeight_" , dyRW);
   //  this_mc_weight= this_mc_weight*dyRW;
-  // }
+ 
+ // }
   
 
   return this_mc_weight;

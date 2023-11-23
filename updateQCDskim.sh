@@ -1,0 +1,9 @@
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_1800to2400_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_2400to3200_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_300to470_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_470to600_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_600to800_TuneCP5_13TeV_pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2017/MC_SkimTree_LRSMTau/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8
