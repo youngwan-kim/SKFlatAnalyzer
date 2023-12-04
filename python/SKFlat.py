@@ -892,6 +892,8 @@ try:
                 os.system('rm output/*.root')
                 #os.system('condor_run -a request_cpus=10 "hadd -j 10 -f '+outputname+'.root output/*.root 2>&1 >> JobStatus.log"')
               else:
+                nhadd=int(os.popen("pgrep -x hadd -u $USER |wc -l").read().strip())
+                print('echo "num of hadd : '+str(nhadd)+' " >> JobStatus.log')
                 os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
                 os.system('rm job_*/*.root')
 

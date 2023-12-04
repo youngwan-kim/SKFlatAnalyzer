@@ -3,7 +3,7 @@
 void WRTau_Analyzer::initializeAnalyzer(){
 
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
-  vJet_vec = {5}; vEl_vec = {9,13}; vMu_vec = {18,21};
+  vJet_vec = {5}; vEl_vec = {13}; vMu_vec = {21};
   
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
@@ -130,7 +130,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         std::tuple<int,int,int> IDtuple = std::make_tuple(vJet_vec[i],vEl_vec[j],vMu_vec[k]);
         TString idname = "vJet"+idname_map[vJet_vec.at(i)]+"_vEl"+idname_map[vEl_vec.at(j)]+"_vMu"+idname_map[vMu_vec.at(k)];
-        TString path = param.Name+"/"+idname;
         vector<Tau> taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
         
         /*FillHist(path+"/AllTaus",AllTaus.size(),weight,10,0.,10.);
@@ -158,6 +157,17 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         vector<Tau> taus;
 
+        TString TauPromptString = "";
+        TString LeptonPromptString = "";
+
+        if(taus_temp.size()>0 && taus_temp.at(0).Pt()>=190){
+          if(IsPromptTau(taus_temp.at(0),AllGens)) TauPromptString = "__PromptTau";
+          else if(IsNonPromptTau(taus_temp.at(0)),AllGens) TauPromptString = "__NonPromptTau";
+          else return;
+        }
+
+        TString path = param.Name+"/"+idname;
+        //TString path = param.Name+TauPromptString+LeptonPromptString"/"+idname;
         if(taus_temp.size()>0){
           for(unsigned int i =0 ; i < taus_temp.size() ; i++){
             FillHist(path+"/TauType"+TString::Itoa(i,10),GetTauType(taus_temp.at(i),AllGens),weight,20,-10.,10.);
@@ -232,15 +242,27 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           }
           continue;
         }
-        map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
         
-        for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
-          FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
-        }
+        map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
 
         if(HasFlag("LSFOpt")){
           map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85},fatjets);
-          FillPassingRegions(LSFOptCutMap,METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+          FillPassingRegions(LSFOptCutMap,"LSF",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+        }
+
+        if(HasFlag("MassOpt")){
+          map<pair<WRTau_Core::SearchRegion,double>, bool> MassOptCutMap_eff = MassCutter(map_regions,{650,700,750,800,850,900,950,1000},METv,taus,jets,fatjets,LooseLeptons,TightLeptons,true);
+          map<pair<WRTau_Core::SearchRegion,double>, bool> MassOptCutMap_mt = MassCutter(map_regions,{100,125,150,175,200,225,250,275,300,325,350},METv,taus,jets,fatjets,LooseLeptons,TightLeptons,false);
+          FillPassingRegions(MassOptCutMap_eff,"EffMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+          FillPassingRegions(MassOptCutMap_mt,"TransMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+        }
+
+        cout << "[WRTauAnalyzer] End MassOpt" << endl;
+
+        else{
+          for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
+            FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+          }
         }
 
       }
