@@ -157,14 +157,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         vector<Tau> taus;
 
-        TString TauPromptString = "";
-        TString LeptonPromptString = "";
-
-        if(taus_temp.size()>0 && taus_temp.at(0).Pt()>=190){
-          if(IsPromptTau(taus_temp.at(0),AllGens)) TauPromptString = "__PromptTau";
-          else if(IsNonPromptTau(taus_temp.at(0)),AllGens) TauPromptString = "__NonPromptTau";
-          else return;
-        }
+        
 
         TString path = param.Name+"/"+idname;
         //TString path = param.Name+TauPromptString+LeptonPromptString"/"+idname;
@@ -255,9 +248,10 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           map<pair<WRTau_Core::SearchRegion,double>, bool> MassOptCutMap_mt = MassCutter(map_regions,{100,125,150,175,200,225,250,275,300,325,350},METv,taus,jets,fatjets,LooseLeptons,TightLeptons,false);
           FillPassingRegions(MassOptCutMap_eff,"EffMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           FillPassingRegions(MassOptCutMap_mt,"TransMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
-        }
+          
+          cout << "[WRTauAnalyzer] End MassOpt" << endl;
 
-        cout << "[WRTauAnalyzer] End MassOpt" << endl;
+        }
 
         else{
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){

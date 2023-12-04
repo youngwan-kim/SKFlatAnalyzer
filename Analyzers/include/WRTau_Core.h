@@ -167,7 +167,7 @@ public:
   vector<Tau> TauPromptOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
   vector<Tau> TauFakeOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
   vector<Tau> TauErrorOnly(const std::vector<Tau>& taus, const std::vector<Gen>& gens);
-  bool IsFakeTau(const Tau tau, const std::vector<Gen>& gens);
+  bool IsNonPromptTau(const Tau tau, const std::vector<Gen>& gens);
   bool IsPromptTau(const Tau tau, const std::vector<Gen>& gens);
   Gen GetClosestGenJet(const std::vector<Gen>& gens, const Jet jet);
   Gen GetClosestGenJet(const std::vector<Gen>& gens, const FatJet jet);

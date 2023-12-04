@@ -654,7 +654,7 @@ vector<Tau> WRTau_Core::TauFakeOnly(const std::vector<Tau>& taus, const std::vec
 
 }
 
-bool WRTau_Core::IsFakeTau(const Tau tau, const std::vector<Gen>& gens){
+bool WRTau_Core::IsNonPromptTau(const Tau tau, const std::vector<Gen>& gens){
   
   if(IsDATA) return false;
   if(GetTauType(tau,gens)<0) return true;
@@ -1147,13 +1147,13 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
       if(taus.size()>0 && taus.at(0).Pt()>=190){
         if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-        else if(IsNonPromptTau(taus.at(0)),gens) TauPromptString = "__NonPromptTau";
+        else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
         else return;
       }
 
       if(leptons.size()>0){
-        if(IsPromptLepton(leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-        else if(IsNonPromptLepton(leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+        if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+        else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
         else return;
       }
 
@@ -1161,12 +1161,12 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       TObjArray *tokens = fillpath.Tokenize("/");
       TString paramName = ((TObjString *) tokens -> At(0)) -> GetString();
       TString tauIDString = ((TObjString *) tokens -> At(1)) -> GetString();
-      TString label = paramName+TauPromptString+LeptonPromptString"/"+tauIDString+"/"+GetRegionString(region.first); 
+      TString label = paramName+TauPromptString+LeptonPromptString+"/"+tauIDString+"/"+GetRegionString(region.first); 
       TString label_channel = label + "_"+GetChannelString(ch);
 
       std::vector<TString> fillstr = {label,label_channel};
       
-      double weight = GetMatchedWeight(taus,leptons,idtuple,highpT) * MCweight;
+      double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
       weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
       if(HasFlag("unweighted")) weight = 1;
 
@@ -1249,17 +1249,16 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
 
         if(taus.size()>0 && taus.at(0).Pt()>=190){
           if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-          else if(IsNonPromptTau(taus.at(0)),gens) TauPromptString = "__NonPromptTau";
+          else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
           else return;
         }
 
         if(leptons.size()>0){
-          if(IsPromptLepton(leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-          else if(IsNonPromptLepton(leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+          if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+          else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
           else return;
         }
 
-        WRTau_Core::Channel ch = GetChannel(leptons);
         TObjArray *tokens = fillpath.Tokenize("/");
         TString paramName = ((TObjString *) tokens -> At(0)) -> GetString();
         TString tauIDString = ((TObjString *) tokens -> At(1)) -> GetString();
@@ -1268,13 +1267,12 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
         cutval.Remove(cutval.Length() - 4, 4);
         cutval.ReplaceAll(".", "p");
 
-        TString label = paramName+TauPromptString+LeptonPromptString"/"+tauIDString+"/"+GetRegionString(region.first)+ "_"+ cutvar+ cutval;
+        TString label = paramName+TauPromptString+LeptonPromptString+"/"+tauIDString+"/"+GetRegionString(r)+ "_"+ cutvar+ cutval;
         TString label_channel = label + "_"+GetChannelString(ch);
 
         std::vector<TString> fillstr = {label,label_channel};
 
-        double weight = GetMatchedWeight(taus,leptons,idtuple,highpT) * MCweight;
-
+        double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
 
         weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
         if(HasFlag("unweighted")) weight = 1;
@@ -1351,15 +1349,18 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       std::pair<std::vector<Lepton *>,std::vector<Lepton *>> PairVecLeps = std::make_pair(LooseLeptons,TightLeptons);
       vector<Lepton *> leptons = ChooseLeptonColl(r,PairVecLeps);
 
+      TString TauPromptString = "";
+      TString LeptonPromptString = "";
+
       if(taus.size()>0 && taus.at(0).Pt()>=190){
         if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-        else if(IsNonPromptTau(taus.at(0)),gens) TauPromptString = "__NonPromptTau";
+        else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
         else return;
       }
 
       if(leptons.size()>0){
-        if(IsPromptLepton(leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-        else if(IsNonPromptLepton(leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+        if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+        else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
         else return;
       }
 
@@ -1367,12 +1368,12 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       TObjArray *tokens = fillpath.Tokenize("/");
       TString paramName = ((TObjString *) tokens -> At(0)) -> GetString();
       TString tauIDString = ((TObjString *) tokens -> At(1)) -> GetString();
-      TString label = paramName+TauPromptString+LeptonPromptString"/"+tauIDString+"/"+GetRegionString(r); 
+      TString label = paramName+TauPromptString+LeptonPromptString+"/"+tauIDString+"/"+GetRegionString(r); 
       TString label_channel = label + "_"+GetChannelString(ch);
 
       std::vector<TString> fillstr = {label,label_channel};
       
-      double weight = GetMatchedWeight(taus,leptons,idtuple,highpT) * MCweight;
+      double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
       weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
       if(HasFlag("unweighted")) weight = 1;
 
@@ -1489,7 +1490,7 @@ double WRTau_Core::GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, c
 
   double w = 1.0;
 
-  if(leps.size()>0 && IsNonPromptLepton(leps.at(0),gens)){
+  if(leps.size()>0 && IsNonPromptLepton(*leps.at(0),gens)){
     
     if(GetChannel(leps) == WRTau_Core::TauE){
       int genmatch = fabs(GetLeptonType(*leps.at(0),gens));
@@ -1523,7 +1524,7 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
       }
     }
     if(leps.size()>0){
-      if(IsPromptLepton(leps.at(0),gens)){
+      if(IsPromptLepton(*leps.at(0),gens)){
 
         if(GetChannel(leps) == WRTau_Core::TauE){
           w_lepton *= mcCorr->ElectronID_SF("HEEP",leps.at(0)->Eta(),leps.at(0)->Pt());

@@ -223,8 +223,8 @@ public:
   std::vector<Jet> JetsAwayFromPhoton(const std::vector<Jet>& jets, const std::vector<Photon>& photons, double mindr);
   Particle AddFatJetAndLepton(const FatJet& fatjet, const Lepton& lep);
   
-  bool isPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens);
-  bool isNonPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens);
+  bool IsPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens);
+  bool IsNonPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens);
 
   Jet GetClosestJet(const std::vector<Jet>& jets, const Muon& muon);
   Jet GetClosestJet(const std::vector<Jet>& jets, const Electron& electron);

@@ -1523,7 +1523,7 @@ std::vector<Muon> AnalyzerCore::MuonPromptOnly(const std::vector<Muon>& muons, c
 
 }
 
-bool AnalyzerCore::isPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens){
+bool AnalyzerCore::IsPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens){
 
   if(IsDATA) return false;
   if(GetLeptonType(lepton, gens)>0) return true;
@@ -1531,7 +1531,7 @@ bool AnalyzerCore::isPromptLepton(const Lepton& lepton, const std::vector<Gen>& 
 
 }
 
-bool AnalyzerCore::isNonPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens){
+bool AnalyzerCore::IsNonPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens){
 
   if(IsDATA) return false;
   if(GetLeptonType(lepton, gens)<0) return true;
