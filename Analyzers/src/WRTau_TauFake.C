@@ -168,7 +168,7 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
         label += "/"+GetRegionString(region.first)+"_"+tag+"Loose";
         if(!IsDATA && IsPromptTau(taus.at(0),gens)){
           tuple<int,int,int> tauid(3,13,21);
-          weight *= GetMatchedWeight(taus,tauid,highpT); 
+          weight *= GetMatchedWeight(taus,gens,tauid,highpT); 
         }
         FillHist(label+"/TauPt_absEta",taupT,tauAbsEta,weight,10,ptbins,5,etabins);
       }
@@ -176,7 +176,7 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
         label += "/"+GetRegionString(region.first)+"_"+tag+"Tight";
         if(!IsDATA && IsPromptTau(taus.at(0),gens)){
           tuple<int,int,int> tauid(5,13,21);
-          weight *= GetMatchedWeight(taus,tauid,highpT); 
+          weight *= GetMatchedWeight(taus,gens,tauid,highpT); 
         }
         FillHist(label+"/TauPt_absEta",taupT,tauAbsEta,weight,10,ptbins,5,etabins);
 

@@ -1237,6 +1237,7 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
       WRTau_Core::SearchRegion cutregion = p_cutregion.first.first;
       double cut = p_cutregion.first.second;
 
+      //cout << "[WRTau_Core::FillPassingRegions] Start FillPassingRegion_Cut with " <<  cutregion  << endl;
       if(p_cutregion.second){
 
         std::pair<std::vector<Lepton *>,std::vector<Lepton *>> PairVecLeps = std::make_pair(LooseLeptons,TightLeptons);
@@ -1267,18 +1268,21 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
         cutval.Remove(cutval.Length() - 4, 4);
         cutval.ReplaceAll(".", "p");
 
-        TString label = paramName+TauPromptString+LeptonPromptString+"/"+tauIDString+"/"+GetRegionString(r)+ "_"+ cutvar+ cutval;
+        TString label = paramName+TauPromptString+LeptonPromptString+"/"+tauIDString+"/"+GetRegionString(cutregion)+ "_"+ cutvar+ cutval;
         TString label_channel = label + "_"+GetChannelString(ch);
 
         std::vector<TString> fillstr = {label,label_channel};
-
+        //cout << "[WRTau_Core::FillPassingRegions] Start GetMatchedWeight" << endl;
         double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
-
+        //cout << "[WRTau_Core::FillPassingRegions] End GetMatchedWeight" << endl;
+        //cout << "[WRTau_Core::FillPassingRegions] Start GetTauIDLeptonFakeSF" << endl;
         weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
+        //cout << "[WRTau_Core::FillPassingRegions] End GetTauIDLeptonFakeSF" << endl;
         if(HasFlag("unweighted")) weight = 1;
 
         for(const auto str : fillstr){
 
+          //cout << "[WRTau_Core::FillPassingRegions] FillStr " << str << endl;
           //CopyHist(fillpath+"/Cutflow",str+"/Cutflow");
           FillHist(str+"/Nevents",0,weight,1,0.,1.);
           FillHist(str+"/MET",METv.Pt(),weight,2500,0.,2500.);
@@ -1300,17 +1304,24 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
               FillHist(str+"/dRJ"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(fatjets.at(i)),weight,60,0.,6.);
             }
           }
-
+          //cout << "[WRTau_Core::FillPassingRegions] Start FillPreselHists" << endl;
           FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
+          //cout << "[WRTau_Core::FillPassingRegions] End FillPreselHists" << endl;
+          //cout << "[WRTau_Core::FillPassingRegions] Start FillMassHists" << endl;
           FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
+          //cout << "[WRTau_Core::FillPassingRegions] End FillMassHists" << endl;
 
           auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), cutregion);
           auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), cutregion);
 
+          //cout << "[WRTau_Core::FillPassingRegions] Get it_b , it_r" << endl;
+
           if( it_b != BoostedRegions.end() ){
 
             double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
+            //cout << "[WRTau_Core::FillPassingRegions] Get Boosted M1" << endl;
             double M2 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
+            //cout << "[WRTau_Core::FillPassingRegions] Get Boosted M2" << endl;
             //double M3 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
             //double M4 = GetBoostedSRMassN_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
             if(M1>0) FillHist(str+"/ProperMTWR",M1,weight,5000,0.,5000.);
@@ -1320,10 +1331,12 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
 
           }
 
-          if( it_r != BoostedRegions.end() ){
+          if( it_r != ResolvedRegions.end() ){
 
             double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
+            //cout << "[WRTau_Core::FillPassingRegions] Get Resolved M1" << endl;
             double M2 = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);
+            //cout << "[WRTau_Core::FillPassingRegions] Get Resolved M2" << endl;
             //double M3 = GetResolvedSRMass_RecoNeutrino(METv,taus,jets,TightLeptons);
             //double M4 = GetResolvedSRMassN_RecoNeutrino(METv,taus,jets,TightLeptons);
             if(M1>0) FillHist(str+"/ProperMTWR",M1,weight,5000,0.,5000.);
@@ -1457,11 +1470,13 @@ map<pair<WRTau_Core::SearchRegion,double>, bool> WRTau_Core::MassCutter(map<WRTa
                                                               const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,bool ignoreMET){
 
 
+  //cout << "[WRTauCore::MassCutter] Start MassCutter" << endl;
   map<pair<WRTau_Core::SearchRegion,double>, bool> cutmap;
   cutmap.insert(std::make_pair(std::make_pair(WRTau_Core::None,-999.),false));
   int i(0); double mass(0.);
   for(const auto r : MassOptRegions){
     if(m_region[r]){
+        //cout << "[WRTauCore::MassCutter] Cutting Region " << r << endl;
         if(r == WRTau_Core::BoostedMassOptSel)         mass = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,ignoreMET); 
         else if(r == WRTau_Core::ResolvedMassOptSel)   mass = GetResolvedSRMass(METv,taus,jets,TightLeptons,ignoreMET);
         for(const auto cut : MassCuts){
@@ -1471,6 +1486,7 @@ map<pair<WRTau_Core::SearchRegion,double>, bool> WRTau_Core::MassCutter(map<WRTa
     }
   }
   if(i!=0) cutmap.erase(std::make_pair(WRTau_Core::None,-999.));
+  //cout << "[WRTauCore::MassCutter] End MassCutter with cutmap size " << cutmap.size() << endl;
   return cutmap;
 }
 
