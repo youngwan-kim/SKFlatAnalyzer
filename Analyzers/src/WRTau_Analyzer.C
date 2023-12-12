@@ -245,22 +245,22 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         if(HasFlag("MassOpt")){
           
-          cout << "[WRTauAnalyzer] Start MassCutter_Meff" << endl;
+          //cout << "[WRTauAnalyzer] Start MassCutter_Meff" << endl;
           map<pair<WRTau_Core::SearchRegion,double>, bool> MassOptCutMap_eff = MassCutter(map_regions,{650,700,750,800,850,900,950,1000},METv,taus,jets,fatjets,LooseLeptons,TightLeptons,true);
-          cout << "[WRTauAnalyzer] End MassCutter_Meff" << endl;
+          //cout << "[WRTauAnalyzer] End MassCutter_Meff" << endl;
 
-          cout << "[WRTauAnalyzer] Start MassCutter_MT" << endl;
+          //cout << "[WRTauAnalyzer] Start MassCutter_MT" << endl;
           map<pair<WRTau_Core::SearchRegion,double>, bool> MassOptCutMap_mt = MassCutter(map_regions,{100,125,150,175,200,225,250,275,300,325,350},METv,taus,jets,fatjets,LooseLeptons,TightLeptons,false);
-          cout << "[WRTauAnalyzer] End MassCutter_MT" << endl;
+          //cout << "[WRTauAnalyzer] End MassCutter_MT" << endl;
 
 
-          cout << "[WRTauAnalyzer] Start EffMassOptFill" << endl;
+          //cout << "[WRTauAnalyzer] Start EffMassOptFill" << endl;
           FillPassingRegions(MassOptCutMap_eff,"EffMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           cout << "[WRTauAnalyzer] End EffMassOptFill" << endl;
           
-          cout << "[WRTauAnalyzer] Start TransMassOpt" << endl;
+          //cout << "[WRTauAnalyzer] Start TransMassOpt" << endl;
           FillPassingRegions(MassOptCutMap_mt,"TransMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
-          cout << "[WRTauAnalyzer] End TransMassOpt" << endl;
+          //cout << "[WRTauAnalyzer] End TransMassOpt" << endl;
 
         }
 

@@ -794,6 +794,9 @@ std::string WRTau_Core::GetRegionString(WRTau_Core::SearchRegion region){
   if (region == WRTau_Core::WJetsControlRegion)                 region_string="WJetsControlRegion";
   if (region == WRTau_Core::QCDEnrichedControlRegionAK4)        region_string="QCDEnrichedControlRegionAK4";
   if (region == WRTau_Core::QCDEnrichedControlRegionAK8)        region_string="QCDEnrichedControlRegionAK8";
+  if (region == WRTau_Core::FakeTTControlRegion)                region_string="FakeTTControlRegion";
+  if (region == WRTau_Core::FakeDYControlRegion)                region_string="FakeDYControlRegion";
+
 
   return region_string;
 }

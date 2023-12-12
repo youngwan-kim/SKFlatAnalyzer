@@ -80,9 +80,15 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   //vector<Tau> this_AllTaus = TauFakeOnly(this_AllTaus_tmp,AllGens);
   //vector<Tau> this_AllTaus_Prompt = TauPromptOnly(this_AllTaus_tmp,AllGens);
 
+  JetTagging::Parameters param_jetsM = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
+
   vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 50., 2.4) ;
   vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 50., 2.4);
   vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
+
+  vector<Electron> electrons = SelectElectrons(this_AllElectrons, param.Electron_Tight_ID, 50. , 2.4);
+  vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50. , 2.4);
+  vector<Lepton *> leptons = CombineLeptonPointerVector(electrons,muons);
 
   vector<Tau> taus = VetoLeptonsFromTaus(VetoLeps,this_AllTaus);
   vector<Jet> jets_tauVeto = VetoTauFromJets(this_AllJets,taus); 
@@ -90,6 +96,7 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   vector<Jet> jets_lepVeto_tauVeto = JetsVetoLeptonInside(jets_tauVeto,electrons_veto,muons_veto,0.4);
 
   vector<Jet> jets = SelectJets(jets_lepVeto_tauVeto, param.Jet_ID, 40., 2.4);
+  vector<Jet> bjets = SelectBJets(jets,param_jetsM);
   vector<FatJet> fatjets = SelectFatJets(fatjets_tmp,param.FatJet_ID,200.,2.4);
 
   //vector<Tau> taus_prompt = SelectTaus(taus_le)
@@ -100,6 +107,7 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
 
   map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeregion = GetQCDFakeRegion(METv,taus,jets,fatjets);
   FillPassingFakeRegions(m_fakeregion,param.Name,taus,AllGens,weight,true);
+  map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeTTDYCR = GetTTDYFakeRegion(METv,taus,leptons,bjets);
 
 }
 
@@ -125,7 +133,45 @@ map<WRTau_Core::SearchRegion,std::pair<bool,bool>> WRTau_TauFake::GetQCDFakeRegi
 
   map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeregion = {
     {WRTau_Core::QCDEnrichedControlRegionAK4,_isAK4bpair},
-    {WRTau_Core::QCDEnrichedControlRegionAK8,_isAK8bpair},
+    {WRTau_Core::QCDEnrichedControlRegionAK8,_isAK8bpair}
+  };
+
+  return m_fakeregion;
+
+}
+
+map<WRTau_Core::SearchRegion,std::pair<bool,bool>> WRTau_TauFake::GetTTDYFakeRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Lepton *> leptons, const std::vector<Jet>& bjets){
+
+  std::pair<bool,bool> _isTTpair = std::make_pair(false,false);
+  std::pair<bool,bool> _isDYpair = std::make_pair(false,false);
+    
+  int nEl(0); int nMu(0);
+  for(const auto &l : leptons){
+    if(l->IsElectron())   nEl += 1;
+    else if(l->IsMuon())  nMu += 1;
+  }
+
+  if(taus.size()==1){
+    if(leptons.size()==2 && leptons.at(0)->Charge() * leptons.at(1)->Charge() < 0){
+      Particle ll = *leptons.at(0) + *leptons.at(1);
+      if(nEl == 2 || nMu == 2){
+        if(fabs(ll.M()-M_Z)<15 && METv.Pt()<50){
+          if(taus.at(0).PassID("LooseFakeStudyID")) _isDYpair.first = true;
+          if(taus.at(0).PassID("TightFakeStudyID")) _isDYpair.second = true;
+        }
+      }
+      else if(nEl == 1 && nMu == 1){
+        if(ll.M()>20 && METv.Pt()<50 && bjets.size()>0){
+          if(taus.at(0).PassID("LooseFakeStudyID")) _isTTpair.first = true;
+          if(taus.at(0).PassID("TightFakeStudyID")) _isTTpair.second = true;
+        }
+      }
+    }
+  }
+
+  map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeregion = {
+    {WRTau_Core::FakeTTControlRegion,_isTTpair},
+    {WRTau_Core::FakeDYControlRegion,_isDYpair}
   };
 
   return m_fakeregion;
@@ -134,7 +180,7 @@ map<WRTau_Core::SearchRegion,std::pair<bool,bool>> WRTau_TauFake::GetQCDFakeRegi
 
 void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m,TString fillpath,const std::vector<Tau>& taus,const std::vector<Gen>& gens,double MCweight, bool highpT){
 
-  double ptbins[11] = {190,200,250,300,400,500,600,700,800,900,1000};
+  double ptbins[17] = {190,200,210,220,230,240,250,275,300,350,400,450,500,600,700,800,1000};
   double etabins[6] = {0.0,0.5,1.0,1.5,2.0,2.5};
 
   for(auto const& region : m){

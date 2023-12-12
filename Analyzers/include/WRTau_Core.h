@@ -90,6 +90,8 @@ public:
     ResolvedMassOptSel,
     QCDEnrichedControlRegionAK4,
     QCDEnrichedControlRegionAK8,
+    FakeTTControlRegion,
+    FakeDYControlRegion,
     //Generator level regions ()
     GenDebug                    = 100,
     GenTauHTauH                 = 101,
