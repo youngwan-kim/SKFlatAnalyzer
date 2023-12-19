@@ -1,5 +1,9 @@
 #include "WRTau_Core.h"
 
+bool WRTau_Core::isSignalSample(){
+  return MCSample.Contains("WRtoTauNtoTauTauJets");
+}
+
 bool WRTau_Core::isBoostedPreselection(const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons){
   return ( (isPreselection(taus) && hasAtLeast1Leptons(LooseLeptons)) && !isResolvedPreselection(taus,jets,fatjets,LooseLeptons,TightLeptons) && hasAtLeast1AK8Jets(fatjets));
 }
@@ -658,7 +662,7 @@ bool WRTau_Core::IsNonPromptTau(const Tau tau, const std::vector<Gen>& gens){
   
   if(IsDATA) return false;
   if(GetTauType(tau,gens)<0) return true;
-  else false;
+  else return false;
 
 }
 
@@ -666,7 +670,7 @@ bool WRTau_Core::IsPromptTau(const Tau tau, const std::vector<Gen>& gens){
   
   if(IsDATA) return false;
   if(GetTauType(tau,gens)>0) return true;
-  else false;
+  else return false;
 
 }
 
@@ -1148,16 +1152,18 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       TString TauPromptString = "";
       TString LeptonPromptString = "";
 
-      if(taus.size()>0 && taus.at(0).Pt()>=190){
-        if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-        else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
-        else return;
-      }
+      if(!isSignalSample()){
+        if(taus.size()>0 && taus.at(0).Pt()>=190){
+          if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
+          else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
+          else return;
+        }
 
-      if(leptons.size()>0){
-        if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-        else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
-        else return;
+        if(leptons.size()>0){
+          if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+          else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+          else return;
+        }
       }
 
       WRTau_Core::Channel ch = GetChannel(leptons);
@@ -1251,16 +1257,20 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
         TString TauPromptString = "";
         TString LeptonPromptString = "";
 
-        if(taus.size()>0 && taus.at(0).Pt()>=190){
-          if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-          else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
-          else return;
-        }
+        if(!isSignalSample()){
+          if(taus.size()>0 && taus.at(0).Pt()>=190){
+            if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
+            else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
+            else return;
+          }
+          //cout << "[WRTau_Core::FillPassingRegions] (TauType,isPromptTau,String) = (" << GetTauType(taus.at(0),gens) << "," <<  IsPromptTau(taus.at(0),gens) << " , " << TauPromptString << ")" << endl; 
+          //cout << "[WRTau_Core::FillPassingRegions] (TauType,isNonPromptTau,String) = (" << GetTauType(taus.at(0),gens) << "," <<  IsNonPromptTau(taus.at(0),gens) << " , " << TauPromptString << ")" << endl; 
 
-        if(leptons.size()>0){
-          if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-          else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
-          else return;
+          if(leptons.size()>0){
+            if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+            else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+            else return;
+          }
         }
 
         TObjArray *tokens = fillpath.Tokenize("/");
@@ -1288,7 +1298,7 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
           //cout << "[WRTau_Core::FillPassingRegions] FillStr " << str << endl;
           //CopyHist(fillpath+"/Cutflow",str+"/Cutflow");
           FillHist(str+"/Nevents",0,weight,1,0.,1.);
-          FillHist(str+"/MET",METv.Pt(),weight,2500,0.,2500.);
+          /*FillHist(str+"/MET",METv.Pt(),weight,2500,0.,2500.);
 
           if(leptons.size()>0){
             for(unsigned int i=0;i<leptons.size();i++){
@@ -1306,19 +1316,19 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
             for(unsigned int i=0;i<fatjets.size();i++){
               FillHist(str+"/dRJ"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(fatjets.at(i)),weight,60,0.,6.);
             }
-          }
+          }*/
           //cout << "[WRTau_Core::FillPassingRegions] Start FillPreselHists" << endl;
-          FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
+          //FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
           //cout << "[WRTau_Core::FillPassingRegions] End FillPreselHists" << endl;
           //cout << "[WRTau_Core::FillPassingRegions] Start FillMassHists" << endl;
-          FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
+          //FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
           //cout << "[WRTau_Core::FillPassingRegions] End FillMassHists" << endl;
 
-          auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), cutregion);
-          auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), cutregion);
+          //auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), cutregion);
+          //auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), cutregion);
 
           //cout << "[WRTau_Core::FillPassingRegions] Get it_b , it_r" << endl;
-
+          /*
           if( it_b != BoostedRegions.end() ){
 
             double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
@@ -1347,7 +1357,7 @@ void WRTau_Core::FillPassingRegions(map<pair<WRTau_Core::SearchRegion,double>, b
             //if(M3>0) FillHist(str+"/ProperMRecoNu",M3,weight,5000,0.,5000.);
             //if(M4>0) FillHist(str+"/ProperMRecoNu_N",M4,weight,5000,0.,5000.);
 
-          }
+          }*/
         }
       }
     }
@@ -1368,16 +1378,18 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       TString TauPromptString = "";
       TString LeptonPromptString = "";
 
-      if(taus.size()>0 && taus.at(0).Pt()>=190){
-        if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-        else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
-        else return;
-      }
-
-      if(leptons.size()>0){
-        if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-        else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
-        else return;
+      if(!isSignalSample()){
+        if(taus.size()>0 && taus.at(0).Pt()>=190){
+          if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
+          else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
+          else return;
+        }
+  
+        if(leptons.size()>0){
+          if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+          else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+          else return;
+        }
       }
 
       WRTau_Core::Channel ch = GetChannel(leptons);
@@ -1492,6 +1504,32 @@ map<pair<WRTau_Core::SearchRegion,double>, bool> WRTau_Core::MassCutter(map<WRTa
   //cout << "[WRTauCore::MassCutter] End MassCutter with cutmap size " << cutmap.size() << endl;
   return cutmap;
 }
+
+map<pair<WRTau_Core::SearchRegion,double>, bool> WRTau_Core::MassCutter(map<WRTau_Core::SearchRegion,bool> m_region,vector<double> MassCuts,
+                                                              Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,
+                                                              const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons){
+
+
+  //cout << "[WRTauCore::MassCutter] Start MassCutter" << endl;
+  map<pair<WRTau_Core::SearchRegion,double>, bool> cutmap;
+  cutmap.insert(std::make_pair(std::make_pair(WRTau_Core::None,-999.),false));
+  int i(0); double mass(0.);
+  for(const auto r : MassOptRegions){
+    if(m_region[r]){
+        //cout << "[WRTauCore::MassCutter] Cutting Region " << r << endl;
+        if(r == WRTau_Core::BoostedMassOptSel)         mass = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons); 
+        else if(r == WRTau_Core::ResolvedMassOptSel)   mass = GetResolvedSRMass_RecoNeutrino(METv,taus,jets,TightLeptons);
+        for(const auto cut : MassCuts){
+          cutmap.insert(std::make_pair(std::make_pair(r,cut),mass>cut));
+        }
+      i++;
+    }
+  }
+  if(i!=0) cutmap.erase(std::make_pair(WRTau_Core::None,-999.));
+  //cout << "[WRTauCore::MassCutter] End MassCutter with cutmap size " << cutmap.size() << endl;
+  return cutmap;
+}
+
 
 
 // (loose,tight) pair order

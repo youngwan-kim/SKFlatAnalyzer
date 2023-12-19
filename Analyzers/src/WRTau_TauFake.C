@@ -26,7 +26,7 @@ void WRTau_TauFake::executeEvent(){
   param.Clear();
   TriggerList.clear();
   
-  TriggerList = SingleTauTriggers;
+  TriggerList = SingleLeptonTriggers;
 
   param.Name = "WRTauFake";
   param.Electron_Tight_ID = "passHEEPID";
@@ -105,9 +105,10 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   std::sort(jets.begin(),jets.end(),PtComparing);
   std::sort(fatjets.begin(),fatjets.end(),PtComparing);
 
-  map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeregion = GetQCDFakeRegion(METv,taus,jets,fatjets);
-  FillPassingFakeRegions(m_fakeregion,param.Name,taus,AllGens,weight,true);
+  //map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeregion = GetQCDFakeRegion(METv,taus,jets,fatjets);
+  //FillPassingFakeRegions(m_fakeregion,param.Name,taus,AllGens,weight,true);
   map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeTTDYCR = GetTTDYFakeRegion(METv,taus,leptons,bjets);
+  FillPassingFakeRegions(m_fakeTTDYCR,param.Name,taus,AllGens,weight,true);
 
 }
 
@@ -156,14 +157,14 @@ map<WRTau_Core::SearchRegion,std::pair<bool,bool>> WRTau_TauFake::GetTTDYFakeReg
       Particle ll = *leptons.at(0) + *leptons.at(1);
       if(nEl == 2 || nMu == 2){
         if(fabs(ll.M()-M_Z)<15 && METv.Pt()<50){
-          if(taus.at(0).PassID("LooseFakeStudyID")) _isDYpair.first = true;
-          if(taus.at(0).PassID("TightFakeStudyID")) _isDYpair.second = true;
+          if(taus.at(0).PassID("FakeBase") && taus.at(0).passLIDvJet() && !taus.at(0).passTIDvJet() ) _isDYpair.first = true;
+          if(taus.at(0).PassID("FakeBase") && taus.at(0).passLIDvJet() &&  taus.at(0).passTIDvJet() ) _isDYpair.second = true;
         }
       }
       else if(nEl == 1 && nMu == 1){
         if(ll.M()>20 && METv.Pt()<50 && bjets.size()>0){
-          if(taus.at(0).PassID("LooseFakeStudyID")) _isTTpair.first = true;
-          if(taus.at(0).PassID("TightFakeStudyID")) _isTTpair.second = true;
+          if(taus.at(0).PassID("FakeBase") && taus.at(0).passLIDvJet() && !taus.at(0).passTIDvJet() ) _isTTpair.first = true;
+          if(taus.at(0).PassID("FakeBase") && taus.at(0).passLIDvJet() &&  taus.at(0).passTIDvJet() ) _isTTpair.second = true;
         }
       }
     }
@@ -217,6 +218,8 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
           weight *= GetMatchedWeight(taus,gens,tauid,highpT); 
         }
         FillHist(label+"/TauPt_absEta",taupT,tauAbsEta,weight,10,ptbins,5,etabins);
+        FillHist(label+"/TauPt",taus.at(0).Pt(),weight,2500,0.,2500.);
+        FillHist(label+"/TauEta",taus.at(0).Eta(),weight,100,-5.,5.);
       }
       else if(region.second.second){
         label += "/"+GetRegionString(region.first)+"_"+tag+"Tight";
@@ -225,7 +228,8 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
           weight *= GetMatchedWeight(taus,gens,tauid,highpT); 
         }
         FillHist(label+"/TauPt_absEta",taupT,tauAbsEta,weight,10,ptbins,5,etabins);
-
+        FillHist(label+"/TauPt",taus.at(0).Pt(),weight,2500,0.,2500.);
+        FillHist(label+"/TauEta",taus.at(0).Eta(),weight,100,-5.,5.);
       }
     }
   }

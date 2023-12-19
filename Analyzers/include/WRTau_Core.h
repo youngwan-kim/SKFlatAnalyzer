@@ -123,6 +123,9 @@ public:
                                                      WRTau_Core::ResolvedMassOptSel};
 
 
+  // misc
+  bool isSignalSample();
+
   // Regions
   const inline bool isPreselection(const std::vector<Tau>& taus){ return (taus.size()>0); };
   const inline bool hasAtLeast2AK4Jets(const std::vector<Jet>& jets){ return (jets.size()>1); };
@@ -222,6 +225,9 @@ public:
   map<pair<WRTau_Core::SearchRegion,double>, bool> MassCutter(map<WRTau_Core::SearchRegion,bool> m_region,vector<double> MassCuts,
                                                               Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,
                                                               const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons, bool ignoreMET);
+  map<pair<WRTau_Core::SearchRegion,double>, bool> MassCutter(map<WRTau_Core::SearchRegion,bool> m_region,vector<double> MassCuts,
+                                                              Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,
+                                                              const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons);                                                              
   std::vector<Lepton *> ChooseLeptonColl(WRTau_Core::SearchRegion region, std::pair<std::vector<Lepton *>,std::vector<Lepton *>> LeptonPair);
   void CopyHist(TString histname0, TString histname1);
 
