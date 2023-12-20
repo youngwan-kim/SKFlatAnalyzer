@@ -792,6 +792,8 @@ std::string WRTau_Core::GetRegionString(WRTau_Core::SearchRegion region){
   if (region == WRTau_Core::BoostedLowMassControlRegionMass1)   region_string="BoostedLowMassControlRegionMass1";
   if (region == WRTau_Core::ResolvedSignalRegion)               region_string="ResolvedSignalRegion";
   if (region == WRTau_Core::BoostedSignalRegion)                region_string="BoostedSignalRegion";
+  if (region == WRTau_Core::ResolvedSignalRegionMETInvert)      region_string="ResolvedSignalRegionMETInvert";
+  if (region == WRTau_Core::BoostedSignalRegionMETInvert)       region_string="BoostedSignalRegionMETInvert";
   if (region == WRTau_Core::ResolvedSignalRegionMass1)          region_string="ResolvedSignalRegionMass1";
   if (region == WRTau_Core::BoostedMassOptSel)                  region_string="BoostedMassOptSel";
   if (region == WRTau_Core::ResolvedMassOptSel)                 region_string="ResolvedMassOptSel";
@@ -1026,6 +1028,8 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool _isBoostedLowMassControlRegionMass1(false);
   bool _isResolvedSignalRegion(false);
   bool _isBoostedSignalRegion(false);
+  bool _isResolvedSignalRegionMETInvert(false);
+  bool _isBoostedSignalRegionMETInvert(false);
   bool _isResolvedMassOptSel(false);
   bool _isResolvedSignalRegionMass1(false);
   bool _isBoostedSignalRegionMass1(false);
@@ -1058,16 +1062,17 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
       if(*min_element(dRlj.begin(),dRlj.end())<0.4) _isResolvedSignalRegion = false;
       else{
 
-        _isResolvedMassOptSel = true;
+        if(METv.Pt()>METCut) _isResolvedMassOptSel = true;
+        else _isResolvedSignalRegionMETInvert = true;
 
         double mwr1 = GetResolvedSRMass_RecoNeutrino(METv,taus,jets,TightLeptons);
         double mwr  = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
         
-        if(mwr<800) _isResolvedLowMassControlRegion = true ; // TODO : study mass cut optimization ; make a submethod to vary mass cuts and check significance in 2D
-        else if(mwr>800) _isResolvedSignalRegion = true;
+        if(mwr<MTCut) _isResolvedLowMassControlRegion = true ; // TODO : study mass cut optimization ; make a submethod to vary mass cuts and check significance in 2D
+        else if(mwr>MTCut && METv.Pt()>METCut) _isResolvedSignalRegion = true;
 
-        if(mwr1<800) _isResolvedLowMassControlRegionMass1 = true;
-        else if(mwr1>800) _isResolvedSignalRegionMass1 = true;
+        if(mwr1<MRecoCut) _isResolvedLowMassControlRegionMass1 = true;
+        else if(mwr1>MRecoCut && METv.Pt()>METCut) _isResolvedSignalRegionMass1 = true;
       }
     }  
   }
@@ -1094,17 +1099,18 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
       }
       if(leptons_BoostedSR.size()>0 && fatjet_BoostedSR.LSF()>LSFOptCut){
         
-        _isBoostedMassOptSel = true;
+        if(METv.Pt()>METCut) _isBoostedMassOptSel = true;
+        else _isBoostedSignalRegionMETInvert = true;
 
         //double mwr1 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
         double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
         double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
 
-        if(mwr<250) _isBoostedLowMassControlRegion = true ;
-        else if(mwr>250) _isBoostedSignalRegion = true;
+        if(mwr<MTCut) _isBoostedLowMassControlRegion = true ;
+        else if(mwr>MTCut && METv.Pt()>METCut) _isBoostedSignalRegion = true;
 
-        if(mwr1<800) _isBoostedLowMassControlRegionMass1 = true ;
-        else if(mwr1>800) _isBoostedSignalRegionMass1 = true;
+        if(mwr1<MRecoCut) _isBoostedLowMassControlRegionMass1 = true ;
+        else if(mwr1>MRecoCut && METv.Pt()>METCut) _isBoostedSignalRegionMass1 = true;
 
         //cout << "-----" << endl;
         //cout << "mwr,mwr1 : " << mwr << " , " << mwr1 << endl;
@@ -1125,9 +1131,11 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
     {WRTau_Core::ResolvedLowMassControlRegionMass1,_isResolvedLowMassControlRegionMass1},
     {WRTau_Core::BoostedLowMassControlRegionMass1,_isBoostedLowMassControlRegionMass1},
     {WRTau_Core::ResolvedSignalRegion,_isResolvedSignalRegion},
+    {WRTau_Core::ResolvedSignalRegionMETInvert,_isResolvedSignalRegionMETInvert},
     {WRTau_Core::BoostedSignalRegionMass1,_isBoostedSignalRegionMass1},
     {WRTau_Core::ResolvedSignalRegionMass1,_isResolvedSignalRegionMass1},
     {WRTau_Core::BoostedSignalRegion,_isBoostedSignalRegion},
+    {WRTau_Core::BoostedSignalRegionMETInvert,_isBoostedSignalRegionMETInvert},
     {WRTau_Core::WJetsControlRegion,_isWJetsControlRegion},
     {WRTau_Core::BoostedMassOptSel,_isBoostedMassOptSel},
     {WRTau_Core::ResolvedMassOptSel,_isResolvedMassOptSel}

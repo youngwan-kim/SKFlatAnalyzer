@@ -17,7 +17,11 @@ public:
   std::string DeepTauVSe = "DeepTau2017v2p1VSe";
   std::string DeepTauVSmu = "DeepTau2017v2p1VSmu";
 
+  // Cut Values
   double LSFOptCut = 0.6;
+  double METCut = 100;
+  double MTCut = 450;
+  double MRecoCut = 1200;
 
   map<int,TString> idname_map = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
                                  {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
@@ -83,6 +87,8 @@ public:
     BoostedLowMassControlRegionMass1,
     ResolvedSignalRegion,
     BoostedSignalRegion,
+    ResolvedSignalRegionMETInvert,
+    BoostedSignalRegionMETInvert,
     ResolvedSignalRegionMass1,
     BoostedSignalRegionMass1,
     WJetsControlRegion,
