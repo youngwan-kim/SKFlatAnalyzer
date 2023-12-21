@@ -4,7 +4,7 @@ void WRTau_TauFake::initializeAnalyzer(){
 
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
   vJet_vec = {3,4,5}; vEl_vec = {13}; vMu_vec = {21};
-  
+
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
   if(DataYear==2017){
@@ -62,6 +62,9 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   Event ev = GetEvent();
   Particle METv = ev.GetMETVector();
 
+  tauid_LTT = make_tuple(3,13,21);
+  tauid_TTT = make_tuple(5,13,21);
+
   double weight(1.);
 
   if(!IsDATA){
@@ -82,13 +85,19 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
 
   JetTagging::Parameters param_jetsM = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
 
+  vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50., 2.4) ;
   vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 50., 2.4) ;
-  vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 50., 2.4);
-  vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
+  vector<Muon> muons_loose = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4) ;
 
   vector<Electron> electrons = SelectElectrons(this_AllElectrons, param.Electron_Tight_ID, 50. , 2.4);
-  vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50. , 2.4);
+  vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 50., 2.4);
+  vector<Electron> electrons_loose = SelectElectrons(this_AllElectrons, param.Electron_Loose_ID, 50.,2.4);
+  
+  vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
   vector<Lepton *> leptons = CombineLeptonPointerVector(electrons,muons);
+
+  vector<Lepton *> LooseLeptons = CombineLeptonPointerVector(electrons_loose,muons_loose);
+  vector<Lepton *> TightLeptons = CombineLeptonPointerVector(electrons,muons);
 
   vector<Tau> taus = VetoLeptonsFromTaus(VetoLeps,this_AllTaus);
   vector<Jet> jets_tauVeto = VetoTauFromJets(this_AllJets,taus); 
@@ -105,10 +114,87 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   std::sort(jets.begin(),jets.end(),PtComparing);
   std::sort(fatjets.begin(),fatjets.end(),PtComparing);
 
+  map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
+  FillTauKinematics(map_regions,METv,AllGens,taus,LooseLeptons,TightLeptons,jets,bjets,fatjets,param.Name,weight);
+
   //map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeregion = GetQCDFakeRegion(METv,taus,jets,fatjets);
   //FillPassingFakeRegions(m_fakeregion,param.Name,taus,AllGens,weight,true);
-  map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeTTDYCR = GetTTDYFakeRegion(METv,taus,leptons,bjets);
-  FillPassingFakeRegions(m_fakeTTDYCR,param.Name,taus,AllGens,weight,true);
+  //map<WRTau_Core::SearchRegion,std::pair<bool,bool>> m_fakeTTDYCR = GetTTDYFakeRegion(METv,taus,leptons,bjets);
+  //FillPassingFakeRegions(m_fakeTTDYCR,param.Name,taus,AllGens,weight,true);
+
+
+}
+
+void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_regions, Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, 
+                                      const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,const std::vector<Jet>& jets, const std::vector<Jet>& bjets, const std::vector<FatJet>& fatjets, TString fillpath, double weight){
+
+  bool highpT = true;
+  double ptbins[17] = {190,200,210,220,230,240,250,275,300,350,400,450,500,600,700,800,1000};
+
+  for(auto const& r : FakeMeasurementRegion){
+
+    if(map_regions[r] == true){
+
+      std::pair<std::vector<Lepton *>,std::vector<Lepton *>> PairVecLeps = std::make_pair(LooseLeptons,TightLeptons);
+      vector<Lepton *> leptons = ChooseLeptonColl(r,PairVecLeps);
+
+      WRTau_Core::Channel ch = GetChannel(leptons);
+      TString label = fillpath+"/"+GetRegionString(r); 
+      TString label_channel = label + "_"+GetChannelString(ch);
+      
+      std::vector<TString> fillstr = {label,label_channel};
+      TString geomTag = "";
+
+      bool isEndCap = fabs(taus.at(0).Eta())>=1.479;
+      bool isBarrel = fabs(taus.at(0).Eta())<1.479;
+
+      bool isLoose = taus.at(0).PassID("FakeBase") && taus.at(0).passLIDvJet();
+      bool isTight = isLoose && taus.at(0).passTIDvJet();
+
+      int Nj = jets.size();
+      TString NjTag = "";
+      
+      if(Nj<4) NjTag = TString::Itoa(Nj,10);
+      else NjTag = "4";
+
+      //double w_looseTau = GetMatchedWeight(taus,gens,tauid_LTT,highpT)*GetTauIDLeptonFakeSF(tauid_LTT,leptons,gens);
+      //double w_tightTau = GetMatchedWeight(taus,gens,tauid_TTT,highpT)*GetTauIDLeptonFakeSF(tauid_TTT,leptons,gens);
+
+      double w_looseTau = 1.0 ; double w_tightTau = 1.0;
+
+      for(const auto str : fillstr){
+
+        // All Inclusive 
+        if(isLoose)  FillHist(str+"/TauPt_Loose_All_All",taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
+        if(isTight)  FillHist(str+"/TauPt_Tight_All_All",taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
+
+        // Njet Inclusive + 
+        if(isEndCap){
+          if(isLoose){
+            FillHist(str+"/TauPt_Loose_EC_All",taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
+            FillHist(str+"/TauPt_Loose_EC_"+NjTag,taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
+          }
+          if(isTight){
+            FillHist(str+"/TauPt_Tight_EC_All",taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
+            FillHist(str+"/TauPt_Tight_EC_"+NjTag,taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
+          }
+        }  
+        else if(isBarrel){
+          if(isLoose)  FillHist(str+"/TauPt_Loose_B_All",taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
+          if(isTight)  FillHist(str+"/TauPt_Tight_B_All",taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
+        } 
+
+        // Geometry Inclusive
+        if(isLoose)  FillHist(str+"/TauPt_Loose_All_"+NjTag,taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
+        if(isTight)  FillHist(str+"/TauPt_Tight_All_"+NjTag,taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
+
+      }
+      
+    }
+
+  }
+  
+  return;
 
 }
 

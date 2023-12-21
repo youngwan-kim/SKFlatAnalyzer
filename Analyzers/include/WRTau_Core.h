@@ -128,6 +128,11 @@ public:
   vector<WRTau_Core::SearchRegion> MassOptRegions = {WRTau_Core::BoostedMassOptSel,
                                                      WRTau_Core::ResolvedMassOptSel};
 
+  vector<WRTau_Core::SearchRegion> FakeMeasurementRegion = {WRTau_Core::BoostedSignalRegionMETInvert,
+                                                            WRTau_Core::ResolvedSignalRegionMETInvert};
+
+  
+
 
   // misc
   bool isSignalSample();
