@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+QCD_Pt-20toInf_MuEnrichedPt5_TuneCP5_13TeV_pythia8_TauHLT	QCD_Pt-20toInf_MuEnrichedPt5_TuneCP5_13TeV_pythia8_TauHLT	4339000	199120	199120.0	1.991200000000e+05
