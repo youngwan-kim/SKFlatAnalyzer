@@ -35,8 +35,41 @@ void WRTau_Analyzer::executeEvent(){
   TriggerList.clear();
   
   TriggerList = SingleTauTriggers;
+  TriggerSafeTauPtCut = 190.;
 
   param.Name = "WRTau_SignalSingleTauTrg";
+  param.Electron_Tight_ID = "passHEEPID";
+  param.Electron_Loose_ID = "CutBasedLooseNoIso";
+  param.Electron_Veto_ID = "passVetoID";
+  param.Electron_ID_SF_Key = "HEEP";
+
+  param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
+  param.Muon_Loose_ID = "POGHighPt";
+  param.Muon_Veto_ID = "POGLoose";
+  param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
+  param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
+
+  param.Jet_ID = "tightLepVeto";
+  param.FatJet_ID = "tight";
+  param.syst_ = AnalyzerParameter::Central;
+
+  AllMuons = GetAllMuons();
+  AllElectrons = GetAllElectrons();
+  AllTaus = GetAllTaus();
+  AllJets = GetAllJets();
+  AllFatJets = GetAllFatJets();
+  AllGens = GetGens();
+  AllLHEs = GetLHEs();
+
+  executeEventFromParameter(param);
+
+  param.Clear();
+  TriggerList.clear();
+  
+  TriggerList = {"HLT_IsoMu20_eta2p1_LooseChargedIsoPFTau27_eta2p1_CrossL1_v"};
+  TriggerSafeTauPtCut = 40.;
+
+  param.Name = "WRTau_Tau27IsoMu20Trg";
   param.Electron_Tight_ID = "passHEEPID";
   param.Electron_Loose_ID = "CutBasedLooseNoIso";
   param.Electron_Veto_ID = "passVetoID";

@@ -22,6 +22,8 @@ public:
   double METCut = 100;
   double MTCut = 450;
   double MRecoCut = 1200;
+  
+  double TriggerSafeTauPtCut = 0.0;
 
   map<int,TString> idname_map = {{0,"VVVLoose"},{1,"VVLoose"},{2,"VLoose"},{3,"Loose"},{4,"Medium"},{5,"Tight"},{6,"VTight"},
                                  {8,"VVVLoose"},{9,"VVLoose"},{10,"VLoose"},{11,"Loose"},{12,"Medium"},{13,"Tight"},
