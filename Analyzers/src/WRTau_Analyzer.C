@@ -19,9 +19,11 @@ void WRTau_Analyzer::initializeAnalyzer(){
   RegionOfInterest = {WRTau_Core::BoostedPreselection,
                       WRTau_Core::BoostedLowMassControlRegion,
                       WRTau_Core::ResolvedLowMassControlRegion,
-                      WRTau_Core::BoostedLowMassControlRegionMass1,
+                      //WRTau_Core::BoostedLowMassControlRegionMass1,
                       WRTau_Core::BoostedSignalRegion,
-                      WRTau_Core::BoostedSignalRegionMass1,
+                      //WRTau_Core::BoostedSignalRegionMass1,
+                      WRTau_Core::ResolvedSignalRegionMETInvert,
+                      WRTau_Core::BoostedSignalRegionMETInvert
                       };
 
 }
@@ -62,7 +64,7 @@ void WRTau_Analyzer::executeEvent(){
   AllLHEs = GetLHEs();
 
   executeEventFromParameter(param);
-
+/*
   param.Clear();
   TriggerList.clear();
   
@@ -94,7 +96,7 @@ void WRTau_Analyzer::executeEvent(){
   AllLHEs = GetLHEs();
 
   executeEventFromParameter(param);
-
+*/
 }
 
 void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
@@ -189,8 +191,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }*/
 
         vector<Tau> taus;
-
-        
 
         TString path = param.Name+"/"+idname;
         //TString path = param.Name+TauPromptString+LeptonPromptString"/"+idname;

@@ -57,6 +57,8 @@ void WRTau_TauFake::executeEvent(){
 
 void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
 
+  TriggerSafeTauPtCut = 190.;
+
   if(!PassMETFilter()) return;
 
   Event ev = GetEvent();
@@ -69,6 +71,7 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
 
   if(!IsDATA){
     if(HasFlag("unweighted")) weight *= 1.;
+    else if(HasFlag("genWeight")) weight *= MCweight(true,false);
     else weight *= MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(0) * GetPileUpWeight(nPileUp,0);
   }
 
@@ -139,11 +142,24 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
       vector<Lepton *> leptons = ChooseLeptonColl(r,PairVecLeps);
 
       WRTau_Core::Channel ch = GetChannel(leptons);
-      TString label = fillpath+"/"+GetRegionString(r); 
-      TString label_channel = label + "_"+GetChannelString(ch);
+      
+      TString geomTag = "";
+      TString genmatchTag = "";
+
+      if(!IsDATA){
+        if(IsPromptTau(taus.at(0),gens))         genmatchTag = "Prompt";
+        else if(IsNonPromptTau(taus.at(0),gens)) genmatchTag = "Fake";
+        else                                     genmatchTag = "Error";
+      }
+      else                                       genmatchTag = "Data"; 
+
+      //cout << taus.size() << endl;
+      //cout << GetTauType(taus.at(0),gens) << " , " << genmatchTag << endl;
+
+      TString label = fillpath+"/"+GetRegionString(r) + "/"+ genmatchTag;
+      TString label_channel = fillpath+"/"+GetRegionString(r) + "_"+GetChannelString(ch) + "/"+ genmatchTag;
       
       std::vector<TString> fillstr = {label,label_channel};
-      TString geomTag = "";
 
       bool isEndCap = fabs(taus.at(0).Eta())>=1.479;
       bool isBarrel = fabs(taus.at(0).Eta())<1.479;

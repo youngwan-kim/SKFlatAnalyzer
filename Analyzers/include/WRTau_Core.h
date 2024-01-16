@@ -251,7 +251,6 @@ public:
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Gen>& gens, std::tuple<int,int,int> idtuple, bool highpT);
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
 
-
   // Others
   TDirectory* GetTempDir_WRTauCore();
 

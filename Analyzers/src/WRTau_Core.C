@@ -1040,7 +1040,7 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool hasAtLeast1TightLeptons = TightLeptons.size()>0;
   bool hasAtLeast1LooseLeptons = LooseLeptons.size()>0;
 
-  _isBaselinePreselection = taus.size()>0 && taus.at(0).Pt()>TriggerSafeTauPtCut && LooseLeptons.size()==1;
+  _isBaselinePreselection = taus.size()>0 && taus.at(0).Pt()>TriggerSafeTauPtCut        && LooseLeptons.size()==1;
   _isResolvedPreselection = _isBaselinePreselection && hasAtLeast2AK4Jets && TightLeptons.size()==1;
   _isBoostedPreselection = _isBaselinePreselection && !_isResolvedPreselection && hasAtLeast1AK8Jets;
 
@@ -1386,17 +1386,19 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       TString TauPromptString = "";
       TString LeptonPromptString = "";
 
-      if(!isSignalSample()){
-        if(taus.size()>0 && taus.at(0).Pt()>=TriggerSafeTauPtCut){
-          if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
-          else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
-          else return;
-        }
-  
-        if(leptons.size()>0){
-          if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-          else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
-          else return;
+      if(!IsDATA){
+        if(!isSignalSample()){
+          if(taus.size()>0 && taus.at(0).Pt()>=TriggerSafeTauPtCut){
+            if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
+            else if(IsNonPromptTau(taus.at(0),gens)) TauPromptString = "__NonPromptTau";
+            else return;
+          }
+    
+          if(leptons.size()>0){
+            if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+            else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+            else return;
+          }
         }
       }
 
