@@ -16,12 +16,13 @@ void WRTau_Analyzer::initializeAnalyzer(){
 
   }
 
-  RegionOfInterest = {WRTau_Core::BoostedPreselection,
+  RegionOfInterest = {
+                      WRTau_Core::BoostedPreselection,
+                      WRTau_Core::ResolvedPreselection,
                       WRTau_Core::BoostedLowMassControlRegion,
                       WRTau_Core::ResolvedLowMassControlRegion,
-                      //WRTau_Core::BoostedLowMassControlRegionMass1,
+                      WRTau_Core::BoostedSignalRegionLSFInvert,
                       WRTau_Core::BoostedSignalRegion,
-                      //WRTau_Core::BoostedSignalRegionMass1,
                       WRTau_Core::ResolvedSignalRegionMETInvert,
                       WRTau_Core::BoostedSignalRegionMETInvert
                       };

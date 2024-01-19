@@ -783,25 +783,26 @@ TString WRTau_Core::GetChannelString(WRTau_Core::Channel channel){
 std::string WRTau_Core::GetRegionString(WRTau_Core::SearchRegion region){
 
   std::string region_string="";
-  if (region == WRTau_Core::BaselinePreselection)               region_string="BaselinePreselection";
-  if (region == WRTau_Core::ResolvedPreselection)               region_string="ResolvedPreselection";
-  if (region == WRTau_Core::BoostedPreselection)                region_string="BoostedPreselection";
-  if (region == WRTau_Core::ResolvedLowMassControlRegion)       region_string="ResolvedLowMassControlRegion";
-  if (region == WRTau_Core::BoostedLowMassControlRegion)        region_string="BoostedLowMassControlRegion";
-  if (region == WRTau_Core::ResolvedLowMassControlRegionMass1)  region_string="ResolvedLowMassControlRegionMass1";
-  if (region == WRTau_Core::BoostedLowMassControlRegionMass1)   region_string="BoostedLowMassControlRegionMass1";
-  if (region == WRTau_Core::ResolvedSignalRegion)               region_string="ResolvedSignalRegion";
-  if (region == WRTau_Core::BoostedSignalRegion)                region_string="BoostedSignalRegion";
-  if (region == WRTau_Core::ResolvedSignalRegionMETInvert)      region_string="ResolvedSignalRegionMETInvert";
-  if (region == WRTau_Core::BoostedSignalRegionMETInvert)       region_string="BoostedSignalRegionMETInvert";
-  if (region == WRTau_Core::ResolvedSignalRegionMass1)          region_string="ResolvedSignalRegionMass1";
-  if (region == WRTau_Core::BoostedMassOptSel)                  region_string="BoostedMassOptSel";
-  if (region == WRTau_Core::ResolvedMassOptSel)                 region_string="ResolvedMassOptSel";
-  if (region == WRTau_Core::WJetsControlRegion)                 region_string="WJetsControlRegion";
-  if (region == WRTau_Core::QCDEnrichedControlRegionAK4)        region_string="QCDEnrichedControlRegionAK4";
-  if (region == WRTau_Core::QCDEnrichedControlRegionAK8)        region_string="QCDEnrichedControlRegionAK8";
-  if (region == WRTau_Core::FakeTTControlRegion)                region_string="FakeTTControlRegion";
-  if (region == WRTau_Core::FakeDYControlRegion)                region_string="FakeDYControlRegion";
+  if (region == WRTau_Core::BaselinePreselection)               region_string = "BaselinePreselection";
+  if (region == WRTau_Core::ResolvedPreselection)               region_string = "ResolvedPreselection";
+  if (region == WRTau_Core::BoostedPreselection)                region_string = "BoostedPreselection";
+  if (region == WRTau_Core::ResolvedLowMassControlRegion)       region_string = "ResolvedLowMassControlRegion";
+  if (region == WRTau_Core::BoostedLowMassControlRegion)        region_string = "BoostedLowMassControlRegion";
+  if (region == WRTau_Core::ResolvedLowMassControlRegionMass1)  region_string = "ResolvedLowMassControlRegionMass1";
+  if (region == WRTau_Core::BoostedLowMassControlRegionMass1)   region_string = "BoostedLowMassControlRegionMass1";
+  if (region == WRTau_Core::ResolvedSignalRegion)               region_string = "ResolvedSignalRegion";
+  if (region == WRTau_Core::BoostedSignalRegion)                region_string = "BoostedSignalRegion";
+  if (region == WRTau_Core::ResolvedSignalRegionMETInvert)      region_string = "ResolvedSignalRegionMETInvert";
+  if (region == WRTau_Core::BoostedSignalRegionMETInvert)       region_string = "BoostedSignalRegionMETInvert";
+  if (region == WRTau_Core::ResolvedSignalRegionMass1)          region_string = "ResolvedSignalRegionMass1";
+  if (region == WRTau_Core::BoostedMassOptSel)                  region_string = "BoostedMassOptSel";
+  if (region == WRTau_Core::ResolvedMassOptSel)                 region_string = "ResolvedMassOptSel";
+  if (region == WRTau_Core::WJetsControlRegion)                 region_string = "WJetsControlRegion";
+  if (region == WRTau_Core::QCDEnrichedControlRegionAK4)        region_string = "QCDEnrichedControlRegionAK4";
+  if (region == WRTau_Core::QCDEnrichedControlRegionAK8)        region_string = "QCDEnrichedControlRegionAK8";
+  if (region == WRTau_Core::FakeTTControlRegion)                region_string = "FakeTTControlRegion";
+  if (region == WRTau_Core::FakeDYControlRegion)                region_string = "FakeDYControlRegion";
+  if (region == WRTau_Core::BoostedSignalRegionLSFInvert)       region_string = "BoostedSignalRegionLSFInvert";
 
 
   return region_string;
@@ -906,7 +907,7 @@ double WRTau_Core::GetBoostedSRMass(Particle METv,const std::vector<Tau>& taus,c
   FatJet fatjet_BoostedSR;
 
   for(const auto &J : fatjets){
-    if(J.DeltaPhi(taus.at(0))>2.0 && J.LSF()>LSFOptCut) fatjets_BoostedSR.push_back(J);
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
   }
 
   if(fatjets_BoostedSR.size()>0){
@@ -934,7 +935,7 @@ double WRTau_Core::GetBoostedSRMass_RecoNeutrino(Particle METv,const std::vector
   FatJet fatjet_BoostedSR;
 
   for(const auto &J : fatjets){
-    if(J.DeltaPhi(taus.at(0))>2.0 && J.LSF()>LSFOptCut) fatjets_BoostedSR.push_back(J);
+    if(J.DeltaPhi(taus.at(0))>2.0 ) fatjets_BoostedSR.push_back(J);
   }
 
   if(fatjets_BoostedSR.size()>0){
@@ -962,7 +963,7 @@ double WRTau_Core::GetBoostedSRMassN_RecoNeutrino(Particle METv,const std::vecto
   FatJet fatjet_BoostedSR;
 
   for(const auto &J : fatjets){
-    if(J.DeltaPhi(taus.at(0))>2.0 && J.LSF()>LSFOptCut) fatjets_BoostedSR.push_back(J);
+    if(J.DeltaPhi(taus.at(0))>2.0 ) fatjets_BoostedSR.push_back(J);
   }
 
   if(fatjets_BoostedSR.size()>0){
@@ -1028,6 +1029,7 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool _isBoostedLowMassControlRegionMass1(false);
   bool _isResolvedSignalRegion(false);
   bool _isBoostedSignalRegion(false);
+  bool _isBoostedSignalRegionLSFInvert(false);
   bool _isResolvedSignalRegionMETInvert(false);
   bool _isBoostedSignalRegionMETInvert(false);
   bool _isResolvedMassOptSel(false);
@@ -1081,6 +1083,7 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
 
     vector<double> mll;
     vector<FatJet> fatjets_BoostedSR;
+    vector<FatJet> fatjets_BoostedSR_LSFInvert;
     vector<Lepton *> leptons_BoostedSR;
     FatJet fatjet_BoostedSR;
     Particle ll;
@@ -1090,32 +1093,31 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
       mll.push_back(ll.M());
     }
     for(const auto &J : fatjets){
-      if(J.DeltaPhi(taus.at(0))>2.0 && J.LSF()>LSFOptCut) fatjets_BoostedSR.push_back(J);
+      if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
     }
     if(fatjets_BoostedSR.size()>0){
       fatjet_BoostedSR = fatjets_BoostedSR.at(0);
       for(const auto &looselep : LooseLeptons){
         if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
       }
-      if(leptons_BoostedSR.size()>0 && fatjet_BoostedSR.LSF()>LSFOptCut){
+      if(leptons_BoostedSR.size()>0){
         
-        if(METv.Pt()>METCut) _isBoostedMassOptSel = true;
-        else _isBoostedSignalRegionMETInvert = true;
+        if(fatjet_BoostedSR.LSF()>LSFOptCut){
 
-        //double mwr1 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
-        double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
-        double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
+          if(METv.Pt()>METCut) _isBoostedMassOptSel = true;
+          else _isBoostedSignalRegionMETInvert = true;
 
-        if(mwr<MTCut) _isBoostedLowMassControlRegion = true ;
-        else if(mwr>MTCut && METv.Pt()>METCut) _isBoostedSignalRegion = true;
+          double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
+          double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
 
-        if(mwr1<MRecoCut) _isBoostedLowMassControlRegionMass1 = true ;
-        else if(mwr1>MRecoCut && METv.Pt()>METCut) _isBoostedSignalRegionMass1 = true;
+          if(mwr<MTCut) _isBoostedLowMassControlRegion = true ;
+          else if(mwr>MTCut && METv.Pt()>METCut) _isBoostedSignalRegion = true;
 
-        //cout << "-----" << endl;
-        //cout << "mwr,mwr1 : " << mwr << " , " << mwr1 << endl;
-        //cout << "isLMCR,isLMCR1 : " << _isBoostedLowMassControlRegion << " , " << _isBoostedLowMassControlRegionMass1 << endl;
-        
+          if(mwr1<MRecoCut) _isBoostedLowMassControlRegionMass1 = true ;
+          else if(mwr1>MRecoCut && METv.Pt()>METCut) _isBoostedSignalRegionMass1 = true;
+
+        }
+        else if(fatjet_BoostedSR.LSF()<=LSFOptCut) _isBoostedSignalRegionLSFInvert = true;
       }
     }
   }
@@ -1130,6 +1132,7 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
     {WRTau_Core::BoostedLowMassControlRegion,_isBoostedLowMassControlRegion},
     {WRTau_Core::ResolvedLowMassControlRegionMass1,_isResolvedLowMassControlRegionMass1},
     {WRTau_Core::BoostedLowMassControlRegionMass1,_isBoostedLowMassControlRegionMass1},
+    {WRTau_Core::BoostedSignalRegionLSFInvert,_isBoostedSignalRegionLSFInvert},
     {WRTau_Core::ResolvedSignalRegion,_isResolvedSignalRegion},
     {WRTau_Core::ResolvedSignalRegionMETInvert,_isResolvedSignalRegionMETInvert},
     {WRTau_Core::BoostedSignalRegionMass1,_isBoostedSignalRegionMass1},

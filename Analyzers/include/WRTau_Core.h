@@ -89,8 +89,9 @@ public:
     BoostedLowMassControlRegionMass1,
     ResolvedSignalRegion,
     BoostedSignalRegion,
-    ResolvedSignalRegionMETInvert,
-    BoostedSignalRegionMETInvert,
+    BoostedSignalRegionLSFInvert,       // Muon Fake Boosted Measurement Region
+    ResolvedSignalRegionMETInvert,      // Tau Fake Resolved Measurement Region
+    BoostedSignalRegionMETInvert,       // Tau Fake Boosted Measurement Region
     ResolvedSignalRegionMass1,
     BoostedSignalRegionMass1,
     WJetsControlRegion,

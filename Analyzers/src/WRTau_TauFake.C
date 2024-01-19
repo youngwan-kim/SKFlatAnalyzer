@@ -147,11 +147,13 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
       TString genmatchTag = "";
 
       if(!IsDATA){
-        if(IsPromptTau(taus.at(0),gens))         genmatchTag = "Prompt";
-        else if(IsNonPromptTau(taus.at(0),gens)) genmatchTag = "Fake";
-        else                                     genmatchTag = "Error";
+        if(IsPromptTau(taus.at(0),gens)){         genmatchTag = "Prompt";
+          if(IsPromptLepton(*leptons.at(0),gens)) genmatchTag = "PromptSubtract";
+        }
+        else if(IsNonPromptTau(taus.at(0),gens))  genmatchTag = "Fake";
+        else                                      genmatchTag = "Error";
       }
-      else                                       genmatchTag = "Data"; 
+      else                                        genmatchTag = "Data"; 
 
       //cout << taus.size() << endl;
       //cout << GetTauType(taus.at(0),gens) << " , " << genmatchTag << endl;
@@ -164,7 +166,7 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
       bool isEndCap = fabs(taus.at(0).Eta())>=1.479;
       bool isBarrel = fabs(taus.at(0).Eta())<1.479;
 
-      bool isLoose = taus.at(0).PassID("FakeBase") && taus.at(0).passLIDvJet();
+      bool isLoose = taus.at(0).PassID("FakeBase") && taus.at(0).passVVVLIDvJet();
       bool isTight = isLoose && taus.at(0).passTIDvJet();
 
       int Nj = jets.size();
