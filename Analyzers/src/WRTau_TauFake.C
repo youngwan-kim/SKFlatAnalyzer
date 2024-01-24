@@ -116,6 +116,8 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   std::sort(taus.begin(),taus.end(),PtComparing);
   std::sort(jets.begin(),jets.end(),PtComparing);
   std::sort(fatjets.begin(),fatjets.end(),PtComparing);
+  std::sort(LooseLeptons.begin(),LooseLeptons.end(),PtComparingPtr);
+  std::sort(TightLeptons.begin(),TightLeptons.end(),PtComparingPtr);
 
   map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
   FillTauKinematics(map_regions,METv,AllGens,taus,LooseLeptons,TightLeptons,jets,bjets,fatjets,param.Name,weight);

@@ -164,6 +164,8 @@ bool Electron::PassID(TString ID) const{
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
   if(ID=="CutBasedLooseNoIso") return Pass_CutBasedLooseNoIso();
+  if(ID=="LRSMLooseNoIso") return Pass_LRSMLooseNoIso();
+  if(ID=="LRSMVetoNoIso") return Pass_LRSMVetoNoIso();
 
   if(ID=="TriLepEleLoose") return Pass_TriLepEleLoose();
   if(ID=="TriLepEleFO") return Pass_TriLepEleFO();
@@ -291,6 +293,69 @@ bool Electron::Pass_CutBasedLooseNoIso() const{
 
     return true;
 
+  }
+
+}
+
+bool Electron::Pass_LRSMLooseNoIso() const{
+
+  if(! (HoverE() < 0.5) ) return false;
+
+  if( fabs(scEta()) <= 1.479 ){
+
+    if(! (Full5x5_sigmaIetaIeta() < 0.0112) ) return false;
+    if(! (fabs(dEtaSeed()) < 0.00377) ) return false;
+    if(! (fabs(dPhiIn()) < 0.0884) ) return false;
+    //if(! (HoverE() < 0.05 + 1.16/scE() + 0.0324*Rho()/scE()) ) return false;
+    if(! (fabs(InvEminusInvP()) < 0.193) ) return false;
+    if(! (NMissingHits() <= 1) ) return false;
+    if(! (PassConversionVeto()) ) return false;
+
+    return true;
+
+  }
+  else{
+
+    if(! (Full5x5_sigmaIetaIeta() < 0.0425) ) return false;
+    if(! (fabs(dEtaSeed()) < 0.00674) ) return false;
+    if(! (fabs(dPhiIn()) <  0.169 ) ) return false;
+    //if(! (HoverE() < 0.0441 + 2.54/scE() + 0.183*Rho()/scE()) ) return false;
+    if(! (fabs(InvEminusInvP()) < 0.111) ) return false;
+    if(! (NMissingHits() <= 1) ) return false;
+    if(! (PassConversionVeto()) ) return false;
+
+    return true;
+
+  }
+
+}
+
+bool Electron::Pass_LRSMVetoNoIso() const{
+
+  if( fabs(scEta()) <= 1.479 ){
+
+    if(! (Full5x5_sigmaIetaIeta() < 0.0112) ) return false;
+    if(! (fabs(dEtaSeed()) < 0.00377) ) return false;
+    if(! (fabs(dPhiIn()) < 0.0884) ) return false;
+    //if(! (HoverE() < 0.05 + 1.16/scE() + 0.0324*Rho()/scE()) ) return false;
+    if(! (fabs(InvEminusInvP()) < 0.193) ) return false;
+    if(! (NMissingHits() <= 1) ) return false;
+    if(! (PassConversionVeto()) ) return false;
+
+    return true;
+
+  }
+  else{
+  
+    if(! (Full5x5_sigmaIetaIeta() < 0.0425) ) return false;
+    if(! (fabs(dEtaSeed()) < 0.00674) ) return false;
+    if(! (fabs(dPhiIn()) <  0.169 ) ) return false;
+    //if(! (HoverE() < 0.0441 + 2.54/scE() + 0.183*Rho()/scE()) ) return false;
+    if(! (fabs(InvEminusInvP()) < 0.111) ) return false;
+    if(! (NMissingHits() <= 1) ) return false;
+    if(! (PassConversionVeto()) ) return false;
+
+    return true;
   }
 
 }

@@ -24,6 +24,7 @@ class WRTau_Analyzer
 class WRTau_CR
 class WRTau_Core
 class WRTau_FakeRate
+class WRTau_LeptonFake
 class WRTau_SR
 class WRTau_SR_Debug
 class WRTau_SR_Test
@@ -55,6 +56,7 @@ header WRTau_Analyzer.h
 header WRTau_CR.h
 header WRTau_Core.h
 header WRTau_FakeRate.h
+header WRTau_LeptonFake.h
 header WRTau_SR.h
 header WRTau_SR_Debug.h
 header WRTau_SR_Test.h

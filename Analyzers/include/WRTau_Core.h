@@ -134,6 +134,9 @@ public:
   vector<WRTau_Core::SearchRegion> FakeMeasurementRegion = {WRTau_Core::BoostedSignalRegionMETInvert,
                                                             WRTau_Core::ResolvedSignalRegionMETInvert};
 
+  vector<WRTau_Core::SearchRegion> FakeMeasurementRegion_Lepton = {WRTau_Core::BoostedSignalRegionLSFInvert,
+                                                                  };
+
   
 
 

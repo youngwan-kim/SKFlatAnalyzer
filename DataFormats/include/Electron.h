@@ -135,6 +135,8 @@ public:
   bool Pass_TriLepEleTight() const;
 
   bool Pass_CutBasedLooseNoIso() const;
+  bool Pass_LRSMLooseNoIso() const;
+  bool Pass_LRSMVetoNoIso() const;
   bool Pass_CutBasedVetoNoIso() const;
   bool Pass_CutBasedLoose() const;
   bool Pass_CutBasedVeto() const;
