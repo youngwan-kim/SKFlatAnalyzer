@@ -119,6 +119,7 @@ public:
 
   std::vector<Muon> UseTunePMuon(const std::vector<Muon>& muons);
   std::vector<Muon> SelectMuons(const std::vector<Muon>& muons, TString id, double ptmin, double fetamax);
+  std::vector<Muon> SelectMuonsLRSMIsoOpt(const std::vector<Muon>& muons, double isocut, double ptmin, double fetamax);
 
   std::vector<Tau> SelectTaus(const std::vector<Tau>& taus, TString id, double ptmin, double fetamax);
   std::vector<Tau> SelectWRTaus(const std::vector<Tau>& taus, int vJet, double ptmin, double fetamax);

@@ -976,6 +976,28 @@ std::vector<Muon> AnalyzerCore::SelectMuons(const std::vector<Muon>& muons, TStr
 
 }
 
+std::vector<Muon> AnalyzerCore::SelectMuonsLRSMIsoOpt(const std::vector<Muon>& muons, double isocut, double ptmin, double fetamax){
+
+  std::vector<Muon> out;
+  for(unsigned int i=0; i<muons.size(); i++){
+    if(!( muons.at(i).Pt()>ptmin )){
+      //cout << "Fail Pt : pt = " << muons.at(i).Pt() << ", cut = " << ptmin << endl;
+      continue;
+    }
+    if(!( fabs(muons.at(i).Eta())<fetamax )){
+      //cout << "Fail Eta : eta = " << fabs(muons.at(i).Eta()) << ", cut = " << fetamax << endl;
+      continue;
+    }
+    if(!( muons.at(i).Pass_POGHighPtWithTrkIsoTest(isocut) )){
+      //cout << "Fail ID" << endl;
+      continue;
+    }
+    out.push_back( muons.at(i) );
+  }
+  return out;
+
+}
+
 std::vector<Electron> AnalyzerCore::SelectElectrons(const std::vector<Electron>& electrons, TString id, double ptmin, double fetamax, bool vetoHEM){
 
   std::vector<Electron> out;
@@ -2675,7 +2697,7 @@ void AnalyzerCore::FillLeptonPlots(std::vector<Lepton *> leps, TString this_regi
     else if(lep->LeptonFlavour()==Lepton::MUON){
       Muon *mu = (Muon *)lep;
       FillHist(this_region+"/Lepton_"+this_itoa+"_Chi2", mu->Chi2(), weight, 500, 0., 50.);
-      FillHist(this_region+"/Lepton_"+this_itoa+"_TrkRelIso", mu->TrkIso()/mu->TuneP4().Pt(), weight, 100, 0., 1.);
+      FillHist(this_region+"/Lepton_"+this_itoa+"_TrkRelIso", mu->TrkIso()/mu->TuneP4().Pt(), weight, 1000, 0., 1.);
     }
     else{
       cout << "[AnalyzerCore::FillLeptonPlots] lepton flavour wrong.." << endl;

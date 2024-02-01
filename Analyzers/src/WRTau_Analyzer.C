@@ -64,40 +64,58 @@ void WRTau_Analyzer::executeEvent(){
   AllGens = GetGens();
   AllLHEs = GetLHEs();
 
-  executeEventFromParameter(param);
-/*
-  param.Clear();
-  TriggerList.clear();
-  
-  TriggerList = {"HLT_IsoMu20_eta2p1_LooseChargedIsoPFTau27_eta2p1_CrossL1_v"};
-  TriggerSafeTauPtCut = 40.;
-
-  param.Name = "WRTau_Tau27IsoMu20Trg";
-  param.Electron_Tight_ID = "passHEEPID";
-  param.Electron_Loose_ID = "CutBasedLooseNoIso";
-  param.Electron_Veto_ID = "passVetoID";
-  param.Electron_ID_SF_Key = "HEEP";
-
-  param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
-  param.Muon_Loose_ID = "POGHighPt";
-  param.Muon_Veto_ID = "POGLoose";
-  param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
-  param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
-
-  param.Jet_ID = "tightLepVeto";
-  param.FatJet_ID = "tight";
-  param.syst_ = AnalyzerParameter::Central;
-
-  AllMuons = GetAllMuons();
-  AllElectrons = GetAllElectrons();
-  AllTaus = GetAllTaus();
-  AllJets = GetAllJets();
-  AllFatJets = GetAllFatJets();
-  AllGens = GetGens();
-  AllLHEs = GetLHEs();
+  cout << "[WRTau_Analyzer::Nominal] Analyze with cut " << MuIsoCut << endl;
 
   executeEventFromParameter(param);
-*/
+
+  if(HasFlag("MuIsoCutOpt")){
+
+    double isocut[3] = {0.25,0.50,0.75};
+
+    for(const auto &cut : isocut){
+
+      param.Clear();
+      TriggerList.clear();
+
+      TriggerList = SingleTauTriggers;
+      TriggerSafeTauPtCut = 190.;
+
+      TString cutval = std::to_string(cut);
+      cutval.Remove(cutval.Length() - 4, 4);
+      cutval.ReplaceAll(".", "p");
+
+      param.Name = "MuIsoCutOpt_"+cutval;
+      param.Electron_Tight_ID = "passHEEPID";
+      param.Electron_Loose_ID = "CutBasedLooseNoIso";
+      param.Electron_Veto_ID = "passVetoID";
+      param.Electron_ID_SF_Key = "HEEP";
+
+      param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
+      param.Muon_Loose_ID = "POGHighPt";
+      param.Muon_Veto_ID = "POGLoose";
+      param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
+      param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
+
+      param.Jet_ID = "tightLepVeto";
+      param.FatJet_ID = "tight";
+      param.syst_ = AnalyzerParameter::Central;
+
+      AllMuons = GetAllMuons();
+      AllElectrons = GetAllElectrons();
+      AllTaus = GetAllTaus();
+      AllJets = GetAllJets();
+      AllFatJets = GetAllFatJets();
+      AllGens = GetGens();
+      AllLHEs = GetLHEs();
+
+      MuIsoCut = cut;
+
+      cout << "[WRTau_Analyzer::MuIsoCutOpt] Analyze with cut " << MuIsoCut << endl;
+      executeEventFromParameter(param);
+
+    }
+
+  }
 }
 
 void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
@@ -144,10 +162,29 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
     this_AllElectrons = AllElectrons;
   }
 
-
   vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50., 2.4) ;
   vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 50., 2.4) ;
-  vector<Muon> muons_loose = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4) ;
+  vector<Muon> muons_loose ;
+
+  //cout << param.Muon_Loose_ID << " " << muons_loose.size() << endl;
+  //cout << "[WRTau_Analyzer::Nominal] Loose Muon size " << muons_loose.size() << " with cut " << MuIsoCut << endl;
+  cout << "------------------" << endl;
+  if(HasFlag("MuIsoCutOpt") && MuIsoCut>0.){
+    muons_loose = SelectMuonsLRSMIsoOpt(this_AllMuons, MuIsoCut, 50., 2.4);
+    cout << "MuIsoCutOpt " << MuIsoCut << " / loose muon selection " << muons_loose.size() << endl;
+  }
+  else{ 
+    muons_loose = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4);
+    cout << "Nominal HighPt loose muon selection " << muons_loose.size() << endl;
+  }
+
+  cout << "------------------" << endl;
+  for(const auto &mu : muons_loose){
+    cout << "AnalyzeCut " << MuIsoCut << " RelTrkIso " << mu.TrkIso()/mu.TuneP4().Pt() << endl;
+    FillHist(param.Name+"/LooseMuonRelTrkIso",mu.TrkIso()/mu.TuneP4().Pt(),weight,1000,0.,1.);
+  }
+  FillHist(param.Name+"/LooseMuonSize",muons_loose.size(),weight,10,0.,10.);
+
 
   vector<Electron> electrons = SelectElectrons(this_AllElectrons, param.Electron_Tight_ID, 50., 2.4);
   vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 50., 2.4);
@@ -239,24 +276,33 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           }
 
         }
+
         
         bool PassTrg(false);
-        if(param.Name == "WRTau_SignalSingleTauTrg"){
+        if(param.Name == "WRTau_SignalSingleTauTrg" || HasFlag("MuIsoCutOpt") ){
           if(ev.PassTrigger(TriggerList)) PassTrg = true;
         }
 
         if(!PassTrg) continue;
         FillHist(path+"/Cutflow",1.,weight,10,0.,10.);
 
+        if(HasFlag("debug")) cout << "Pass Cut 1" << endl;
+
         if(taus.size()<1) continue;
         FillHist(path+"/Cutflow",2.,weight,10,0.,10.);
+
+        if(HasFlag("debug")) cout << "Pass Cut 2" << endl;
 
         if(taus.at(0).Pt()<190) continue;
         FillHist(path+"/Cutflow",3.,weight,10,0.,10.);
 
+        if(HasFlag("debug")) cout << "Pass Cut 3" << endl;
+
         if(LooseLeptons.size()!=1) continue;
         if(!LooseLeptons.at(0)->IsMuon()) continue; // concentrate on muon channel first 
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
+
+        if(HasFlag("debug")) cout << "Pass Cut 4" << endl;
 
         if(HasFlag("DeltaTest")){
           if(LooseLeptons.at(0)->IsMuon()){
@@ -271,6 +317,14 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
         
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
+
+        if(HasFlag("debug")) cout << "Get Region Map " << endl;
+
+        if(HasFlag("debug")){
+          for (const auto& pair : map_regions) {
+            std::cout << "Cut : " <<  MuIsoCut << " Region: " << GetRegionString(pair.first) << ", Pass: " << pair.second << std::endl;
+          }
+        }
 
         if(HasFlag("LSFOpt")){
           map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85},fatjets);
@@ -291,6 +345,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
 
         else{
+          //cout << "[WRTauAnalyzer] Start FillPassingRegions with cut " << MuIsoCut << " in path " << path << endl;
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
             FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           }

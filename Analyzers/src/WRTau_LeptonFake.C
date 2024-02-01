@@ -34,8 +34,8 @@ void WRTau_LeptonFake::executeEvent(){
   param.Electron_ID_SF_Key = "HEEP";
 
   param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
-  param.Muon_Loose_ID = "POGHighPt";
-  param.Muon_Veto_ID = "POGLoose";
+  param.Muon_Loose_ID = "POGHighPtWithTrkIso";
+  param.Muon_Veto_ID = "POGHighPt";
   param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
   param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
 
@@ -83,12 +83,12 @@ void WRTau_LeptonFake::executeEventFromParameter(AnalyzerParameter param){
 
   JetTagging::Parameters param_jetsM = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
 
-  //vector<Muon> muons_raw           = SelectMuons(this_AllMuons, "NOCUT", 50., 2.4) ;
+  vector<Muon> muons_raw           = SelectMuons(this_AllMuons, "NOCUT", 50., 2.4) ;
   vector<Muon> muons               = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50., 2.4) ;
   vector<Muon> muons_veto          = SelectMuons(this_AllMuons, param.Muon_Veto_ID,  50., 2.4) ;
   vector<Muon> muons_loose         = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4) ;
 
-  //vector<Electron> electrons_raw   = SelectElectrons(this_AllElectrons, "NOCUT", 50. , 2.4);
+  vector<Electron> electrons_raw   = SelectElectrons(this_AllElectrons, "NOCUT", 50. , 2.4);
   vector<Electron> electrons       = SelectElectrons(this_AllElectrons, param.Electron_Tight_ID, 50., 2.4);
   vector<Electron> electrons_veto  = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID,  50., 2.4);
   vector<Electron> electrons_loose = SelectElectrons(this_AllElectrons, param.Electron_Loose_ID, 50., 2.4);
@@ -170,6 +170,10 @@ void WRTau_LeptonFake::FillLeptonKinematics(map<WRTau_Core::SearchRegion,bool> m
       // lepton type discrimination
       if(isMu){ 
 
+        cout << param.Muon_Veto_ID  << " veto muon " << muons_veto.size() << endl;
+        cout << param.Muon_Loose_ID << " loose muon " << muons_loose.size() << endl;
+        cout << param.Muon_Tight_ID << " tight muon " << muons.size() << endl;
+
         for(auto const& mu : muons_veto){
 
           double muPt = mu.Pt(); 
@@ -177,13 +181,16 @@ void WRTau_LeptonFake::FillLeptonKinematics(map<WRTau_Core::SearchRegion,bool> m
           if(mu.Pt() > 1000.) muPt = 999.9;
           if(muAbsEta > 2.4)  muAbsEta = 2.399;
 
-          bool isLoose = mu.PassID(param.Muon_Loose_ID); // Veto-to-Loose
-          bool isTight = mu.PassID(param.Muon_Tight_ID); // Veto-to-Tight
+          bool isVeto  = mu.PassID(param.Muon_Veto_ID);            // Veto-to-Veto (debug)
+          bool isLoose = isVeto && mu.PassID(param.Muon_Loose_ID); // Veto-to-Loose
+          bool isTight = isVeto && mu.PassID(param.Muon_Tight_ID); // Veto-to-Tight
 
-                       FillHist(label_channel+"/LeptonPtAbsEta_Veto",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
+          if(isVeto)   FillHist(label_channel+"/LeptonPtAbsEta_Veto",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
           if(isLoose)  FillHist(label_channel+"/LeptonPtAbsEta_Loose",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
           if(isTight)  FillHist(label_channel+"/LeptonPtAbsEta_Tight",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
         
+          cout << "muIDBit: " << mu.GetIDBit() << " muPt: " << muPt << " muAbsEta: " << muAbsEta << " isVeto: " << isVeto << " isLoose: " << isLoose << " isTight: " << isTight << endl;
+
         }
 
       }
@@ -196,10 +203,11 @@ void WRTau_LeptonFake::FillLeptonKinematics(map<WRTau_Core::SearchRegion,bool> m
           if(elPt > 1000.)    elPt = 999.9;
           if(elAbsEta > 2.4)  elAbsEta = 2.399;
 
-          bool isLoose = el.PassID(param.Electron_Loose_ID); // Veto-to-Loose
-          bool isTight = el.PassID(param.Electron_Tight_ID); // Veto-to-Tight
+          bool isVeto  = el.PassID(param.Electron_Veto_ID);            // Veto-to-Veto (debug)
+          bool isLoose = isVeto && el.PassID(param.Electron_Loose_ID); // Veto-to-Loose
+          bool isTight = isVeto && el.PassID(param.Electron_Tight_ID); // Veto-to-Tight
 
-                       FillHist(label_channel+"/LeptonPtAbsEta_Veto", elPt,elAbsEta,weight,100,0.,1000.,24,0.0,2.4);
+          if(isVeto)   FillHist(label_channel+"/LeptonPtAbsEta_Veto", elPt,elAbsEta,weight,100,0.,1000.,24,0.0,2.4);
           if(isLoose)  FillHist(label_channel+"/LeptonPtAbsEta_Loose",elPt,elAbsEta,weight,100,0.,1000.,24,0.0,2.4);
           if(isTight)  FillHist(label_channel+"/LeptonPtAbsEta_Tight",elPt,elAbsEta,weight,100,0.,1000.,24,0.0,2.4);
         }

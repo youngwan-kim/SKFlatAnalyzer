@@ -23,6 +23,8 @@ public:
   vector<Gen> AllGens;
   vector<LHE> AllLHEs;
 
+  double MuIsoCut = -999.;
+
   TString muon_IsoSF_loose_key = "";
   TString muon_IsoSF_tight_key = "";
 

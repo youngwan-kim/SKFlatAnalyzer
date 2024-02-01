@@ -108,9 +108,11 @@ public:
 
   //==== ID
   bool PassID(TString ID) const;
-  bool Pass_POGTightWithTightIso() const;
-  bool Pass_POGHighPtWithLooseTrkIso() const;
-  bool Pass_TESTID() const;
+  bool Pass_POGTightWithTightIso() const; 
+  bool Pass_POGHighPtWithTrkIso() const;                  // LRSM Loose ID
+  bool Pass_POGHighPtWithLooseTrkIso() const;             // LRSM Tight ID
+  bool Pass_POGHighPtWithTrkIsoTest(double isocut) const; // LRSM Tight ID with different iso cut
+  bool Pass_TESTID() const; 
 
   bool Pass_TriLepMuLoose() const;
   bool Pass_TriLepMuFO() const;
@@ -123,6 +125,7 @@ public:
   void SetPathBits(ULong64_t pathbits){ j_pathbits=pathbits; }
   bool PassFilter(TString filter) const;
   bool PassPath(TString path) const;
+  unsigned int GetIDBit() const { return j_IDBit; }
 
 
 private:
