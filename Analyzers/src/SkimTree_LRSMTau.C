@@ -60,7 +60,7 @@ void SkimTree_LRSMTau::executeEvent(){
     if(alltaus.at(i).Pt()>190) Ntaus++;
   }
   vector<Muon> allmuons = UseTunePMuon( GetAllMuons() );
-  vector<Muon> loosemuons = SelectMuons( allmuons, "POGHighPt" , 50, 2.4 );
+  vector<Muon> loosemuons = SelectMuons( allmuons, "POGHighPtWithTrkIso" , 50, 2.4 );
   vector<Electron> allelectrons = GetAllElectrons();
   vector<Electron> looseelectrons = SelectElectrons( allelectrons, "CutBasedLooseNoIso", 50, 2.4);
   int NlooseMu = loosemuons.size(); int NlooseEl = looseelectrons.size();

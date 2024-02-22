@@ -145,7 +145,7 @@ bool Muon::Pass_POGHighPtWithLooseTrkIso() const {
 
 bool Muon::Pass_POGHighPtWithTrkIso() const {
   if(!( isPOGHighPt() )) return false;
-  if(!( TrkIso()/TuneP4().Pt()<0.45 )) return false;
+  if(!( TrkIso()/TuneP4().Pt()<0.75 )) return false;
   return true;
 }
 

@@ -27,6 +27,7 @@
 #pragma link C++ class TauQCDFakeStudy+;
 #pragma link C++ class ZTauTau+;
 #pragma link C++ class LeptonicTauStudy+;
+#pragma link C++ class TauHLTDebug+;
 #pragma link C++ class TauolaValidation+;
 #pragma link C++ class SKFlatValidation+;
 #pragma link C++ class SkimTree_SS2lOR3l+;

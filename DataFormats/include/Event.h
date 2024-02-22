@@ -30,6 +30,8 @@ public:
   TString GetEra() const { return j_DataEra; }
   int GetYear() const { return j_DataYear; }
 
+  //debugging
+  vector<string> GetHLTName() const { return j_HLT_TriggerName; }
 
 private:
   int j_nPV;

@@ -16,6 +16,7 @@ class SkimTree_HighPt1LJets
 class SkimTree_LRSMHighPt
 class SkimTree_LRSMTau
 class SkimTree_SS2lOR3l
+class TauHLTDebug
 class TauQCDFakeStudy
 class TauStudy
 class TauolaValidation
@@ -48,6 +49,7 @@ header SkimTree_HighPt1LJets.h
 header SkimTree_LRSMHighPt.h
 header SkimTree_LRSMTau.h
 header SkimTree_SS2lOR3l.h
+header TauHLTDebug.h
 header TauQCDFakeStudy.h
 header TauStudy.h
 header TauolaValidation.h

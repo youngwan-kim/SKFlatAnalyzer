@@ -47,7 +47,7 @@ void WRTau_Analyzer::executeEvent(){
   param.Electron_ID_SF_Key = "HEEP";
 
   param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
-  param.Muon_Loose_ID = "POGHighPt";
+  param.Muon_Loose_ID = "POGHighPtWithTrkIso";
   param.Muon_Veto_ID = "POGLoose";
   param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
   param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
@@ -64,11 +64,11 @@ void WRTau_Analyzer::executeEvent(){
   AllGens = GetGens();
   AllLHEs = GetLHEs();
 
-  cout << "[WRTau_Analyzer::Nominal] Analyze with cut " << MuIsoCut << endl;
+  //cout << "[WRTau_Analyzer::Nominal] Analyze with cut " << MuIsoCut << endl;
 
   executeEventFromParameter(param);
 
-  if(HasFlag("MuIsoCutOpt")){
+  /*if(HasFlag("MuIsoCutOpt")){
 
     double isocut[3] = {0.25,0.50,0.75};
 
@@ -110,12 +110,12 @@ void WRTau_Analyzer::executeEvent(){
 
       MuIsoCut = cut;
 
-      cout << "[WRTau_Analyzer::MuIsoCutOpt] Analyze with cut " << MuIsoCut << endl;
+      //cout << "[WRTau_Analyzer::MuIsoCutOpt] Analyze with cut " << MuIsoCut << endl;
       executeEventFromParameter(param);
 
     }
 
-  }
+  }*/
 }
 
 void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
@@ -164,26 +164,40 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
   vector<Muon> muons = SelectMuons(this_AllMuons, param.Muon_Tight_ID, 50., 2.4) ;
   vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 50., 2.4) ;
-  vector<Muon> muons_loose ;
+  vector<Muon> muons_loose  = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4);
+
+  vector<Muon> muons_loose_isocut0p25;
+  vector<Muon> muons_loose_isocut0p45;
+  vector<Muon> muons_loose_isocut0p50;
+  vector<Muon> muons_loose_isocut0p55;
+  vector<Muon> muons_loose_isocut0p75;
+
+  if(HasFlag("MuIsoCutOpt")){
+    muons_loose_isocut0p25  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.25, 50., 2.4);
+    muons_loose_isocut0p45  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.45, 50., 2.4);
+    muons_loose_isocut0p50  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.50, 50., 2.4);
+    muons_loose_isocut0p55  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.55, 50., 2.4);
+    muons_loose_isocut0p75  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.75, 50., 2.4);
+  }
 
   //cout << param.Muon_Loose_ID << " " << muons_loose.size() << endl;
   //cout << "[WRTau_Analyzer::Nominal] Loose Muon size " << muons_loose.size() << " with cut " << MuIsoCut << endl;
-  cout << "------------------" << endl;
-  if(HasFlag("MuIsoCutOpt") && MuIsoCut>0.){
+  //cout << "------------------" << endl;
+  /*if(HasFlag("MuIsoCutOpt") && MuIsoCut>0.){
     muons_loose = SelectMuonsLRSMIsoOpt(this_AllMuons, MuIsoCut, 50., 2.4);
-    cout << "MuIsoCutOpt " << MuIsoCut << " / loose muon selection " << muons_loose.size() << endl;
-  }
-  else{ 
+    //cout << "MuIsoCutOpt " << MuIsoCut << " / loose muon selection " << muons_loose.size() << endl;
+  }*/
+  /*else{ 
     muons_loose = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4);
-    cout << "Nominal HighPt loose muon selection " << muons_loose.size() << endl;
-  }
+    //cout << "Nominal HighPt loose muon selection " << muons_loose.size() << endl;
+  }*/
 
-  cout << "------------------" << endl;
-  for(const auto &mu : muons_loose){
-    cout << "AnalyzeCut " << MuIsoCut << " RelTrkIso " << mu.TrkIso()/mu.TuneP4().Pt() << endl;
+  //cout << "------------------" << endl;
+  /*for(const auto &mu : muons_loose){
+    //cout << "AnalyzeCut " << MuIsoCut << " RelTrkIso " << mu.TrkIso()/mu.TuneP4().Pt() << endl;
     FillHist(param.Name+"/LooseMuonRelTrkIso",mu.TrkIso()/mu.TuneP4().Pt(),weight,1000,0.,1.);
   }
-  FillHist(param.Name+"/LooseMuonSize",muons_loose.size(),weight,10,0.,10.);
+  FillHist(param.Name+"/LooseMuonSize",muons_loose.size(),weight,10,0.,10.);*/
 
 
   vector<Electron> electrons = SelectElectrons(this_AllElectrons, param.Electron_Tight_ID, 50., 2.4);
@@ -193,6 +207,20 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   vector<Lepton *> leptons_tmp = CombineLeptonPointerVector(electrons,muons);
   vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
   vector<Lepton *> LooseLeptons_tmp = CombineLeptonPointerVector(electrons_loose,muons_loose);
+
+  vector<Lepton *> LooseLeptons_isocut0p25;
+  vector<Lepton *> LooseLeptons_isocut0p45;
+  vector<Lepton *> LooseLeptons_isocut0p50;
+  vector<Lepton *> LooseLeptons_isocut0p55;
+  vector<Lepton *> LooseLeptons_isocut0p75;
+
+  if(HasFlag("MuIsoCutOpt")){
+    LooseLeptons_isocut0p25  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p25);
+    LooseLeptons_isocut0p45  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p45);
+    LooseLeptons_isocut0p50  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p50);
+    LooseLeptons_isocut0p55  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p55);
+    LooseLeptons_isocut0p75  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p75);
+  }
 
   vector<Tau> taus_lepVeto = VetoLeptonsFromTaus(VetoLeps,this_AllTaus);
 
@@ -249,6 +277,9 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         vector<Lepton *> LooseLeptons = LooseLeptons_tmp;
         vector<Lepton *> TightLeptons = leptons_tmp;
 
+        bool passLooseLeptonBaseline = (  LooseLeptons.size() == 1            || LooseLeptons_isocut0p25.size() == 1 || LooseLeptons_isocut0p45.size() == 1 ||
+                                    LooseLeptons_isocut0p50.size() == 1 || LooseLeptons_isocut0p55.size() == 1 || LooseLeptons_isocut0p75.size() == 1 );
+
         vector<Jet> jets_lepVeto_tauVeto = JetsVetoLeptonInside(jets_tauVeto,electrons_veto,muons_veto,0.4);
         vector<Jet> jets = SelectJets(jets_lepVeto_tauVeto, param.Jet_ID, 40., 2.4);
         vector<FatJet> fatjets = SelectFatJets(fatjets_tmp,param.FatJet_ID,200.,2.4);
@@ -262,6 +293,13 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         std::sort(jets.begin(),jets.end(),PtComparing);
         std::sort(fatjets.begin(),fatjets.end(),PtComparing);
         std::sort(LooseLeptons.begin(),LooseLeptons.end(),PtComparingPtr);
+        if(HasFlag("MuIsoCutOpt")){
+          std::sort(LooseLeptons_isocut0p25.begin(),LooseLeptons_isocut0p25.end(),PtComparingPtr);
+          std::sort(LooseLeptons_isocut0p45.begin(),LooseLeptons_isocut0p45.end(),PtComparingPtr);
+          std::sort(LooseLeptons_isocut0p50.begin(),LooseLeptons_isocut0p50.end(),PtComparingPtr);
+          std::sort(LooseLeptons_isocut0p55.begin(),LooseLeptons_isocut0p55.end(),PtComparingPtr);
+          std::sort(LooseLeptons_isocut0p75.begin(),LooseLeptons_isocut0p75.end(),PtComparingPtr);
+        }
         std::sort(TightLeptons.begin(),TightLeptons.end(),PtComparingPtr);
 
         FillHist(path+"/Cutflow",0.,weight,10,0.,10.);
@@ -286,23 +324,24 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         if(!PassTrg) continue;
         FillHist(path+"/Cutflow",1.,weight,10,0.,10.);
 
-        if(HasFlag("debug")) cout << "Pass Cut 1" << endl;
+        //if(HasFlag("debug")) cout << "Pass Cut 1" << endl;
 
         if(taus.size()<1) continue;
         FillHist(path+"/Cutflow",2.,weight,10,0.,10.);
 
-        if(HasFlag("debug")) cout << "Pass Cut 2" << endl;
+        //if(HasFlag("debug")) cout << "Pass Cut 2" << endl;
 
         if(taus.at(0).Pt()<190) continue;
         FillHist(path+"/Cutflow",3.,weight,10,0.,10.);
 
-        if(HasFlag("debug")) cout << "Pass Cut 3" << endl;
+        //if(HasFlag("debug")) cout << "Pass Cut 3" << endl;
 
-        if(LooseLeptons.size()!=1) continue;
-        if(!LooseLeptons.at(0)->IsMuon()) continue; // concentrate on muon channel first 
+        //if(LooseLeptons.size()!=1) continue;
+        if(!passLooseLeptonBaseline) continue;
+        //if(!LooseLeptons.at(0)->IsMuon()) continue; // concentrate on muon channel first 
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
-        if(HasFlag("debug")) cout << "Pass Cut 4" << endl;
+        //if(HasFlag("debug")) cout << "Pass Cut 4" << endl;
 
         if(HasFlag("DeltaTest")){
           if(LooseLeptons.at(0)->IsMuon()){
@@ -318,13 +357,27 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
 
-        if(HasFlag("debug")) cout << "Get Region Map " << endl;
+        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p25;
+        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p45;
+        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p50;
+        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p55;
+        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p75;
 
-        if(HasFlag("debug")){
+        if(HasFlag("MuIsoCutOpt")){
+          map_regions_isocut0p25 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p25,TightLeptons);
+          map_regions_isocut0p45 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p45,TightLeptons);
+          map_regions_isocut0p50 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p50,TightLeptons);
+          map_regions_isocut0p55 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p55,TightLeptons);
+          map_regions_isocut0p75 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p75,TightLeptons);
+        }
+
+        //if(HasFlag("debug")) cout << "Get Region Map " << endl;
+
+        /*if(HasFlag("debug")){
           for (const auto& pair : map_regions) {
             std::cout << "Cut : " <<  MuIsoCut << " Region: " << GetRegionString(pair.first) << ", Pass: " << pair.second << std::endl;
           }
-        }
+        }*/
 
         if(HasFlag("LSFOpt")){
           map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85},fatjets);
@@ -348,6 +401,13 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           //cout << "[WRTauAnalyzer] Start FillPassingRegions with cut " << MuIsoCut << " in path " << path << endl;
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
             FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+            if(HasFlag("MuIsoCutOpt")){
+              FillPassingRegions(map_regions_isocut0p25, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p25, TightLeptons, "MuIsoCutOpt_0p25/"+idname,weight,IDtuple,true);
+              FillPassingRegions(map_regions_isocut0p45, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p45, TightLeptons, "MuIsoCutOpt_0p45/"+idname,weight,IDtuple,true);
+              FillPassingRegions(map_regions_isocut0p50, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p50, TightLeptons, "MuIsoCutOpt_0p50/"+idname,weight,IDtuple,true);
+              FillPassingRegions(map_regions_isocut0p55, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p55, TightLeptons, "MuIsoCutOpt_0p55/"+idname,weight,IDtuple,true);
+              FillPassingRegions(map_regions_isocut0p75, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p75, TightLeptons, "MuIsoCutOpt_0p75/"+idname,weight,IDtuple,true);
+            }
           }
         }
 
