@@ -109,7 +109,7 @@ public:
   //==== ID
   bool PassID(TString ID) const;
   bool Pass_POGTightWithTightIso() const; 
-  bool Pass_POGHighPtWithTrkIso() const;                  // LRSM Loose ID
+  bool Pass_POGHighPtWithVLooseTrkIso() const;                  // LRSM Loose ID
   bool Pass_POGHighPtWithLooseTrkIso() const;             // LRSM Tight ID
   bool Pass_POGHighPtWithTrkIsoTest(double isocut) const; // LRSM Tight ID with different iso cut
   bool Pass_TESTID() const; 

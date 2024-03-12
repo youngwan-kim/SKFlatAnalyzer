@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+ST_tW_antitop_5f_nofullhaddec_TauHLT	ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8	19.56	3588444	3588264.0	1.166515957958e+08

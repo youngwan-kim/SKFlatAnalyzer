@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+DYJets_MG_TauHLT	DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8	6077.22	98714647	98714647.0	9.871464700000e+07

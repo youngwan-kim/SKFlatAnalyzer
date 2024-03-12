@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+ST_sch_4f_lepdecays_TauHLT	ST_s-channel_4f_leptonDecays_TuneCP5_13TeV-amcatnlo-pythia8	3.36	6306000	4103724.0	2.238316290582e+07

@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+TTLJ_TauHLT	TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8	365.34	144520000	143353768.0	4.348751259793e+10

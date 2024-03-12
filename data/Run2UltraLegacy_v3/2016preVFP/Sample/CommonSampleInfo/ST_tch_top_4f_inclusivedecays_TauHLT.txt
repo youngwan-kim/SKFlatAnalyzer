@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+ST_tch_top_4f_inclusivedecays_TauHLT	ST_t-channel_top_4f_InclusiveDecays_TuneCP5_13TeV-powheg-madspin-pythia8	136.02	55822000	52307166.0	5.933358690641e+09

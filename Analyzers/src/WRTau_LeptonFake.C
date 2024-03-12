@@ -34,7 +34,7 @@ void WRTau_LeptonFake::executeEvent(){
   param.Electron_ID_SF_Key = "HEEP";
 
   param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
-  param.Muon_Loose_ID = "POGHighPtWithTrkIso";
+  param.Muon_Loose_ID = "POGHighPtWithVLooseTrkIso";
   param.Muon_Veto_ID = "POGHighPt";
   param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
   param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";
@@ -170,14 +170,16 @@ void WRTau_LeptonFake::FillLeptonKinematics(map<WRTau_Core::SearchRegion,bool> m
       // lepton type discrimination
       if(isMu){ 
 
-        cout << param.Muon_Veto_ID  << " veto muon " << muons_veto.size() << endl;
-        cout << param.Muon_Loose_ID << " loose muon " << muons_loose.size() << endl;
-        cout << param.Muon_Tight_ID << " tight muon " << muons.size() << endl;
+        //cout << param.Muon_Veto_ID  << " veto muon " << muons_veto.size() << endl;
+        //cout << param.Muon_Loose_ID << " loose muon " << muons_loose.size() << endl;
+        //cout << param.Muon_Tight_ID << " tight muon " << muons.size() << endl;
 
         for(auto const& mu : muons_veto){
 
-          double muPt = mu.Pt(); 
-          double muAbsEta = fabs(mu.Eta());
+          double muPt        = mu.Pt(); 
+          double muAbsEta    = fabs(mu.Eta());
+          double muRelTrkIso = mu.TrkIso()/mu.Pt();
+
           if(mu.Pt() > 1000.) muPt = 999.9;
           if(muAbsEta > 2.4)  muAbsEta = 2.399;
 
@@ -185,11 +187,20 @@ void WRTau_LeptonFake::FillLeptonKinematics(map<WRTau_Core::SearchRegion,bool> m
           bool isLoose = isVeto && mu.PassID(param.Muon_Loose_ID); // Veto-to-Loose
           bool isTight = isVeto && mu.PassID(param.Muon_Tight_ID); // Veto-to-Tight
 
-          if(isVeto)   FillHist(label_channel+"/LeptonPtAbsEta_Veto",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
-          if(isLoose)  FillHist(label_channel+"/LeptonPtAbsEta_Loose",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
-          if(isTight)  FillHist(label_channel+"/LeptonPtAbsEta_Tight",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
+          if(isVeto){
+            FillHist(label_channel+"/LeptonPtAbsEta_Veto" ,muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
+            FillHist(label_channel+"/LeptonTrkRelIso_Veto",muRelTrkIso,weight,100,0.,1.);
+          }
+          if(isLoose){
+            FillHist(label_channel+"/LeptonPtAbsEta_Loose",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
+            FillHist(label_channel+"/LeptonTrkRelIso_Loose",muRelTrkIso,weight,100,0.,1.);
+          }
+          if(isTight){
+            FillHist(label_channel+"/LeptonPtAbsEta_Tight",muPt,muAbsEta,weight,100,0.,1000.,24,0.0,2.4);
+            FillHist(label_channel+"/LeptonTrkRelIso_Tight",muRelTrkIso,weight,100,0.,1.);
+          }
         
-          cout << "muIDBit: " << mu.GetIDBit() << " muPt: " << muPt << " muAbsEta: " << muAbsEta << " isVeto: " << isVeto << " isLoose: " << isLoose << " isTight: " << isTight << endl;
+          //cout << "muIDBit: " << mu.GetIDBit() << " muPt: " << muPt << " muAbsEta: " << muAbsEta << " isVeto: " << isVeto << " isLoose: " << isLoose << " isTight: " << isTight << endl;
 
         }
 
