@@ -7,12 +7,24 @@ void WRTau_TauFake::initializeAnalyzer(){
 
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
+  if(DataYear==2016){
+
+    SingleTauTriggers = { "HLT_VLooseIsoPFTau140_Trk50_eta2p1_v" }
+
+  }
+
   if(DataYear==2017){
 
     SingleElectronTriggers = {"HLT_Ele35_WPTight_Gsf_v"};
     SingleMuonTriggers = {"HLT_Mu50_v"};
     SingleTauTriggers = {"HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"};
     SingleLeptonTriggers = {"HLT_Mu27_v","HLT_Ele35_WPTight_Gsf_v"};
+
+  }
+
+  if(DataYear==2018){
+
+    SingleTauTriggers = {"HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"};
 
   }
 

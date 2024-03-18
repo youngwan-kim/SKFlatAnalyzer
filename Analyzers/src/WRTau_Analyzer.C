@@ -47,7 +47,7 @@ void WRTau_Analyzer::executeEvent(){
   param.Electron_ID_SF_Key = "HEEP";
 
   param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
-  param.Muon_Loose_ID = "POGHighPtWithTrkIso";
+  param.Muon_Loose_ID = "POGHighPt";
   param.Muon_Veto_ID = "POGLoose";
   param.Muon_ID_SF_Key = "NUM_HighPtID_DEN_TrackerMuons";
   param.Muon_ISO_SF_Key = "NUM_LooseRelTkIso_DEN_HighPtIDandIPCut";

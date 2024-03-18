@@ -86,3 +86,4 @@ done 3< <(find $SKFlatOutputDir$SKFlatV/GetEffLumi -type f|sort -V)
 
 
 #find data/Run2Legacy_v3/*/Sample/CommonSampleInfo -type f -mtime -1|while read line;do array=(${line//\// });NAME=${array[5]/.txt/}; DASNAME=$(head -n1 ${line/CommonSampleInfo/ForSNU/}|awk 'BEGIN{FS="/"}{print $9}'); NUMS=($(echo 'cout<<sumW->GetSum()<<"\t"<<sumW->GetEntries()<<"\t"'|root -b -l $SKFlatOutputDir/$SKFlatV/GetEffLumi/${array[2]}/GetEffLumi_${array[5]/.txt/.root}|tail -n1|awk '{print $1"\t"$2}')); echo $NAME $DASNAME CROSSSECTION ${NUMS[@]} > $line;done
+

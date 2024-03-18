@@ -2988,7 +2988,6 @@
 /gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1741.root
 /gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1758.root
 /gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1829.root
-/gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1848.root
 /gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1058.root
 /gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1008.root
 /gv0/Users/youngwan/WRTauBkgMC/2018/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/SKFlat_Run2UltraLegacy_v3/240219_093228/0001/SKFlatNtuple_2018_MC_1062.root

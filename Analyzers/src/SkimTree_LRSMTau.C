@@ -12,16 +12,19 @@ void SkimTree_LRSMTau::initializeAnalyzer(){
       "HLT_VLooseIsoPFTau120_Trk50_eta2p1_v",
       "HLT_VLooseIsoPFTau140_Trk50_eta2p1_v"
     };
+    TriggerSafePtCut = 150.;
   }
   else if(DataYear==2017){
     triggers = {
       "HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"
     };
+    TriggerSafePtCut = 190.;
   }
   else if(DataYear==2018){
     triggers = {
       "HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"
     };
+    TriggerSafePtCut = 190.;
   }
   else{
     cout << "[SkimTree_LRSMTau::initializeAnalyzer] DataYear is wrong : " << DataYear << endl;
@@ -57,10 +60,10 @@ void SkimTree_LRSMTau::executeEvent(){
   vector<Tau> alltaus = GetAllTaus();
   int Ntaus = 0;
   for(unsigned int i=0; i<alltaus.size(); i++){
-    if(alltaus.at(i).Pt()>190) Ntaus++;
+    if(alltaus.at(i).Pt()>TriggerSafePtCut) Ntaus++;
   }
   vector<Muon> allmuons = UseTunePMuon( GetAllMuons() );
-  vector<Muon> loosemuons = SelectMuons( allmuons, "POGHighPtWithTrkIso" , 50, 2.4 );
+  vector<Muon> loosemuons = SelectMuons( allmuons, "POGHighPt" , 50, 2.4 );
   vector<Electron> allelectrons = GetAllElectrons();
   vector<Electron> looseelectrons = SelectElectrons( allelectrons, "CutBasedLooseNoIso", 50, 2.4);
   int NlooseMu = loosemuons.size(); int NlooseEl = looseelectrons.size();

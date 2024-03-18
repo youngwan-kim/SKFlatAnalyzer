@@ -20,6 +20,7 @@ public:
   void WriteHist();
 
   double LeptonPtCut, AK4JetPtCut, AK8JetPtCut;
+  double TriggerSafePtCut;
 
 };
 
