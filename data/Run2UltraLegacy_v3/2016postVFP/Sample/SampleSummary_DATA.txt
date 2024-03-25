@@ -14,3 +14,6 @@ SingleElectron	H	127093812
 SingleMuon	F	8003612
 SingleMuon	G	147945745
 SingleMuon	H	171137991
+Tau F 4346847
+Tau G 78733260
+Tau H 75409819
