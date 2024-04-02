@@ -27,6 +27,7 @@ public:
 
   TDirectory *histDir;
   void ReadHistograms();
+  void ReadTauHistograms();
 
   bool IgnoreNoHist;
 
@@ -41,9 +42,12 @@ public:
 
   std::map< TString, TH2D* > map_hist_Electron;
   std::map< TString, TH2D* > map_hist_Muon;
+  TH1D* Tau_PR_Resolved;
+  TH1D* Tau_PR_Boosted;
 
   double GetElectronFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
   double GetMuonFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
+  double GetTauPromptRate(TString region,double pt, int sys=0);
 
   bool HasLooseLepton;
   double GetWeight(vector<Lepton *> lepptrs, AnalyzerParameter param, int sys=0);

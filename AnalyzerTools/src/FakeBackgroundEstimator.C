@@ -56,9 +56,50 @@ void FakeBackgroundEstimator::ReadHistograms(){
     }
   }
 
+  // Tau histogram 
+  TFile *file1 = new TFile(datapath+"/Tau/PromptRate.root");
+  histDir->cd();
+  Tau_PR_Boosted  = (TH1D *) file1->Get("BoostedSignalRegionMETInvert_PRNonSubtract_All_All")->Clone();
+  file1->Close();
+  delete file1;
+  origDir->cd();
+
+  TFile *file2 = new TFile(datapath+"/Tau/PromptRate.root");
+  histDir->cd();
+  Tau_PR_Resolved = (TH1D *) file2->Get("ResolvedSignalRegionMETInvert_PRNonSubtract_All_All")->Clone();
+  file2->Close();
+  delete file2;
+  origDir->cd();
+
 }
 
 FakeBackgroundEstimator::~FakeBackgroundEstimator(){
+
+}
+
+double FakeBackgroundEstimator::GetTauPromptRate(TString region,double pt, int sys){
+
+  double value = 1.;
+  double error = 0.;
+
+  if(pt>=1000.) pt = 999.;
+
+  if(region == "Boosted"){
+
+    int this_bin = Tau_PR_Boosted->FindBin(pt);
+    value = Tau_PR_Boosted->GetBinContent(this_bin);
+    error = Tau_PR_Boosted->GetBinError(this_bin); 
+
+  }
+  else if(region == "Resolved"){
+
+    int this_bin = Tau_PR_Resolved->FindBin(pt);
+    value = Tau_PR_Resolved->GetBinContent(this_bin);
+    error = Tau_PR_Resolved->GetBinError(this_bin); 
+
+  }
+
+  return value+double(sys)*error;
 
 }
 

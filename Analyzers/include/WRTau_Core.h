@@ -17,6 +17,10 @@ public:
   std::string DeepTauVSe = "DeepTau2017v2p1VSe";
   std::string DeepTauVSmu = "DeepTau2017v2p1VSmu";
 
+  // Boosted SR object tag
+  FatJet fatjet_BoostedSR;
+  vector<FatJet> fatjet_BoostedSR_v;
+
   // Cut Values
   double LSFOptCut = 0.6;
   double METCut = 100;
@@ -119,13 +123,15 @@ public:
                                                      WRTau_Core::BoostedLowMassControlRegion,
                                                      WRTau_Core::BoostedMassOptSel,
                                                      WRTau_Core::BoostedSignalRegion,
-                                                     WRTau_Core::BoostedSignalRegionMass1};
+                                                     WRTau_Core::BoostedSignalRegionMass1,
+                                                     WRTau_Core::BoostedSignalRegionMETInvert};
 
   vector<WRTau_Core::SearchRegion> ResolvedRegions = {WRTau_Core::ResolvedLowMassControlRegionMass1,
                                                       WRTau_Core::ResolvedLowMassControlRegion,
                                                       WRTau_Core::ResolvedMassOptSel,
                                                       WRTau_Core::ResolvedSignalRegion,
-                                                      WRTau_Core::ResolvedSignalRegionMass1};
+                                                      WRTau_Core::ResolvedSignalRegionMass1,
+                                                      WRTau_Core::ResolvedSignalRegionMETInvert};
 
 
   vector<WRTau_Core::SearchRegion> MassOptRegions = {WRTau_Core::BoostedMassOptSel,
@@ -254,6 +260,9 @@ public:
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Gen>& gens,const std::vector<Lepton *> leps, std::tuple<int,int,int> idtuple, bool highpT);
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Gen>& gens, std::tuple<int,int,int> idtuple, bool highpT);
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
+
+  // Fake Rates
+  double GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, map<WRTau_Core::SearchRegion,bool> m_region);
 
   // Others
   TDirectory* GetTempDir_WRTauCore();

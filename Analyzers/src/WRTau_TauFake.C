@@ -9,7 +9,7 @@ void WRTau_TauFake::initializeAnalyzer(){
 
   if(DataYear==2016){
 
-    SingleTauTriggers = { "HLT_VLooseIsoPFTau140_Trk50_eta2p1_v" }
+    SingleTauTriggers = { "HLT_VLooseIsoPFTau140_Trk50_eta2p1_v" };
 
   }
 

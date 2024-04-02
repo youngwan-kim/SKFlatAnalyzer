@@ -2719,17 +2719,22 @@ void AnalyzerCore::FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatje
 
   }
 
-  for(unsigned int i=0; i<fatjets.size(); i++){
+  if(fatjets.size()>0){
+    for(unsigned int i=0; i<fatjets.size(); i++){
 
-    TString this_itoa = TString::Itoa(i,10);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_Pt", fatjets.at(i).Pt(), weight, 5000, 0., 5000.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_Eta", fatjets.at(i).Eta(), weight, 60, -3., 3.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_Mass", fatjets.at(i).M(), weight, 3000, 0., 3000.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_SDMass", fatjets.at(i).SDMass(), weight, 3000, 0., 3000.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_LSF", fatjets.at(i).LSF(), weight, 100, 0., 1.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau21", fatjets.at(i).PuppiTau2()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
-    FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
+      TString this_itoa = TString::Itoa(i,10);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_Pt", fatjets.at(i).Pt(), weight, 5000, 0., 5000.);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_Eta", fatjets.at(i).Eta(), weight, 60, -3., 3.);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_Mass", fatjets.at(i).M(), weight, 3000, 0., 3000.);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_SDMass", fatjets.at(i).SDMass(), weight, 3000, 0., 3000.);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_LSF", fatjets.at(i).LSF(), weight, 100, 0., 1.);
+      //cout << "[AnalyzerCore::FillJetPlots] FatJet"+this_itoa+"_LSF = " << fatjets.at(i).LSF()  << " @ "+ this_region << endl;
+      //cout << "[AnalyzerCore::FillJetPlots] FatJet"+this_itoa+"_pt = " << fatjets.at(i).Pt()  << " @ "+ this_region << endl;
+      //cout << "[AnalyzerCore::FillJetPlots] FatJet"+this_itoa+"_eta = " << fatjets.at(i).Eta()  << " @ "+ this_region << endl;
+      FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau21", fatjets.at(i).PuppiTau2()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
+      FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
+    }
   }
 
 }

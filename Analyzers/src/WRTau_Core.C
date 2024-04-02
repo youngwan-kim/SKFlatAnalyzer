@@ -22,7 +22,10 @@ void WRTau_Core::GetTauIDSFTools(const std::vector<int> vJet_vec,const std::vect
     for(const auto &vel : vEl_vec){
       for(const auto &vmu : vMu_vec){
         std::tuple<int,int,int> IDtuple = std::make_tuple(vjet,vel,vmu);
-        tauidsftool_map[IDtuple]     = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet],idname_map_str[vel],false,false,false,true);
+        if( vjet > 2 && vjet < 6 ){
+          tauidsftool_map[IDtuple]   = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet],idname_map_str[vel],false,false,false,true);
+        }
+        else tauidsftool_map[IDtuple]   = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,"Tight",idname_map_str[vel],false,false,false,true);
         tauidsftool_vEl_map[IDtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSe,idname_map_str[vel],idname_map_str[vel]);
         tauidsftool_vMu_map[IDtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSmu,idname_map_str[vmu],idname_map_str[vel]);
       }
@@ -212,8 +215,10 @@ void WRTau_Core::FillPreselHists(TString region,const std::vector<Tau>& taus, co
   else{
     //FillHist(region+"/MET",METv.Pt(),weight,2500,0.,2500.);
     FillHist(region+"/Tauh_pT",taus.at(0).Pt(),weight,5000,0.,5000.);
+    FillHist(region+"/Tauh_eta",taus.at(0).Eta(),weight,100,-5.,5.);
     FillLeptonPlots(TightLeptons,region+"/HighPtTight",weight);
     FillLeptonPlots(LooseLeptons,region+"/HighPtLoose",weight);
+    //cout << "[WRTauCore::FillPreselHists] region : " << region << endl;
     FillJetPlots(jets,fatjets,region+"/Jets",weight);
     FillJetPlots(bjets,fatjets,region+"/BJets",weight);
 
@@ -1085,7 +1090,7 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
     vector<FatJet> fatjets_BoostedSR;
     vector<FatJet> fatjets_BoostedSR_LSFInvert;
     vector<Lepton *> leptons_BoostedSR;
-    FatJet fatjet_BoostedSR;
+    //FatJet fatjet_BoostedSR;
     Particle ll;
 
     for(const auto &looselep : LooseLeptons){
@@ -1093,10 +1098,14 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
       mll.push_back(ll.M());
     }
     for(const auto &J : fatjets){
-      if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+      if(J.DeltaPhi(taus.at(0))>2.0 && J.LSF()>LSFOptCut){
+        fatjets_BoostedSR.push_back(J);
+        //cout << "[WRTau_Core::GetRegion] J.LSF() = " <<  J.LSF() << endl ;
+      }
     }
     if(fatjets_BoostedSR.size()>0){
       fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+      fatjet_BoostedSR_v.push_back(fatjet_BoostedSR);
       for(const auto &looselep : LooseLeptons){
         if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
       }
@@ -1105,7 +1114,9 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
         if(fatjet_BoostedSR.LSF()>LSFOptCut){
 
           if(METv.Pt()>METCut) _isBoostedMassOptSel = true;
-          else _isBoostedSignalRegionMETInvert = true;
+          else {
+            _isBoostedSignalRegionMETInvert = true;
+          }
 
           double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
           double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
@@ -1208,8 +1219,22 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
           FillHist(str+"/dRJ"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(fatjets.at(i)),weight,60,0.,6.);
         }
 
+        //cout << "[WRTau_Core::FillPassingRegions] Called in " << str << endl;
+        // Problem regarding
         FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
         FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
+
+        fatjet_BoostedSR.Print();
+
+        if(fatjet_BoostedSR.Pt()>0.) {
+          FillHist(str+"/dRJtau_Boosted",taus.at(0).DeltaR(fatjet_BoostedSR),weight,60,0.,6.);
+          FillHist(str+"/FatJet_Pt", fatjet_BoostedSR.Pt(), weight, 5000, 0., 5000.);
+          FillHist(str+"/FatJet_Eta", fatjet_BoostedSR.Eta(), weight, 60, -3., 3.);
+          FillHist(str+"/FatJet_Mass", fatjet_BoostedSR.M(), weight, 3000, 0., 3000.);
+          FillHist(str+"/FatJet_SDMass", fatjet_BoostedSR.SDMass(), weight, 3000, 0., 3000.);
+          FillHist(str+"/FatJet_LSF", fatjet_BoostedSR.LSF(), weight, 100, 0., 1.);
+      
+        }
 
         auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), region.first);
         auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), region.first);
@@ -1436,6 +1461,18 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
           FillHist(str+"/dRJ"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(fatjets.at(i)),weight,60,0.,6.);
         }
 
+        //fatjet_BoostedSR.Print();
+
+        if(fatjet_BoostedSR.Pt()>0.) {
+          FillHist(str+"/FatJet/dRJtau",taus.at(0).DeltaR(fatjet_BoostedSR),weight,60,0.,6.);
+          FillHist(str+"/FatJet/Pt", fatjet_BoostedSR.Pt(), weight, 5000, 0., 5000.);
+          FillHist(str+"/FatJet/Eta", fatjet_BoostedSR.Eta(), weight, 60, -3., 3.);
+          FillHist(str+"/FatJet/Mass", fatjet_BoostedSR.M(), weight, 3000, 0., 3000.);
+          FillHist(str+"/FatJet/SDMass", fatjet_BoostedSR.SDMass(), weight, 3000, 0., 3000.);
+          FillHist(str+"/FatJet/LSF", fatjet_BoostedSR.LSF(), weight, 100, 0., 1.);
+      
+        }
+
         FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
         FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
 
@@ -1633,7 +1670,7 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
 
 
     if(taus.size()>0){
-      if(IsPromptTau(taus.at(0),gens)){
+      if(IsPromptTau(taus.at(0),gens) && (std::get<0>(idtuple) != 0)){
         if(highpT) w_tau = tauidsftool_map[idtuple]->getHighPTSFvsPT(taus.at(0).Pt());
         else w_tau = tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt());
       }
@@ -1644,6 +1681,49 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
   }
   
 }
+
+double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, map<WRTau_Core::SearchRegion,bool> m_region){
+  
+  // parabolic 
+  double x = 0.; double p[4] ;
+
+  bool isResolved(false), isBoosted(false);
+  isResolved = m_region[WRTau_Core::ResolvedSignalRegion] || m_region[WRTau_Core::ResolvedSignalRegionMETInvert] ;
+  isBoosted  = m_region[WRTau_Core::BoostedSignalRegion]  || m_region[WRTau_Core::BoostedSignalRegionMETInvert];
+
+  if(tau.Pt() > 1000.) x = 999.;
+  else x = tau.Pt() ;
+
+  if(DataEra=="2017" && isResolved){
+    p[0] = -0.05132294652031895; p[1]= 0.0021713765630938077; p[2] = -4.078799237979005e-06 ; p[3] = 0.1458416355076168;
+  }
+  if(DataEra=="2017" && isBoosted){
+     p[0] = -0.19161378669718473; p[1]= 0.0027668856251805594; p[2] = -4.613292834793495e-06 ; p[3] = 0.16864743043836866;
+  } 
+  if(DataEra=="2018" && isResolved){
+    p[0] = -0.04584515677433494; p[1]= 0.0020963301990769858; p[2] = -3.7003681819559146e-06; p[3] = 0.053110591379367605;
+  } 
+  if(DataEra=="2018" && isBoosted){
+     p[0] = -0.08407703581903803; p[1]= 0.0020744293484913153; p[2] = -3.2683183767448108e-06; p[3] = 0.15779344723593997;
+  } 
+
+  double a = p[0] + p[1] * x + p[2] * x * x ;
+  double w_f = std::max(a,p[3]) / (1-std::max(a,p[3]));
+
+  if(!tau.passTIDvJet()) return w_f;
+  if(IsNonPromptTau(tau,gens)){
+    if(tau.passTIDvJet()) {
+      double w_p = 0.; double r_p = 0.;
+      if(isResolved) r_p = fakeEst->GetTauPromptRate("Resolved",x);
+      if(isBoosted)  r_p = fakeEst->GetTauPromptRate("Boosted",x);
+      w_p = (1-r_p)/r_p;
+      return w_f * w_p; 
+    }
+  }
+  else return 1.;
+
+}
+
 
 Gen WRTau_Core::GetClosestGenJet(const std::vector<Gen>& gens, const Jet jet){
   
@@ -2302,6 +2382,8 @@ std::pair<double,double> WRTau_Core::METXYCorr_Met_MetPhi(double uncormet, doubl
   return TheXYCorr_Met_MetPhi;
 
 }
+
+
 
 
 /*std::map<WRTau_Core::SearchRegion,std::pair<int,int>> WRTau_Core::getGenLevelChannelMap(const std::vector<Gen>& gens){

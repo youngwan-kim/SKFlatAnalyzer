@@ -4,7 +4,8 @@ void WRTau_Analyzer::initializeAnalyzer(){
 
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
   vJet_vec = {5}; vEl_vec = {13}; vMu_vec = {21};
-  
+  if(HasFlag("TauFake")) vJet_vec = {0};
+
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
   if(DataYear==2017){
@@ -13,6 +14,12 @@ void WRTau_Analyzer::initializeAnalyzer(){
     SingleMuonTriggers = {"HLT_Mu50_v"};
     SingleTauTriggers = {"HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"};
     SingleLeptonTriggers = {"HLT_Mu27_v","HLT_Ele35_WPTight_Gsf_v"};
+
+  }
+
+  if(DataYear==2018){
+
+    SingleTauTriggers = {"HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"};
 
   }
 
@@ -132,7 +139,11 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
     else weight *= MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(0) * GetPileUpWeight(nPileUp,0);
   }
 
-  FillHist("MCWeight",MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(0) * GetPileUpWeight(nPileUp,0),1.,2e5,-1e5,1e5);
+  //cout << "weight@p1 : " << weight << endl;
+
+  //FillHist("MCWeight",MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(0) * GetPileUpWeight(nPileUp,0),1.,2e5,-1e5,1e5);
+
+  //cout << "weight@p1 : " << weight << endl;
 
   vector<Jet> this_AllJets = AllJets;
   vector<FatJet> this_AllFatJets = AllFatJets;
@@ -166,40 +177,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   vector<Muon> muons_veto = SelectMuons(this_AllMuons, param.Muon_Veto_ID, 50., 2.4) ;
   vector<Muon> muons_loose  = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4);
 
-  vector<Muon> muons_loose_isocut0p25;
-  vector<Muon> muons_loose_isocut0p45;
-  vector<Muon> muons_loose_isocut0p50;
-  vector<Muon> muons_loose_isocut0p55;
-  vector<Muon> muons_loose_isocut0p75;
-
-  if(HasFlag("MuIsoCutOpt")){
-    muons_loose_isocut0p25  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.25, 50., 2.4);
-    muons_loose_isocut0p45  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.45, 50., 2.4);
-    muons_loose_isocut0p50  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.50, 50., 2.4);
-    muons_loose_isocut0p55  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.55, 50., 2.4);
-    muons_loose_isocut0p75  = SelectMuonsLRSMIsoOpt(this_AllMuons, 0.75, 50., 2.4);
-  }
-
-  //cout << param.Muon_Loose_ID << " " << muons_loose.size() << endl;
-  //cout << "[WRTau_Analyzer::Nominal] Loose Muon size " << muons_loose.size() << " with cut " << MuIsoCut << endl;
-  //cout << "------------------" << endl;
-  /*if(HasFlag("MuIsoCutOpt") && MuIsoCut>0.){
-    muons_loose = SelectMuonsLRSMIsoOpt(this_AllMuons, MuIsoCut, 50., 2.4);
-    //cout << "MuIsoCutOpt " << MuIsoCut << " / loose muon selection " << muons_loose.size() << endl;
-  }*/
-  /*else{ 
-    muons_loose = SelectMuons(this_AllMuons, param.Muon_Loose_ID, 50., 2.4);
-    //cout << "Nominal HighPt loose muon selection " << muons_loose.size() << endl;
-  }*/
-
-  //cout << "------------------" << endl;
-  /*for(const auto &mu : muons_loose){
-    //cout << "AnalyzeCut " << MuIsoCut << " RelTrkIso " << mu.TrkIso()/mu.TuneP4().Pt() << endl;
-    FillHist(param.Name+"/LooseMuonRelTrkIso",mu.TrkIso()/mu.TuneP4().Pt(),weight,1000,0.,1.);
-  }
-  FillHist(param.Name+"/LooseMuonSize",muons_loose.size(),weight,10,0.,10.);*/
-
-
   vector<Electron> electrons = SelectElectrons(this_AllElectrons, param.Electron_Tight_ID, 50., 2.4);
   vector<Electron> electrons_veto = SelectElectrons(this_AllElectrons, param.Electron_Veto_ID, 50., 2.4);
   vector<Electron> electrons_loose = SelectElectrons(this_AllElectrons, param.Electron_Loose_ID, 50.,2.4);
@@ -208,19 +185,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   vector<Lepton *> VetoLeps = CombineLeptonPointerVector(electrons_veto,muons_veto);
   vector<Lepton *> LooseLeptons_tmp = CombineLeptonPointerVector(electrons_loose,muons_loose);
 
-  vector<Lepton *> LooseLeptons_isocut0p25;
-  vector<Lepton *> LooseLeptons_isocut0p45;
-  vector<Lepton *> LooseLeptons_isocut0p50;
-  vector<Lepton *> LooseLeptons_isocut0p55;
-  vector<Lepton *> LooseLeptons_isocut0p75;
-
-  if(HasFlag("MuIsoCutOpt")){
-    LooseLeptons_isocut0p25  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p25);
-    LooseLeptons_isocut0p45  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p45);
-    LooseLeptons_isocut0p50  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p50);
-    LooseLeptons_isocut0p55  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p55);
-    LooseLeptons_isocut0p75  = CombineLeptonPointerVector(electrons_loose,muons_loose_isocut0p75);
-  }
 
   vector<Tau> taus_lepVeto = VetoLeptonsFromTaus(VetoLeps,this_AllTaus);
 
@@ -232,30 +196,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         std::tuple<int,int,int> IDtuple = std::make_tuple(vJet_vec[i],vEl_vec[j],vMu_vec[k]);
         TString idname = "vJet"+idname_map[vJet_vec.at(i)]+"_vEl"+idname_map[vEl_vec.at(j)]+"_vMu"+idname_map[vMu_vec.at(k)];
         vector<Tau> taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
-        
-        /*FillHist(path+"/AllTaus",AllTaus.size(),weight,10,0.,10.);
-        FillHist(path+"/LepVetoTaus",taus_lepVeto.size(),weight,10,0.,10.);
-        FillHist(path+"/TausTMP",taus_temp.size(),weight,10,0.,10.);
-
-        std::sort(AllTaus.begin(),AllTaus.end(),PtComparing);
-        std::sort(taus_lepVeto.begin(),taus_lepVeto.end(),PtComparing);
-        std::sort(taus_temp.begin(),taus_temp.end(),PtComparing);
-
-        for(unsigned int i=0;i<AllTaus.size();i++){
-          FillHist(path+"/AllTaus"+TString::Itoa(i,10)+"_Pt",AllTaus.at(i).Pt(),weight,1000,0.,1000.);
-          FillHist(path+"/AllTaus_Pt",AllTaus.at(i).Pt(),weight,1000,0.,1000.);
-        }
-
-        for(unsigned int i=0;i<taus_lepVeto.size();i++){
-          FillHist(path+"/LepVetoTaus"+TString::Itoa(i,10)+"_Pt",taus_lepVeto.at(i).Pt(),weight,1000,0.,1000.);
-          FillHist(path+"/LepVetoTaus_Pt",taus_lepVeto.at(i).Pt(),weight,1000,0.,1000.);
-        }
-
-        for(unsigned int i=0;i<taus_temp.size();i++){
-          FillHist(path+"/TausTMP"+TString::Itoa(i,10)+"_Pt",taus_temp.at(i).Pt(),weight,1000,0.,1000.);
-          FillHist(path+"/TausTMP_Pt",taus_temp.at(i).Pt(),weight,1000,0.,1000.);
-        }*/
-
         vector<Tau> taus;
 
         TString path = param.Name+"/"+idname;
@@ -277,9 +217,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         vector<Lepton *> LooseLeptons = LooseLeptons_tmp;
         vector<Lepton *> TightLeptons = leptons_tmp;
 
-        bool passLooseLeptonBaseline = (  LooseLeptons.size() == 1            || LooseLeptons_isocut0p25.size() == 1 || LooseLeptons_isocut0p45.size() == 1 ||
-                                    LooseLeptons_isocut0p50.size() == 1 || LooseLeptons_isocut0p55.size() == 1 || LooseLeptons_isocut0p75.size() == 1 );
-
         vector<Jet> jets_lepVeto_tauVeto = JetsVetoLeptonInside(jets_tauVeto,electrons_veto,muons_veto,0.4);
         vector<Jet> jets = SelectJets(jets_lepVeto_tauVeto, param.Jet_ID, 40., 2.4);
         vector<FatJet> fatjets = SelectFatJets(fatjets_tmp,param.FatJet_ID,200.,2.4);
@@ -293,13 +230,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         std::sort(jets.begin(),jets.end(),PtComparing);
         std::sort(fatjets.begin(),fatjets.end(),PtComparing);
         std::sort(LooseLeptons.begin(),LooseLeptons.end(),PtComparingPtr);
-        if(HasFlag("MuIsoCutOpt")){
-          std::sort(LooseLeptons_isocut0p25.begin(),LooseLeptons_isocut0p25.end(),PtComparingPtr);
-          std::sort(LooseLeptons_isocut0p45.begin(),LooseLeptons_isocut0p45.end(),PtComparingPtr);
-          std::sort(LooseLeptons_isocut0p50.begin(),LooseLeptons_isocut0p50.end(),PtComparingPtr);
-          std::sort(LooseLeptons_isocut0p55.begin(),LooseLeptons_isocut0p55.end(),PtComparingPtr);
-          std::sort(LooseLeptons_isocut0p75.begin(),LooseLeptons_isocut0p75.end(),PtComparingPtr);
-        }
         std::sort(TightLeptons.begin(),TightLeptons.end(),PtComparingPtr);
 
         FillHist(path+"/Cutflow",0.,weight,10,0.,10.);
@@ -336,8 +266,8 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         //if(HasFlag("debug")) cout << "Pass Cut 3" << endl;
 
-        //if(LooseLeptons.size()!=1) continue;
-        if(!passLooseLeptonBaseline) continue;
+        if(LooseLeptons.size()!=1) continue;
+        //if(!passLooseLeptonBaseline) continue;
         //if(!LooseLeptons.at(0)->IsMuon()) continue; // concentrate on muon channel first 
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
@@ -356,28 +286,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
         
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
-
-        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p25;
-        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p45;
-        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p50;
-        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p55;
-        map<WRTau_Core::SearchRegion,bool> map_regions_isocut0p75;
-
-        if(HasFlag("MuIsoCutOpt")){
-          map_regions_isocut0p25 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p25,TightLeptons);
-          map_regions_isocut0p45 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p45,TightLeptons);
-          map_regions_isocut0p50 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p50,TightLeptons);
-          map_regions_isocut0p55 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p55,TightLeptons);
-          map_regions_isocut0p75 = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons_isocut0p75,TightLeptons);
-        }
-
-        //if(HasFlag("debug")) cout << "Get Region Map " << endl;
-
-        /*if(HasFlag("debug")){
-          for (const auto& pair : map_regions) {
-            std::cout << "Cut : " <<  MuIsoCut << " Region: " << GetRegionString(pair.first) << ", Pass: " << pair.second << std::endl;
-          }
-        }*/
 
         if(HasFlag("LSFOpt")){
           map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85},fatjets);
@@ -398,16 +306,13 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
 
         else{
-          //cout << "[WRTauAnalyzer] Start FillPassingRegions with cut " << MuIsoCut << " in path " << path << endl;
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
-            FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
-            if(HasFlag("MuIsoCutOpt")){
-              FillPassingRegions(map_regions_isocut0p25, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p25, TightLeptons, "MuIsoCutOpt_0p25/"+idname,weight,IDtuple,true);
-              FillPassingRegions(map_regions_isocut0p45, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p45, TightLeptons, "MuIsoCutOpt_0p45/"+idname,weight,IDtuple,true);
-              FillPassingRegions(map_regions_isocut0p50, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p50, TightLeptons, "MuIsoCutOpt_0p50/"+idname,weight,IDtuple,true);
-              FillPassingRegions(map_regions_isocut0p55, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p55, TightLeptons, "MuIsoCutOpt_0p55/"+idname,weight,IDtuple,true);
-              FillPassingRegions(map_regions_isocut0p75, RegionOfInterest.at(l), METv, AllGens, taus, jets, bjets, fatjets, LooseLeptons_isocut0p75, TightLeptons, "MuIsoCutOpt_0p75/"+idname,weight,IDtuple,true);
+            double w_fake = 1.0;
+            if(HasFlag("TauFake")){
+              w_fake = GetTauFRWeight(taus.at(0),AllGens,map_regions);
             }
+            //cout << "weight = " << weight*w_fake << endl;
+            FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight*w_fake,IDtuple,true);
           }
         }
 
