@@ -1682,14 +1682,31 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
   
 }
 
-double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, map<WRTau_Core::SearchRegion,bool> m_region){
-  
-  // parabolic 
+bool WRTau_Core::isBoostedRegion(WRTau_Core::SearchRegion region){
+
+  std::string str = GetRegionString(region);  
+  if (str.find("Boosted") != std::string::npos) return true; 
+  else return false;
+
+}
+
+bool WRTau_Core::isResolvedRegion(WRTau_Core::SearchRegion region){
+
+  std::string str = GetRegionString(region);  
+  if (str.find("Resolved") != std::string::npos) return true; 
+  else return false;
+
+}
+
+
+
+double WRTau_Core::GetTauFR(const Tau tau, WRTau_Core::SearchRegion region){
+
   double x = 0.; double p[4] ;
 
   bool isResolved(false), isBoosted(false);
-  isResolved = m_region[WRTau_Core::ResolvedSignalRegion] || m_region[WRTau_Core::ResolvedSignalRegionMETInvert] ;
-  isBoosted  = m_region[WRTau_Core::BoostedSignalRegion]  || m_region[WRTau_Core::BoostedSignalRegionMETInvert];
+  isResolved = isResolvedRegion(region);
+  isBoosted  = isBoostedRegion(region);
 
   if(tau.Pt() > 1000.) x = 999.;
   else x = tau.Pt() ;
@@ -1708,22 +1725,93 @@ double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, m
   } 
 
   double a = p[0] + p[1] * x + p[2] * x * x ;
-  double w_f = std::max(a,p[3]) / (1-std::max(a,p[3]));
-
-  if(!tau.passTIDvJet()) return w_f;
-  if(IsNonPromptTau(tau,gens)){
-    if(tau.passTIDvJet()) {
-      double w_p = 0.; double r_p = 0.;
-      if(isResolved) r_p = fakeEst->GetTauPromptRate("Resolved",x);
-      if(isBoosted)  r_p = fakeEst->GetTauPromptRate("Boosted",x);
-      w_p = (1-r_p)/r_p;
-      return w_f * w_p; 
-    }
-  }
-  else return 1.;
+  return std::max(a,p[3]);
 
 }
 
+// Considering only tau when estimating lepton fakes with MC
+double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region){
+  
+  double r_f = GetTauFR(tau,region);
+  double w_f = r_f / (1-r_f);
+  double w_p = 1.; double r_p = 0.;
+  double x = 0.;
+
+  if(tau.Pt() > 1000.) x = 999.;
+  else x = tau.Pt() ;
+
+  if(isResolvedRegion(region)) r_p = fakeEst->GetTauPromptRate("Resolved",x);
+  if(isBoostedRegion(region))  r_p = fakeEst->GetTauPromptRate("Boosted",x);
+  w_p = (1-r_p)/r_p;
+  double coeff = 1.;
+
+  if(!tau.passTIDvJet()) return coeff*w_f;
+  if(IsNonPromptTau(tau,gens)){
+    if(tau.passTIDvJet()) return coeff*w_f * w_p; 
+  }
+  else return coeff;
+
+}
+
+// Considering both electron and tau fakes (Resolved region, eltau channel)
+double WRTau_Core::GetElTauFRWeight(const Tau tau, const Electron el,const std::vector<Gen>& gens, WRTau_Core::SearchRegion region){
+
+  //cout << "[WRTau_Core::GetElTauFRWeight] Method called ... " << endl; 
+
+  double w = -999.;
+  double f_tau = GetTauFR(tau,region);
+  double f_ele = fakeEst->GetElectronFakeRate("WRTau_Resolved","",el.Eta(),el.Pt());
+  double p_tau = 1.0;
+  double x = 0.;
+
+  //cout << "[WRTau_Core::GetElTauFRWeight] fakeEst->GetElectronFakeRate =  " << f_ele << endl;
+
+  if(tau.Pt() > 1000.) x = 999.;
+  else x = tau.Pt() ;
+
+  if(isResolvedRegion(region)) p_tau = fakeEst->GetTauPromptRate("Resolved",x);
+  if(isBoostedRegion(region))  p_tau = fakeEst->GetTauPromptRate("Boosted",x);
+
+  //cout << "[WRTau_Core::GetElTauFRWeight] fakeEst->GetTauPromptRate = " << p_tau << endl;
+
+  double wf_tau = f_tau / (1.-f_tau) ;
+  double wp_tau = (1.-p_tau) / p_tau ;
+  double wf_ele = f_ele / (1.-f_ele) ;
+
+  bool isPromptEle = IsPromptLepton(el,gens);
+  bool isFakeEle   = !isPromptEle;
+  bool isPromptTau = IsPromptTau(tau,gens);
+  bool isFakeTau   = !isPromptTau;
+
+  /*
+    i.e for 
+      N_t(00) : !passEleTight && !passTauTight
+      N_t(10) : passEleTight && !passTauTight
+  */
+  bool passTauTight = tau.passTIDvJet();        // T *1
+  bool passEleTight = el.PassID("passHEEPID");  // T 1*
+
+  if(!passEleTight && !passTauTight)                               w = wf_tau * wf_ele;
+  else if(!passEleTight && passTauTight){
+    if((isPromptEle && isPromptTau) || (isFakeEle && isPromptTau)) w = wf_ele;
+    if((isPromptEle && isFakeTau)   || (isFakeEle && isFakeTau))   w = wf_ele * wf_tau * wp_tau;
+  }
+  else if(passEleTight && !passTauTight){
+    if(isPromptEle)                                            w = wf_tau;
+    else                                                       w = wf_ele * wf_tau;
+  }
+  else{
+    if(isPromptEle && isPromptTau)                             w = 1.;
+    if(isPromptEle && isFakeTau)                               w = wf_tau * wp_tau;
+    if(isFakeEle && isPromptTau)                               w = wf_ele;
+    if(isFakeEle && isFakeTau)                                 w = wf_ele * wf_tau * wp_tau;
+  }
+
+  if(w<0.) cout << "[WRTau_Core::GetElTauFRWeight] Something's wrong ... weight = " << w << endl;
+
+  return w;
+
+}
 
 Gen WRTau_Core::GetClosestGenJet(const std::vector<Gen>& gens, const Jet jet){
   

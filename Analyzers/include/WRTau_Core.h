@@ -252,6 +252,8 @@ public:
                                                               Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,
                                                               const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons);                                                              
   std::vector<Lepton *> ChooseLeptonColl(WRTau_Core::SearchRegion region, std::pair<std::vector<Lepton *>,std::vector<Lepton *>> LeptonPair);
+  bool isBoostedRegion(WRTau_Core::SearchRegion region);
+  bool isResolvedRegion(WRTau_Core::SearchRegion region);
   void CopyHist(TString histname0, TString histname1);
 
   // weights
@@ -262,7 +264,9 @@ public:
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
 
   // Fake Rates
-  double GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, map<WRTau_Core::SearchRegion,bool> m_region);
+  double GetTauFR(const Tau tau, WRTau_Core::SearchRegion region);
+  double GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region);
+  double GetElTauFRWeight(const Tau tau, const Electron el,const std::vector<Gen>& gens, WRTau_Core::SearchRegion region);
 
   // Others
   TDirectory* GetTempDir_WRTauCore();

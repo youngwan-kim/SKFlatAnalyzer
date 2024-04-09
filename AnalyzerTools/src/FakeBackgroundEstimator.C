@@ -113,13 +113,13 @@ double FakeBackgroundEstimator::GetElectronFakeRate(TString ID, TString key, dou
 
   eta = fabs(eta);
 
-  if(pt>=200) pt = 199;
+  if(pt>=80) pt = 79.9;
   if(eta>=2.5) eta = 2.49;
   //==== HOTFIX FIXME
-  if(eta>=1.479 && pt>=150) pt = 149.;
+  //if(eta>=1.479 && pt>=150) pt = 149.;
 
   std::map< TString, TH2D* >::const_iterator mapit;
-  mapit = map_hist_Electron.find(ID+"_"+key);
+  mapit = map_hist_Electron.find(ID);
 
   if(mapit==map_hist_Electron.end()){
     if(IgnoreNoHist) return 1.;
