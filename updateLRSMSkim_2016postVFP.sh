@@ -24,3 +24,6 @@
 ./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2016postVFP/MC_SkimTree_LRSMTau/WZ_TuneCP5_13TeV-pythia8
 ./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2016postVFP/MC_SkimTree_LRSMTau/ZZZ_TuneCP5_13TeV-amcatnlo-pythia8
 ./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2016postVFP/MC_SkimTree_LRSMTau/ZZ_TuneCP5_13TeV-pythia8
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2016postVFP/DATA_SkimTree_LRSMTau/Tau/periodF
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2016postVFP/DATA_SkimTree_LRSMTau/Tau/periodG
+./bin/UpdateSampleForSNU.sh /gv0/DATA/SKFlat/Run2UltraLegacy_v3/2016postVFP/DATA_SkimTree_LRSMTau/Tau/periodH

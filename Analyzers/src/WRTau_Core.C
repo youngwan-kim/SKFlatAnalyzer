@@ -18,16 +18,21 @@ bool WRTau_Core::isResolvedPreselection(const std::vector<Tau>& taus, const std:
 
 void WRTau_Core::GetTauIDSFTools(const std::vector<int> vJet_vec,const std::vector<int> vEl_vec,const std::vector<int> vMu_vec){
 
+  std::string year = "";
+  if(DataEra=="2016preVFP") year = "UL2016_preVFP";
+  else if(DataEra=="2016postVFP") year = "UL2016_postVFP";
+  else year = "UL"+std::to_string(DataYear);
+
   for(const auto &vjet : vJet_vec){
     for(const auto &vel : vEl_vec){
       for(const auto &vmu : vMu_vec){
         std::tuple<int,int,int> IDtuple = std::make_tuple(vjet,vel,vmu);
         if( vjet > 2 && vjet < 6 ){
-          tauidsftool_map[IDtuple]   = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,idname_map_str[vjet],idname_map_str[vel],false,false,false,true);
+          tauidsftool_map[IDtuple]   = new TauIDSFTool(year,DeepTauVSjet,idname_map_str[vjet],idname_map_str[vel],false,false,false,true);
         }
-        else tauidsftool_map[IDtuple]   = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSjet,"Tight",idname_map_str[vel],false,false,false,true);
-        tauidsftool_vEl_map[IDtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSe,idname_map_str[vel],idname_map_str[vel]);
-        tauidsftool_vMu_map[IDtuple] = new TauIDSFTool("UL"+std::to_string(DataYear),DeepTauVSmu,idname_map_str[vmu],idname_map_str[vel]);
+        else tauidsftool_map[IDtuple]   = new TauIDSFTool(year,DeepTauVSjet,"Tight",idname_map_str[vel],false,false,false,true);
+        tauidsftool_vEl_map[IDtuple] = new TauIDSFTool(year,DeepTauVSe,idname_map_str[vel],idname_map_str[vel]);
+        tauidsftool_vMu_map[IDtuple] = new TauIDSFTool(year,DeepTauVSmu,idname_map_str[vmu],idname_map_str[vel]);
       }
     }
   }
@@ -1439,8 +1444,13 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
       std::vector<TString> fillstr = {label,label_channel};
       
+      double weight_var;
       double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
       weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
+      if(HasFlag("TauFake")){
+        weight_var = weight * GetTauFRWeight(taus.at(0),leptons,gens,r,3);
+        weight *= GetTauFRWeight(taus.at(0),leptons,gens,r,2);
+      }
       if(HasFlag("unweighted")) weight = 1;
 
       for(const auto str : fillstr){
@@ -1470,7 +1480,6 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
           FillHist(str+"/FatJet/Mass", fatjet_BoostedSR.M(), weight, 3000, 0., 3000.);
           FillHist(str+"/FatJet/SDMass", fatjet_BoostedSR.SDMass(), weight, 3000, 0., 3000.);
           FillHist(str+"/FatJet/LSF", fatjet_BoostedSR.LSF(), weight, 100, 0., 1.);
-      
         }
 
         FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
@@ -1484,12 +1493,8 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
           double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
           double M2 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
-          //double M3 = GetBoostedSRMass_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
-          //double M4 = GetBoostedSRMassN_RecoNeutrino(METv,taus,fatjets,LooseLeptons);
           if(M1>0) FillHist(str+"/ProperMTWR",M1,weight,5000,0.,5000.);
           if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight,5000,0.,5000.);
-          //if(M3>0) FillHist(str+"/ProperMRecoNu",M3,weight,5000,0.,5000.);
-          //if(M4>0) FillHist(str+"/ProperMRecoNu_N",M4,weight,5000,0.,5000.);
 
         }
 
@@ -1497,13 +1502,71 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
           
           double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
           double M2 = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);
-          //double M3 = GetResolvedSRMass_RecoNeutrino(METv,taus,jets,TightLeptons);
-          //double M4 = GetResolvedSRMassN_RecoNeutrino(METv,taus,jets,TightLeptons);
           if(M1>0) FillHist(str+"/ProperMTWR",M1,weight,5000,0.,5000.);
           if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight,5000,0.,5000.);
-          //if(M3>0) FillHist(str+"/ProperMRecoNu",M3,weight,5000,0.,5000.);
-          //if(M4>0) FillHist(str+"/ProperMRecoNu_N",M4,weight,5000,0.,5000.);
 
+        }
+      }
+
+      if(HasFlag("TauFake")){
+        TString label_var = paramName+TauPromptString+LeptonPromptString+"_TauFRWtVarDeg3/"+tauIDString+"/"+GetRegionString(r); 
+        TString label_var_channel = label_var + "_"+GetChannelString(ch);
+
+        std::vector<TString> fillstr = {label_var,label_var_channel};
+        
+        for(const auto str : fillstr){
+
+          //CopyHist(fillpath+"/Cutflow",str+"/Cutflow");
+          FillHist(str+"/Nevents",0,weight_var,1,0.,1.);
+          FillHist(str+"/MET",METv.Pt(),weight_var,2500,0.,2500.);
+
+          for(unsigned int i=0;i<leptons.size();i++){
+            FillHist(str+"/dRl"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(*leptons.at(i)),weight_var,60,0.,6.);
+          }
+
+          for(unsigned int i=0;i<jets.size();i++){
+            FillHist(str+"/dRj"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(jets.at(i)),weight_var,60,0.,6.);
+          }
+
+          for(unsigned int i=0;i<fatjets.size();i++){
+            FillHist(str+"/dRJ"+TString::Itoa(i,10)+"tau",taus.at(0).DeltaR(fatjets.at(i)),weight_var,60,0.,6.);
+          }
+
+          //fatjet_BoostedSR.Print();
+
+          if(fatjet_BoostedSR.Pt()>0.) {
+            FillHist(str+"/FatJet/dRJtau",taus.at(0).DeltaR(fatjet_BoostedSR),weight_var,60,0.,6.);
+            FillHist(str+"/FatJet/Pt", fatjet_BoostedSR.Pt(), weight_var, 5000, 0., 5000.);
+            FillHist(str+"/FatJet/Eta", fatjet_BoostedSR.Eta(), weight_var, 60, -3., 3.);
+            FillHist(str+"/FatJet/Mass", fatjet_BoostedSR.M(), weight_var, 3000, 0., 3000.);
+            FillHist(str+"/FatJet/SDMass", fatjet_BoostedSR.SDMass(), weight_var, 3000, 0., 3000.);
+            FillHist(str+"/FatJet/LSF", fatjet_BoostedSR.LSF(), weight_var, 100, 0., 1.);
+          }
+
+          FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight_var);
+          FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight_var);
+
+          auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), r);
+          auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), r);
+
+
+          if( it_b != BoostedRegions.end() ){
+
+            double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
+            double M2 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
+            if(M1>0) FillHist(str+"/ProperMTWR",M1,weight_var,5000,0.,5000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight_var,5000,0.,5000.);
+
+          }
+
+          if( it_r != ResolvedRegions.end() ){
+
+            double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
+            double M2 = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);
+            if(M1>0) FillHist(str+"/ProperMTWR",M1,weight_var,5000,0.,5000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight_var,5000,0.,5000.);
+
+          }
         }
       }
       
@@ -1712,7 +1775,7 @@ double WRTau_Core::GetTauFR(const Tau tau, WRTau_Core::SearchRegion region){
   else x = tau.Pt() ;
 
   if(DataEra=="2017" && isResolved){
-    p[0] = -0.05132294652031895; p[1]= 0.0021713765630938077; p[2] = -4.078799237979005e-06 ; p[3] = 0.1458416355076168;
+    p[0] = -0.05132294652031895; p[1]= 0.0021713765630938077; p[2] = -4.078799237979005e-06 ; p[3] = 0.16864743043836866;
   }
   if(DataEra=="2017" && isBoosted){
      p[0] = -0.19161378669718473; p[1]= 0.0027668856251805594; p[2] = -4.613292834793495e-06 ; p[3] = 0.16864743043836866;
@@ -1729,21 +1792,105 @@ double WRTau_Core::GetTauFR(const Tau tau, WRTau_Core::SearchRegion region){
 
 }
 
-// Considering only tau when estimating lepton fakes with MC
-double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region){
-  
-  double r_f = GetTauFR(tau,region);
-  double w_f = r_f / (1-r_f);
-  double w_p = 1.; double r_p = 0.;
-  double x = 0.;
+double WRTau_Core::GetTauFR(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region, const int deg){
+
+  double x = 0.; double x0 = 0.;
+  double p[deg]; double tail(0.); double head(0.);
+  WRTau_Core::Channel ch = GetChannel(leps);
+
+  bool isResolved(false), isBoosted(false);
+  isResolved = isResolvedRegion(region);
+  isBoosted  = isBoostedRegion(region);
 
   if(tau.Pt() > 1000.) x = 999.;
   else x = tau.Pt() ;
 
-  if(isResolvedRegion(region)) r_p = fakeEst->GetTauPromptRate("Resolved",x);
-  if(isBoostedRegion(region))  r_p = fakeEst->GetTauPromptRate("Boosted",x);
+  if(deg == 2){
+    if(DataEra=="2016" && isResolved){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.831243237214809 ; p[1] = 0.008446894180263877 ; p[2] = -1.535807242317035e-05 ;tail = 0.1725287944801986 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -0.15653336452885183 ; p[1] = 0.0021700790382151807 ; p[2] = -3.4107918586764663e-06 ;tail = 0.11446997172410935 ;}
+    }
+    if(DataEra=="2016" && isBoosted){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.14783201770423549 ; p[1] = 0.002291474864145053 ; p[2] = -3.5336099585763808e-06 ;tail = 0.21210511790473885 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -0.30547419484119687 ; p[1] = 0.0034276899219565426 ; p[2] = -6.17947567461921e-06 ;tail = 0.0959035744085898 ;}
+    } 
+    if(DataEra=="2017" && isResolved){
+      if(ch == WRTau_Core::TauE)       { p[0] = -1.4001274630732372  ; p[1] = 0.01452282648020714 ; p[2] = -2.8902584837849924e-05 ;tail = 0.3165701345762715 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -0.03161676869605785 ; p[1] = 0.0013482007655308769 ; p[2] = -2.3948823764251938e-06 ;tail = 0.07196337096413731 ;}
+    }
+    if(DataEra=="2017" && isBoosted){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.29723912122872836 ; p[1] = 0.0034342755525335325 ; p[2] = -5.7350302218065596e-06 ;tail = 0.1547928400042227 ; }
+      else if(ch == WRTau_Core::TauMu) { p[0] = -0.05524685540892613 ; p[1] = 0.0015157907473644023 ; p[2] = -2.547591191874851e-06 ;tail = 0.14102732343325047 ; }
+    } 
+    if(DataEra=="2018" && isResolved){
+      if(ch == WRTau_Core::TauE)       { p[0] = 1.009908681215489 ; p[1] = -0.005583946686936777 ; p[2] = 1.1202289138393658e-05 ;tail = 0.41789256502130945 ; }
+      else if(ch == WRTau_Core::TauMu) { p[0] = 0.0547245873619237 ; p[1] = 0.0008724551468712127 ; p[2] = -1.7092455524811627e-06 ;tail = 0.07477745525518946 ; }
+    } 
+    if(DataEra=="2018" && isBoosted){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.29759761136978863 ; p[1] = 0.0034983219862958354 ; p[2] = -5.691249372788673e-06 ;tail = 0.14411400961605803 ; }
+      else if(ch == WRTau_Core::TauMu) { p[0] = 0.18637005703555454 ; p[1] = -0.0002055282846335179 ; p[2] = 7.919895853886084e-07 ;tail = 0.2028897466489163 ; }
+    } 
+    head = p[0] + p[1] * x + p[2] * x * x ;
+  }
+  else if(deg == 3){
+    if(DataEra=="2016" && isResolved){
+      if(ch == WRTau_Core::TauE)       { p[0] = 1.6048945015782925 ; p[1] = -0.018952815931256417 ; p[2] = 8.46657886189916e-05 ;  p[3] = -1.1840041540973055e-07 ;tail = 0.17252879462092222 ;x0 = 399.083449262323 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -0.763360414333092 ; p[1] = 0.00833167067543171 ; p[2] = -2.3220028631676983e-05 ;  p[3] = 2.011277511053682e-08 ;tail = 0.11446997178554827 ;x0 = 484.89028599728783 ;}
+    }
+    if(DataEra=="2016" && isBoosted){
+      if(ch == WRTau_Core::TauE)       { p[0] = -1.2209634097808408 ; p[1] = 0.014069163620798644 ; p[2] = -4.516305426626977e-05 ;  p[3] = 4.730985337608265e-08 ;tail = 0.2121051179073685 ;x0 = 364.3403760963194 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -1.4522773934898419 ; p[1] = 0.015875348899732907 ; p[2] = -4.96354275692718e-05 ;  p[3] = 4.873886266969021e-08 ;tail = 0.09590357454565306 ;x0 = 421.08831869824036 ;}
+    } 
+    if(DataEra=="2017" && isResolved){
+      if(ch == WRTau_Core::TauE)       { p[0] = 2.9363093123562773 ; p[1] = -0.037681175212527875 ; p[2] = 0.0001773680893060778 ;  p[3] = -2.6736796253372166e-07 ;tail = 0.3165701345242996 ;x0 = 351.0169016567174 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -0.11248549120115643 ; p[1] = 0.0021583325627080137 ; p[2] = -4.96936626663147e-06 ;  p[3] = 2.5910007386413747e-09 ;tail = 0.07196337096902905 ;x0 = 552.5478904507842 ;}
+    }
+    if(DataEra=="2017" && isBoosted){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.15555586989914988 ; p[1] = 0.0018805396027885136 ; p[2] = -2.485355964205635e-07 ;  p[3] = -6.228027856439282e-09 ;tail = 0.15479284009613192 ;x0 = 480.40144528864926 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = -1.7562786356252562 ; p[1] = 0.020129333047017636 ; p[2] = -6.814996468737049e-05 ;  p[3] = 7.438535070015779e-08 ;tail = 0.14102732353773137 ;x0 = 360.7181061491338 ;}
+    } 
+    if(DataEra=="2018" && isResolved){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.8422488840414395 ; p[1] = 0.01607895970173253 ; p[2] = -7.133733518882485e-05 ;  p[3] = 1.0226738482751318e-07 ;tail = 0.4178925649608058 ;x0 = 273.22352597429585 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = 0.48320288475145673 ; p[1] = -0.003445470477049935 ; p[2] = 1.20885557121088e-05 ;  p[3] = -1.3934868159435819e-08 ;tail = 0.07477745526859059 ;x0 = 520.4353614603767 ;}
+    } 
+    if(DataEra=="2018" && isBoosted){
+      if(ch == WRTau_Core::TauE)       { p[0] = -0.5557504627464769 ; p[1] = 0.006210957725518246 ; p[2] = -1.4796904985306322e-05 ;  p[3] = 9.723996753511515e-09 ;tail = 0.144114009592232 ;x0 = 551.6484606339233 ;}
+      else if(ch == WRTau_Core::TauMu) { p[0] = 3.5779840861879277 ; p[1] = -0.039130570752796856 ; p[2] = 0.00014605790095818737 ;  p[3] = -1.759671673219771e-07 ;tail = 0.20288974675568403 ;x0 = 404.69280175462666 ;}
+    } 
+    if(x>x0) head = p[0] + p[1] * x + p[2] * x * x + p[3] * x * x * x ;
+    else head = tail ;
+  }
+
+  return std::max(head,tail);
+
+}
+
+
+// Considering only tau when estimating lepton fakes with MC
+double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Lepton *> leps, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region,const int deg){
+  
+    //cout << "[WRTau_Core::GetTauFRWeight] Method called ... " << endl;
+
+  double r_f = GetTauFR(tau,leps,region,deg);
+  double w_f = r_f / (1-r_f);
+  double w_p = 1.; double r_p = 0.;
+  double x = 0.;
+
+  //cout << "[WRTau_Core::GetTauFRWeight] GetTauFR : " <<  r_f <<  endl;
+
+  TString channel = GetChannelString(GetChannel(leps));
+
+  //cout << "[WRTau_Core::GetTauFRWeight] GetChannelString : " << channel << endl;
+
+  if(tau.Pt() > 1000.) x = 999.;
+  else x = tau.Pt() ;
+
+  if(isResolvedRegion(region)) r_p = fakeEst->GetTauPromptRate("Resolved",channel,x);
+  if(isBoostedRegion(region))  r_p = fakeEst->GetTauPromptRate("Boosted",channel,x);
   w_p = (1-r_p)/r_p;
   double coeff = 1.;
+
+  //cout << "[WRTau_Core::GetTauFRWeight] GetTauPromptRate : " << r_p << endl;
 
   if(!tau.passTIDvJet()) return coeff*w_f;
   if(IsNonPromptTau(tau,gens)){
@@ -1759,7 +1906,7 @@ double WRTau_Core::GetElTauFRWeight(const Tau tau, const Electron el,const std::
   //cout << "[WRTau_Core::GetElTauFRWeight] Method called ... " << endl; 
 
   double w = -999.;
-  double f_tau = GetTauFR(tau,region);
+  double f_tau = 1.; //GetTauFR(tau,WRTau_Core::TauE,region,2);
   double f_ele = fakeEst->GetElectronFakeRate("WRTau_Resolved","",el.Eta(),el.Pt());
   double p_tau = 1.0;
   double x = 0.;
@@ -1769,8 +1916,8 @@ double WRTau_Core::GetElTauFRWeight(const Tau tau, const Electron el,const std::
   if(tau.Pt() > 1000.) x = 999.;
   else x = tau.Pt() ;
 
-  if(isResolvedRegion(region)) p_tau = fakeEst->GetTauPromptRate("Resolved",x);
-  if(isBoostedRegion(region))  p_tau = fakeEst->GetTauPromptRate("Boosted",x);
+  if(isResolvedRegion(region)) p_tau = fakeEst->GetTauPromptRate("Resolved","ElTau",x);
+  if(isBoostedRegion(region))  p_tau = fakeEst->GetTauPromptRate("Boosted","ElTau",x);
 
   //cout << "[WRTau_Core::GetElTauFRWeight] fakeEst->GetTauPromptRate = " << p_tau << endl;
 

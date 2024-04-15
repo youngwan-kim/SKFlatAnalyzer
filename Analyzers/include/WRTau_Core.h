@@ -265,7 +265,8 @@ public:
 
   // Fake Rates
   double GetTauFR(const Tau tau, WRTau_Core::SearchRegion region);
-  double GetTauFRWeight(const Tau tau, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region);
+  double GetTauFR(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region, const int deg);
+  double GetTauFRWeight(const Tau tau, const std::vector<Lepton *> leps, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region,const int deg);
   double GetElTauFRWeight(const Tau tau, const Electron el,const std::vector<Gen>& gens, WRTau_Core::SearchRegion region);
 
   // Others

@@ -164,8 +164,10 @@ bool Electron::PassID(TString ID) const{
   if(ID=="NOCUT") return true;
   if(ID=="TEST") return Pass_TESTID();
   if(ID=="CutBasedLooseNoIso") return Pass_CutBasedLooseNoIso();
-  if(ID=="LRSMLooseNoIso") return Pass_LRSMLooseNoIso();
-  if(ID=="LRSMVetoNoIso") return Pass_LRSMVetoNoIso();
+  if(ID=="LRSMTight") return passHEEPID();
+  if(ID=="LRSMTight2018") return passHEEP2018Prompt();
+  if(ID=="LRSMLoose") return Pass_LRSMLooseNoIso();
+  if(ID=="LRSMVeto") return Pass_LRSMVetoNoIso();
 
   if(ID=="TriLepEleLoose") return Pass_TriLepEleLoose();
   if(ID=="TriLepEleFO") return Pass_TriLepEleFO();

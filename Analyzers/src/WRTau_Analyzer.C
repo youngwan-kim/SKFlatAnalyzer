@@ -28,8 +28,8 @@ void WRTau_Analyzer::initializeAnalyzer(){
                       WRTau_Core::ResolvedPreselection,
                       WRTau_Core::BoostedLowMassControlRegion,
                       WRTau_Core::ResolvedLowMassControlRegion,
-                      WRTau_Core::BoostedSignalRegionLSFInvert,
                       WRTau_Core::BoostedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegion,
                       WRTau_Core::ResolvedSignalRegionMETInvert,
                       WRTau_Core::BoostedSignalRegionMETInvert
                       };
@@ -88,9 +88,10 @@ void WRTau_Analyzer::executeEvent(){
     TriggerSafeTauPtCut = 190.;
 
     param.Name = "WRTau_SignalSingleTauTrg";
-    param.Electron_Tight_ID = "passHEEPID";
-    param.Electron_Loose_ID = "CutBasedLooseNoIso";
-    param.Electron_Veto_ID = "passVetoID";
+    param.Electron_Tight_ID = "LRSMTight";
+    if(DataYear==2018) param.Electron_Tight_ID = "LRSMTight2018";
+    param.Electron_Loose_ID = "LRSMLoose";
+    param.Electron_Veto_ID = "LRSMVeto";
     param.Electron_ID_SF_Key = "HEEP";
 
     param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
@@ -305,11 +306,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         else{
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
-            double w_fake = 1.0;
-            if(HasFlag("TauFake")) w_fake = GetTauFRWeight(taus.at(0),AllGens,RegionOfInterest.at(l));
-            if(HasFlag("ResolvedElectronChannelFake") && electrons.size()>0) w_fake = GetElTauFRWeight(taus.at(0),electrons.at(0),AllGens,RegionOfInterest.at(l));
-            //cout << "weight = " << weight*w_fake << endl;
-            FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight*w_fake,IDtuple,true);
+            FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           }
         }
 

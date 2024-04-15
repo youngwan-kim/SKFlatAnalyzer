@@ -41,11 +41,12 @@ void WRTau_TauFake::executeEvent(){
   TriggerList = SingleLeptonTriggers;
 
   param.Name = "WRTauFake";
-  param.Electron_Tight_ID = "passHEEPID";
-  param.Electron_Loose_ID = "CutBasedLooseNoIso";
-  param.Electron_Veto_ID = "passVetoID";
+  param.Electron_Tight_ID = "LRSMTight";
+  if(DataYear==2018) param.Electron_Tight_ID = "LRSMTight2018";
+  param.Electron_Loose_ID = "LRSMLoose";
+  param.Electron_Veto_ID = "LRSMVeto";
   param.Electron_ID_SF_Key = "HEEP";
-
+  
   param.Muon_Tight_ID = "POGHighPtWithLooseTrkIso";
   param.Muon_Loose_ID = "POGHighPt";
   param.Muon_Veto_ID = "POGLoose";

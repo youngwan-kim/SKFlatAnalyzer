@@ -65,7 +65,7 @@ void SkimTree_LRSMTau::executeEvent(){
   vector<Muon> allmuons = UseTunePMuon( GetAllMuons() );
   vector<Muon> loosemuons = SelectMuons( allmuons, "POGHighPt" , 50, 2.4 );
   vector<Electron> allelectrons = GetAllElectrons();
-  vector<Electron> looseelectrons = SelectElectrons( allelectrons, "CutBasedLooseNoIso", 50, 2.4);
+  vector<Electron> looseelectrons = SelectElectrons( allelectrons, "LRSMLoose", 50, 2.4);
   int NlooseMu = loosemuons.size(); int NlooseEl = looseelectrons.size();
 
   bool isBaseline = (Ntaus > 0) && (NlooseEl > 0 || NlooseMu >0);

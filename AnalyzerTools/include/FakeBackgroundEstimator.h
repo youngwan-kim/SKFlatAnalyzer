@@ -42,12 +42,14 @@ public:
 
   std::map< TString, TH2D* > map_hist_Electron;
   std::map< TString, TH2D* > map_hist_Muon;
-  TH1D* Tau_PR_Resolved;
-  TH1D* Tau_PR_Boosted;
+  TH1D* Tau_PR_Resolved_El;
+  TH1D* Tau_PR_Boosted_El;
+  TH1D* Tau_PR_Resolved_Mu;
+  TH1D* Tau_PR_Boosted_Mu;
 
   double GetElectronFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
   double GetMuonFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
-  double GetTauPromptRate(TString region,double pt, int sys=0);
+  double GetTauPromptRate(TString region,TString channel,double pt, int sys=0);
 
   bool HasLooseLepton;
   double GetWeight(vector<Lepton *> lepptrs, AnalyzerParameter param, int sys=0);

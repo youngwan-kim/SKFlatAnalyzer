@@ -1,7 +1,7 @@
 #include "FakeBackgroundEstimator.h"
 
 FakeBackgroundEstimator::FakeBackgroundEstimator() : 
-IgnoreNoHist(false),
+IgnoreNoHist(true),
 HasLooseLepton(false)
 {
 
@@ -59,16 +59,30 @@ void FakeBackgroundEstimator::ReadHistograms(){
   // Tau histogram 
   TFile *file1 = new TFile(datapath+"/Tau/PromptRate.root");
   histDir->cd();
-  Tau_PR_Boosted  = (TH1D *) file1->Get("BoostedSignalRegionMETInvert_PRNonSubtract_All_All")->Clone();
+  Tau_PR_Boosted_El  = (TH1D *) file1->Get("BoostedSignalRegionMETInvert_ElTau_PRNonSubtract_All_All")->Clone();
   file1->Close();
   delete file1;
   origDir->cd();
 
   TFile *file2 = new TFile(datapath+"/Tau/PromptRate.root");
   histDir->cd();
-  Tau_PR_Resolved = (TH1D *) file2->Get("ResolvedSignalRegionMETInvert_PRNonSubtract_All_All")->Clone();
+  Tau_PR_Resolved_El = (TH1D *) file2->Get("ResolvedSignalRegionMETInvert_ElTau_PRNonSubtract_All_All")->Clone();
   file2->Close();
   delete file2;
+  origDir->cd();
+
+  TFile *file3 = new TFile(datapath+"/Tau/PromptRate.root");
+  histDir->cd();
+  Tau_PR_Boosted_Mu  = (TH1D *) file3->Get("BoostedSignalRegionMETInvert_MuTau_PRNonSubtract_All_All")->Clone();
+  file3->Close();
+  delete file3;
+  origDir->cd();
+
+  TFile *file4 = new TFile(datapath+"/Tau/PromptRate.root");
+  histDir->cd();
+  Tau_PR_Resolved_Mu = (TH1D *) file4->Get("ResolvedSignalRegionMETInvert_MuTau_PRNonSubtract_All_All")->Clone();
+  file4->Close();
+  delete file4;
   origDir->cd();
 
 }
@@ -77,25 +91,40 @@ FakeBackgroundEstimator::~FakeBackgroundEstimator(){
 
 }
 
-double FakeBackgroundEstimator::GetTauPromptRate(TString region,double pt, int sys){
+double FakeBackgroundEstimator::GetTauPromptRate(TString region,TString channel,double pt, int sys){
 
   double value = 1.;
   double error = 0.;
 
   if(pt>=1000.) pt = 999.;
 
+  //cout << "[FakeBackgroundEstimator::GetTauPromptRate] region = " << region << ", channel = " << channel << ", pt = " << pt << endl;
+
   if(region == "Boosted"){
 
-    int this_bin = Tau_PR_Boosted->FindBin(pt);
-    value = Tau_PR_Boosted->GetBinContent(this_bin);
-    error = Tau_PR_Boosted->GetBinError(this_bin); 
-
+    if(channel == "ElTau") {
+      int this_bin = Tau_PR_Boosted_El->FindBin(pt);
+      value = Tau_PR_Boosted_El->GetBinContent(this_bin);
+      error = Tau_PR_Boosted_El->GetBinError(this_bin); 
+    }
+    else if(channel == "MuTau") {
+      int this_bin = Tau_PR_Boosted_Mu->FindBin(pt);
+      value = Tau_PR_Boosted_Mu->GetBinContent(this_bin);
+      error = Tau_PR_Boosted_Mu->GetBinError(this_bin); 
+    }
   }
   else if(region == "Resolved"){
 
-    int this_bin = Tau_PR_Resolved->FindBin(pt);
-    value = Tau_PR_Resolved->GetBinContent(this_bin);
-    error = Tau_PR_Resolved->GetBinError(this_bin); 
+    if(channel == "ElTau"){
+      int this_bin = Tau_PR_Resolved_El->FindBin(pt);
+      value = Tau_PR_Resolved_El->GetBinContent(this_bin);
+      error = Tau_PR_Resolved_El->GetBinError(this_bin); 
+    }
+    else if(channel == "MuTau"){
+      int this_bin = Tau_PR_Resolved_Mu->FindBin(pt);
+      value = Tau_PR_Resolved_Mu->GetBinContent(this_bin);
+      error = Tau_PR_Resolved_Mu->GetBinError(this_bin); 
+    }
 
   }
 
