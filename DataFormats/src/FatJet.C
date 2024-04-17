@@ -40,6 +40,8 @@ FatJet::FatJet() : Particle() {
   j_puppi_tau3 = -999.;
   j_puppi_tau4 = -999.;
   j_SDMass = -999.;
+  j_PxUnSmeared=-999.;
+  j_PyUnSmeared=-999.;
 }
 
 FatJet::~FatJet(){
@@ -154,3 +156,10 @@ void FatJet::SetSDMass(double m){
   j_SDMass = m;
 }
 
+void FatJet::SetPxUnSmeared(double px){
+  j_PxUnSmeared=px;
+}
+
+void FatJet::SetPyUnSmeared(double py){
+  j_PyUnSmeared=py;
+}

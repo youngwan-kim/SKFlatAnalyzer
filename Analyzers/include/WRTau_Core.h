@@ -119,6 +119,22 @@ public:
     GenBoostedMuSignalRegion    = 110,
   };
 
+
+  // RecoSF Syst
+  int Syst_MuonRecoSF = 0;
+  int Syst_ElectronRecoSF = 0;
+  // IDSF Syst
+  int Syst_MuonIDSF = 0;
+  int Syst_ElectronIDSF = 0;
+
+  int Syst_MuonISOSF = 0;
+
+  std::string Syst_TauIDSF = "";
+  int Syst_TauTriggerSF = 0;
+  int Syst_LSFSF = 0;
+  int Syst_PU = 0;
+  int Syst_Prefire = 0;
+
   vector<WRTau_Core::SearchRegion> BoostedRegions = {WRTau_Core::BoostedLowMassControlRegionMass1,
                                                      WRTau_Core::BoostedLowMassControlRegion,
                                                      WRTau_Core::BoostedMassOptSel,
@@ -178,10 +194,20 @@ public:
   std::vector<Muon> MuonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
   std::vector<Muon> MuonNonPromptOnly_Tau(const std::vector<Muon>& muons, const std::vector<Gen>& gens);
 
+  // Select Objects (syst. incl)
+  
+
   // MET
-  Particle GetvMET(TString METType, AnalyzerParameter param);
   Particle GetvMET(TString METType);
+  Particle GetvMET(TString METType, AnalyzerParameter param);
+  Particle GetvMET(TString METType, AnalyzerParameter param,bool PropSmearing);
+  Particle GetvMET(TString METType, AnalyzerParameter param,
+                   std::vector<Jet> jets, std::vector<FatJet> fatjets,
+                   std::vector<Muon> muons, std::vector<Electron> electrons, bool PropSmearing);
   std::pair<double,double> METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false);
+  Particle GetvCorrMET(TString METType, AnalyzerParameter param, Particle METUncorr);
+  map<TString, Particle> METMap( AnalyzerParameter param);
+  Particle GetMiniAODvMET(TString METType);
 
   // Truth Matching
   LHE GetClosestTauLHE(const Tau tau, const std::vector<LHE>& LHEs);
@@ -262,6 +288,7 @@ public:
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Gen>& gens,const std::vector<Lepton *> leps, std::tuple<int,int,int> idtuple, bool highpT);
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Gen>& gens, std::tuple<int,int,int> idtuple, bool highpT);
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
+  double GetTauTriggerSF(const int syst);
 
   // Fake Rates
   double GetTauFR(const Tau tau, WRTau_Core::SearchRegion region);

@@ -42,11 +42,10 @@ public:
   inline double CJetNNCorrection() const { return j_cJetNN_corr; }
   inline double CJetNNResolution() const { return j_cJetNN_res; }
   inline double ChargedEmEnergyFraction() const { return j_chargedEmEnergyFraction;}
-    inline double ChargedHadEnergyFraction() const { return j_chargedHadronEnergyFraction;}
+  inline double ChargedHadEnergyFraction() const { return j_chargedHadronEnergyFraction;}
   inline double NeutralEmEnergyFraction() const { return j_neutralEmEnergyFraction;}
   inline double NeutralHadEnergyFraction() const { return j_neutralHadronEnergyFraction;}
   inline double MuonEnergyFraction() const { return j_muonEnergyFraction;}
-
 
   void SetPxUnSmeared(double px);
   void SetPyUnSmeared(double py);

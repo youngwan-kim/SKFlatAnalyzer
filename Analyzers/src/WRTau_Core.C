@@ -1229,7 +1229,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         FillPreselHists(str,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,weight);
         FillMassHists(str,METv,taus,jets,fatjets,LooseLeptons,TightLeptons,weight);
 
-        fatjet_BoostedSR.Print();
+        //fatjet_BoostedSR.Print();
 
         if(fatjet_BoostedSR.Pt()>0.) {
           FillHist(str+"/dRJtau_Boosted",taus.at(0).DeltaR(fatjet_BoostedSR),weight,60,0.,6.);
@@ -1689,23 +1689,23 @@ double WRTau_Core::GetMatchedWeight(const std::vector<Tau>& taus,const std::vect
 
     if(taus.size()>0){
       if(IsPromptTau(taus.at(0),gens)){
-        if(highpT) w_tau = tauidsftool_map[idtuple]->getHighPTSFvsPT(taus.at(0).Pt());
-        else w_tau = tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt());
+        if(highpT) w_tau = tauidsftool_map[idtuple]->getHighPTSFvsPT(taus.at(0).Pt(),Syst_TauIDSF);
+        else w_tau = tauidsftool_map[idtuple]->getSFvsPT(taus.at(0).Pt(),Syst_TauIDSF);
       }
     }
     if(leps.size()>0){
       if(IsPromptLepton(*leps.at(0),gens)){
 
         if(GetChannel(leps) == WRTau_Core::TauE){
-          w_lepton *= mcCorr->ElectronID_SF("HEEP",leps.at(0)->Eta(),leps.at(0)->Pt());
-          w_lepton *= mcCorr->ElectronReco_SF(leps.at(0)->Eta(),leps.at(0)->Pt());
+          w_lepton *= mcCorr->ElectronID_SF("HEEP",leps.at(0)->Eta(),leps.at(0)->Pt(),Syst_ElectronIDSF);
+          w_lepton *= mcCorr->ElectronReco_SF(leps.at(0)->Eta(),leps.at(0)->Pt(),Syst_ElectronRecoSF);
         }
 
-        // TODO : implement to get AnalyzerParam info for general input of SF WPs
+        // TODO : MuonRECO SF derivation
 
         else if(GetChannel(leps) == WRTau_Core::TauMu){
-          w_lepton *= mcCorr->MuonID_SF("NUM_HighPtID_DEN_TrackerMuons",leps.at(0)->Eta(),leps.at(0)->Pt());
-          w_lepton *= mcCorr->MuonISO_SF("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut",leps.at(0)->Eta(),leps.at(0)->Pt());
+          w_lepton *= mcCorr->MuonID_SF("NUM_HighPtID_DEN_TrackerMuons",leps.at(0)->Eta(),leps.at(0)->Pt(),Syst_MuonIDSF);
+          w_lepton *= mcCorr->MuonISO_SF("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut",leps.at(0)->Eta(),leps.at(0)->Pt(),Syst_MuonISOSF);
         }
       }
       /*else if(IsNonPromptLepton(leps.at(0),gens)){ 
@@ -1806,11 +1806,11 @@ double WRTau_Core::GetTauFR(const Tau tau, const std::vector<Lepton *> leps, WRT
   else x = tau.Pt() ;
 
   if(deg == 2){
-    if(DataEra=="2016" && isResolved){
+    if(DataYear==2016 && isResolved){
       if(ch == WRTau_Core::TauE)       { p[0] = -0.831243237214809 ; p[1] = 0.008446894180263877 ; p[2] = -1.535807242317035e-05 ;tail = 0.1725287944801986 ;}
       else if(ch == WRTau_Core::TauMu) { p[0] = -0.15653336452885183 ; p[1] = 0.0021700790382151807 ; p[2] = -3.4107918586764663e-06 ;tail = 0.11446997172410935 ;}
     }
-    if(DataEra=="2016" && isBoosted){
+    if(DataYear==2016 && isBoosted){
       if(ch == WRTau_Core::TauE)       { p[0] = -0.14783201770423549 ; p[1] = 0.002291474864145053 ; p[2] = -3.5336099585763808e-06 ;tail = 0.21210511790473885 ;}
       else if(ch == WRTau_Core::TauMu) { p[0] = -0.30547419484119687 ; p[1] = 0.0034276899219565426 ; p[2] = -6.17947567461921e-06 ;tail = 0.0959035744085898 ;}
     } 
@@ -1833,11 +1833,11 @@ double WRTau_Core::GetTauFR(const Tau tau, const std::vector<Lepton *> leps, WRT
     head = p[0] + p[1] * x + p[2] * x * x ;
   }
   else if(deg == 3){
-    if(DataEra=="2016" && isResolved){
+    if(DataYear==2016 && isResolved){
       if(ch == WRTau_Core::TauE)       { p[0] = 1.6048945015782925 ; p[1] = -0.018952815931256417 ; p[2] = 8.46657886189916e-05 ;  p[3] = -1.1840041540973055e-07 ;tail = 0.17252879462092222 ;x0 = 399.083449262323 ;}
       else if(ch == WRTau_Core::TauMu) { p[0] = -0.763360414333092 ; p[1] = 0.00833167067543171 ; p[2] = -2.3220028631676983e-05 ;  p[3] = 2.011277511053682e-08 ;tail = 0.11446997178554827 ;x0 = 484.89028599728783 ;}
     }
-    if(DataEra=="2016" && isBoosted){
+    if(DataYear==2016 && isBoosted){
       if(ch == WRTau_Core::TauE)       { p[0] = -1.2209634097808408 ; p[1] = 0.014069163620798644 ; p[2] = -4.516305426626977e-05 ;  p[3] = 4.730985337608265e-08 ;tail = 0.2121051179073685 ;x0 = 364.3403760963194 ;}
       else if(ch == WRTau_Core::TauMu) { p[0] = -1.4522773934898419 ; p[1] = 0.015875348899732907 ; p[2] = -4.96354275692718e-05 ;  p[3] = 4.873886266969021e-08 ;tail = 0.09590357454565306 ;x0 = 421.08831869824036 ;}
     } 
@@ -2227,31 +2227,21 @@ Particle WRTau_Core::GetvMET(TString METType){
   Particle vMET;
   if(UsePuppi){
     if(IsType1){
-      if(IsxyCorr) {
-	Met_pt=PuppiMET_Type1_PhiCor_pt; 
-	Met_phi = PuppiMET_Type1_PhiCor_phi;
-      } 
-      else  {
-	Met_pt=PuppiMET_Type1_pt;
-	Met_phi=PuppiMET_Type1_phi;
-      }
-    }// T1
-    else{
-      Met_pt=PuppiMET_pt;
-      Met_phi=PuppiMET_phi;
-    }
-  } // PUPPI
+      if(IsxyCorr) { Met_pt  = PuppiMET_Type1_PhiCor_pt;  Met_phi = PuppiMET_Type1_PhiCor_phi;} 
+      else  {        Met_pt  = PuppiMET_Type1_pt; Met_phi = PuppiMET_Type1_phi; }
+    } // T1
+    else{            Met_pt  = PuppiMET_pt; Met_phi=PuppiMET_phi; }
+  } 
   
-  else{
-    // PRMET
+  else{ // PFMET
     if(IsType1){
       if(IsxyCorr) {
-	Met_pt =pfMET_Type1_PhiCor_pt;
-	Met_phi=pfMET_Type1_PhiCor_phi;
+	      Met_pt =pfMET_Type1_PhiCor_pt;
+	      Met_phi=pfMET_Type1_PhiCor_phi;
       }
       else{
-	Met_pt =pfMET_Type1_pt;
-	Met_phi =pfMET_Type1_phi;
+	      Met_pt =pfMET_Type1_pt;
+	      Met_phi =pfMET_Type1_phi;
       }
     }
     else{
@@ -2300,28 +2290,26 @@ Particle WRTau_Core::GetvMET(TString METType, AnalyzerParameter param){
   if(UsePuppi){
     if(IsType1){
       if( (!ApplySyst) ){
-	if(IsxyCorr) vMET.SetPtEtaPhiM(PuppiMET_Type1_PhiCor_pt, 0., PuppiMET_Type1_PhiCor_phi, 0.); 
-	else         vMET.SetPtEtaPhiM(PuppiMET_Type1_pt, 0., PuppiMET_Type1_phi, 0.); 
+	      if(IsxyCorr) vMET.SetPtEtaPhiM(PuppiMET_Type1_PhiCor_pt, 0., PuppiMET_Type1_PhiCor_phi, 0.); 
+	      else         vMET.SetPtEtaPhiM(PuppiMET_Type1_pt, 0., PuppiMET_Type1_phi, 0.); 
       }
       else{
-	if(IsxyCorr)  vMET.SetPtEtaPhiM(PuppiMET_Type1_PhiCor_pt, 0., PuppiMET_Type1_PhiCor_phi, 0.);
-	else         vMET.SetPtEtaPhiM(PuppiMET_Type1_pt_shifts->at(IdxSyst), 0.,  PuppiMET_Type1_phi_shifts->at(IdxSyst), 0.); 
+	      if(IsxyCorr)  vMET.SetPtEtaPhiM(PuppiMET_Type1_PhiCor_pt, 0., PuppiMET_Type1_PhiCor_phi, 0.);
+	      else          vMET.SetPtEtaPhiM(PuppiMET_Type1_pt_shifts->at(IdxSyst), 0.,  PuppiMET_Type1_phi_shifts->at(IdxSyst), 0.); 
       }
     }
-    
   }
   else{
     if(IsType1){
       if( (!ApplySyst) or ( IdxSyst>=0 && (!isfinite(pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst))) ) ){
-	if(IsxyCorr) vMET.SetPtEtaPhiM(pfMET_Type1_PhiCor_pt, 0., pfMET_Type1_PhiCor_phi, 0.); 
-	else         vMET.SetPtEtaPhiM(pfMET_Type1_pt, 0., pfMET_Type1_phi, 0.); 
+	      if(IsxyCorr) vMET.SetPtEtaPhiM(pfMET_Type1_PhiCor_pt, 0., pfMET_Type1_PhiCor_phi, 0.); 
+	      else         vMET.SetPtEtaPhiM(pfMET_Type1_pt, 0., pfMET_Type1_phi, 0.); 
       }
       else{
-	if(IsxyCorr) vMET.SetPtEtaPhiM(pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst), 0., pfMET_Type1_PhiCor_phi_shifts->at(IdxSyst), 0.); 
-	else         vMET.SetPtEtaPhiM(pfMET_Type1_pt_shifts->at(IdxSyst), 0., pfMET_Type1_phi_shifts->at(IdxSyst), 0.); 
+	      if(IsxyCorr) vMET.SetPtEtaPhiM(pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst), 0., pfMET_Type1_PhiCor_phi_shifts->at(IdxSyst), 0.); 
+	      else         vMET.SetPtEtaPhiM(pfMET_Type1_pt_shifts->at(IdxSyst), 0., pfMET_Type1_phi_shifts->at(IdxSyst), 0.); 
       }
     }
-
   }
 
   if (!IsJetSmear && param.syst_ == AnalyzerParameter::Central) return vMET;
@@ -2332,7 +2320,7 @@ Particle WRTau_Core::GetvMET(TString METType, AnalyzerParameter param){
 
   if(param.syst_ == AnalyzerParameter::Central) return vMETSmeared;
   double MET = vMETSmeared.Pt();
-  double METPhi = vMETSmeared.Pt();
+  double METPhi = vMETSmeared.Phi();
   //if(param.syst_ == AnalyzerParameter::JetResUp ) CorrectedMETJER(1, GetJets(param, 10., 5.), GetFatJets(param, 200., 5.), MET,METPhi);
   //if(param.syst_ == AnalyzerParameter::JetResDown) CorrectedMETJER(-11, GetJets(param, 10., 5.), GetFatJets(param, 200., 5.), MET,METPhi);
   // Write CorrectedMETXXhttps://github.com/jedori0228/LQanalyzer/blob/CatAnalyzer_13TeV_v8-0-7.36_HNAnalyzer/LQAnalysis/Analyzers/src/AnalyzerCore.cc#L4826
@@ -2618,80 +2606,276 @@ std::pair<double,double> WRTau_Core::METXYCorr_Met_MetPhi(double uncormet, doubl
 
 }
 
+Particle WRTau_Core::GetvCorrMET(TString METType, AnalyzerParameter param, Particle METUncorr){
 
-
-
-/*std::map<WRTau_Core::SearchRegion,std::pair<int,int>> WRTau_Core::getGenLevelChannelMap(const std::vector<Gen>& gens){
-
-  bool _isTauChannel(false);
-  bool _isGenTauHTauH(false);
-  bool _isGenTauHTauEl(false);
-  bool _isGenTauHTauMu(false);
-  bool _isGenTauElTauH(false);
-  bool _isGenTauMuTauH(false);
-  bool _isGenTauLTauL(false);
+  //// THIS FUNCTION UPDATES MET BASED ON JET Smearing / muon rocc  
+  //// Follows https://twiki.cern.ch/twiki/bin/view/CMS/MissingETRun2Corrections                                                                                                                                                                                               
+  //// Jets in simulation can be smeared (as shown in JetResolution twiki) to achieve better agreement with data. This is done by default in GetAllJets().....  This correction is a propagation of the smeared such jets to MET. The Smeared MET correction replaces the vector sum of transverse momenta of particles which can be clustered as jets with the vector sum of the transverse momenta of the jets to which smearing is applied.                                                                                                                                                               
+  //// Jets pt > 15 GeV not near PF muon OR electrons                                                                                                                                                                                                                                                                         
   
-  for(const auto &gen : gens){
-    if(gen.PID()==9900016){
-      _isTauChannel = true;
-      break;
+  bool SmearJets  = METType.Contains("SmearJet");
+  bool SmearMuons = METType.Contains("SmearMuon");
+  bool SmearBoth  = !SmearJets &&  !SmearMuons;
+  
+  if(SmearBoth || SmearJets) {
+    
+    std::vector<Jet>  Jets        = SelectJets(param,param.Jet_ID,40,2.4);
+    std::vector<Muon> loose_muons = GetMuons("POGLoose",     10.,  2.4);
+    
+    std::vector<Jet> jets_corr;
+    for(auto ij : Jets){
+      
+      if(ij.Pt() < 15.) continue;
+      if(fabs(ij.Eta()) > 2.5) continue;
+      
+      bool overlap_mu(false);
+      for(auto imu : loose_muons) {
+        if(imu.DeltaR(ij) < 0.4) {
+	        overlap_mu=true;
+	        break;
+       }
+      }
+
+      if(overlap_mu) continue;
+      
+      double jetEMFrac = ij.ChargedEmEnergyFraction() + ij.NeutralEmEnergyFraction();
+      if (jetEMFrac > 0.9) continue;
+      jets_corr.push_back(ij);
+    }
+   
+   Particle UpdatedMET = UpdateMETSmearedJet(METUncorr,jets_corr);
+   if(SmearJets) return UpdatedMET;
+
+   std::vector<Muon> tight_muons = GetMuons(param.Muon_Tight_ID, 20.,  2.4);
+   Particle UpdatedMET2 = UpdateMET(UpdatedMET,tight_muons);
+   
+   return UpdatedMET2;
+
+  }
+  else if(SmearMuons){
+    
+    std::vector<Muon> tight_muons = GetMuons(param.Muon_Tight_ID, 20.,  2.4);
+    Particle UpdatedMET = UpdateMET(METUncorr,tight_muons);
+   
+    return UpdatedMET;
+
+  }
+
+ return METUncorr;
+
+}
+
+
+Particle WRTau_Core::GetvMET(TString METType, AnalyzerParameter param,bool PropSmearing){
+
+  bool ApplySyst      = (!IsDATA) && (param.syst_ != AnalyzerParameter::Central);
+
+  Particle vStandMET = GetMiniAODvMET(METType);
+  if(!ApplySyst && !PropSmearing) return vStandMET;  //// This function calls central values stored in MINMIAOD OR POG COrrected                                                                                                                                                                                              
+  if(!ApplySyst && PropSmearing)  return GetvCorrMET(METType,param,vStandMET);
+
+  bool UsePuppi     = METType.Contains("Puppi");
+  bool IsxyCorr     = METType.Contains("xyCorr");
+
+  int IdxSyst = -1;
+  if(param.syst_ == AnalyzerParameter::METUnclUp)     IdxSyst = 10;
+  if(param.syst_ == AnalyzerParameter::METUnclDown)   IdxSyst = 11;
+  if(param.syst_ == AnalyzerParameter::JetResUp)      IdxSyst = 0;
+  if(param.syst_ == AnalyzerParameter::JetResDown)    IdxSyst = 1;
+  if(param.syst_ == AnalyzerParameter::JetEnUp)       IdxSyst = 2;
+  if(param.syst_ == AnalyzerParameter::JetEnDown)     IdxSyst = 3;
+  if(param.syst_ == AnalyzerParameter::MuonEnUp)      IdxSyst = 4;
+  if(param.syst_ == AnalyzerParameter::MuonEnDown)    IdxSyst = 5;
+  if(param.syst_ == AnalyzerParameter::ElectronEnUp)  IdxSyst = 6;
+  if(param.syst_ == AnalyzerParameter::ElectronEnDown)IdxSyst = 7;
+
+  Particle vMETSyst;
+
+  if(IdxSyst>=0 && IdxSyst < 8){
+
+    if(UsePuppi){
+      if( isfinite(PuppiMET_Type1_pt_shifts->at(IdxSyst)))  vMETSyst = UpdateMETSyst(PuppiMET_Type1_pt, PuppiMET_Type1_phi, PuppiMET_Type1_pt_shifts->at(IdxSyst),PuppiMET_Type1_phi_shifts->at(IdxSyst), vStandMET);
+      else return vStandMET;
+    }
+    else{
+      if(isfinite(pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst))){
+        if(IsxyCorr) vMETSyst = UpdateMETSyst(pfMET_Type1_PhiCor_pt, pfMET_Type1_PhiCor_phi, pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst), pfMET_Type1_PhiCor_phi_shifts->at(IdxSyst), vStandMET);
+        else         vMETSyst = UpdateMETSyst(pfMET_Type1_pt, pfMET_Type1_phi, pfMET_Type1_pt_shifts->at(IdxSyst), pfMET_Type1_phi_shifts->at(IdxSyst), vStandMET);
+      }
+      else return vStandMET;
     }
   }
 
-  int nElTauFromN(0),nMuTauFromN(0);
-  int nElTauFromWR(0),nMuTauFromWR(0);
+  return vMETSyst;
+}
 
-  if(_isTauChannel){
 
-    for(unsigned int i=2; i<gens.size();i++){
 
-      Gen gen = gens.at(i);
-      if(fabs(gen.PID())==11 || fabs(gen.PID())==13){
 
-        std::vector<int> LeptonHistIdx = TrackGenSelfHistory(gen,gens);
-        if(LeptonHistIdx[1]!=-1){
-           
-          Gen LeptonMother = gens.at(LeptonHistIdx[1]);
+Particle WRTau_Core::GetvMET(TString METType, AnalyzerParameter param,
+                                 std::vector<Jet> jets, std::vector<FatJet> fatjets,
+                                 std::vector<Muon> muons, std::vector<Electron> electrons,
+                                 bool PropSmearing){
 
-          if(fabs(LeptonMother.PID())==15){
+  ////// This function is used to get MET both central and systematic                                                                                                                                                                                                                                                         
 
-            std::vector<int> TauHistIdx = TrackGenSelfHistory(LeptonMother,gens);
-            if(TauHistIdx[1]!=-1){
+  bool ApplySyst      = (!IsDATA) && (param.syst_ != AnalyzerParameter::Central);
 
-              Gen TauMother = gens.at(TauHistIdx[1]);
+  Particle vStandMET = GetMiniAODvMET(METType);
+  if(!ApplySyst && !PropSmearing) return vStandMET;  //// This function calls central values stored in MINMIAOD OR POG COrrected                                                                                                                                                                                              
+  if(!ApplySyst && PropSmearing)  return GetvCorrMET(METType,param,vStandMET);
 
-              if(fabs(TauMother.PID())==9900016 && fabs(gen.PID())==11)    nElTauFromN  += 1;
-              if(fabs(TauMother.PID())==9900016 && fabs(gen.PID())==13)    nMuTauFromN  += 1;
-              if(fabs(TauMother.PID())==34 && fabs(gen.PID())==11)         nElTauFromWR += 1;
-              if(fabs(TauMother.PID())==34 && fabs(gen.PID())==13)         nMuTauFromWR += 1;
+  bool UsePuppi     = METType.Contains("Puppi");
+  bool IsxyCorr     = METType.Contains("xyCorr");
 
-            }
-          }
-        }
+  int IdxSyst = -1;
+  if(param.syst_ == AnalyzerParameter::METUnclUp)             IdxSyst = 10;
+  if(param.syst_ == AnalyzerParameter::METUnclDown)           IdxSyst = 11;
+  if(param.syst_ == AnalyzerParameter::JetResUp)              IdxSyst = 0;
+  if(param.syst_ == AnalyzerParameter::JetResDown)            IdxSyst = 1;
+  if(param.syst_ == AnalyzerParameter::JetEnUp)               IdxSyst = 2;
+  if(param.syst_ == AnalyzerParameter::JetEnDown)             IdxSyst = 3;
+  if(param.syst_ == AnalyzerParameter::MuonEnUp)              IdxSyst = 4;
+  if(param.syst_ == AnalyzerParameter::MuonEnDown)            IdxSyst = 5;
+  if(param.syst_ == AnalyzerParameter::ElectronEnUp)          IdxSyst = 6;
+  if(param.syst_ == AnalyzerParameter::ElectronEnDown)        IdxSyst = 7;
+  // syst source not defined in CMSSW
+  if(param.syst_ == AnalyzerParameter::JetMassUp)             IdxSyst = 20;
+  if(param.syst_ == AnalyzerParameter::JetMassDown)           IdxSyst = 21;
+  if(param.syst_ == AnalyzerParameter::JetMassSmearUp)        IdxSyst = 22;
+  if(param.syst_ == AnalyzerParameter::JetMassSmearDown)      IdxSyst = 23;
+  if(param.syst_ == AnalyzerParameter::MuonRecoSFUp)          IdxSyst = 24;
+  if(param.syst_ == AnalyzerParameter::MuonRecoSFDown)        IdxSyst = 25;
+  if(param.syst_ == AnalyzerParameter::MuonIDSFUp)            IdxSyst = 26;
+  if(param.syst_ == AnalyzerParameter::MuonIDSFDown)          IdxSyst = 27;
+  if(param.syst_ == AnalyzerParameter::MuonISOSFUp)           IdxSyst = 28;
+  if(param.syst_ == AnalyzerParameter::MuonISOSFDown)         IdxSyst = 29;
+  if(param.syst_ == AnalyzerParameter::TauIDSFSystUp)         IdxSyst = 30;
+  if(param.syst_ == AnalyzerParameter::TauIDSFSystDown)       IdxSyst = 31;
+  if(param.syst_ == AnalyzerParameter::ElectronRecoSFUp)      IdxSyst = 32;
+  if(param.syst_ == AnalyzerParameter::ElectronRecoSFDown)    IdxSyst = 33;
+  if(param.syst_ == AnalyzerParameter::ElectronResUp)         IdxSyst = 34;
+  if(param.syst_ == AnalyzerParameter::ElectronResDown)       IdxSyst = 35;
+  if(param.syst_ == AnalyzerParameter::ElectronIDSFUp)        IdxSyst = 36;
+  if(param.syst_ == AnalyzerParameter::ElectronIDSFDown)      IdxSyst = 37;
+  if(param.syst_ == AnalyzerParameter::TauIDSFStatUp)         IdxSyst = 38;
+  if(param.syst_ == AnalyzerParameter::TauIDSFStatDown)       IdxSyst = 39;
+  if(param.syst_ == AnalyzerParameter::BTagSFHTagUp)          IdxSyst = 40;
+  if(param.syst_ == AnalyzerParameter::BTagSFHTagDown)        IdxSyst = 41;
+  if(param.syst_ == AnalyzerParameter::BTagSFLTagUp)          IdxSyst = 42;
+  if(param.syst_ == AnalyzerParameter::BTagSFLTagDown)        IdxSyst = 43;
+  if(param.syst_ == AnalyzerParameter::PrefireUp)             IdxSyst = 44;
+  if(param.syst_ == AnalyzerParameter::PrefireDown)           IdxSyst = 45;
+  if(param.syst_ == AnalyzerParameter::PUUp)                  IdxSyst = 46;
+  if(param.syst_ == AnalyzerParameter::PUDown)                IdxSyst = 47;
+  if(param.syst_ == AnalyzerParameter::TauIDSFExtUp)          IdxSyst = 48;
+  if(param.syst_ == AnalyzerParameter::TauIDSFExtDown)        IdxSyst = 49;
+  if(param.syst_ == AnalyzerParameter::TauTriggerSFUp)        IdxSyst = 48;
+  if(param.syst_ == AnalyzerParameter::TauTriggerSFDown)      IdxSyst = 49;
+
+  Particle vMETSyst = PropSmearing ? GetvCorrMET(METType,param,vStandMET) : vStandMET;
+
+  if(IdxSyst >= 20 )  vMETSyst = UpdateMETSyst(param, vStandMET, jets, fatjets, muons, electrons);
+  else if(IdxSyst>=0){
+
+    if(UsePuppi) {
+      if(isfinite(PuppiMET_Type1_pt_shifts->at(IdxSyst))){
+        vMETSyst = UpdateMETSyst(PuppiMET_Type1_pt, PuppiMET_Type1_phi, PuppiMET_Type1_pt_shifts->at(IdxSyst),PuppiMET_Type1_phi_shifts->at(IdxSyst), vStandMET);
+      }
+    }
+    else {
+      if(isfinite(pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst))){
+        if(IsxyCorr) vMETSyst = UpdateMETSyst(pfMET_Type1_PhiCor_pt, pfMET_Type1_PhiCor_phi, pfMET_Type1_PhiCor_pt_shifts->at(IdxSyst), pfMET_Type1_PhiCor_phi_shifts->at(IdxSyst), vStandMET);
+        else         vMETSyst = UpdateMETSyst(pfMET_Type1_pt, pfMET_Type1_phi, pfMET_Type1_pt_shifts->at(IdxSyst), pfMET_Type1_phi_shifts->at(IdxSyst), vStandMET);
       }
     }
   }
+  else{
+    cout << "[WRTau_Core::GetvMET] There is no matched syst type;" << endl;
+    cout << "[WRTau_Core::GetvMET] Current syst index : " << IdxSyst << endl;
+    exit(EXIT_FAILURE);
+  }
 
-  _isGenTauHTauH  = ((nElTauFromWR + nMuTauFromWR) == 0 ) && ((nElTauFromN + nMuTauFromN) == 0 );
-  _isGenTauHTauEl = ((nElTauFromWR + nMuTauFromWR) == 0 ) && (nElTauFromN == 1);
-  _isGenTauHTauMu = ((nElTauFromWR + nMuTauFromWR) == 0 ) && (nMuTauFromN == 1);
-  _isGenTauElTauH = (nElTauFromWR == 1) && ((nElTauFromN + nMuTauFromN) == 0 );
-  _isGenTauMuTauH = (nMuTauFromWR == 1) && ((nElTauFromN + nMuTauFromN) == 0 );
-  _isGenTauLTauL  = ((nElTauFromWR  +nMuTauFromWR) != 0 ) && ((nElTauFromN + nMuTauFromN) != 0 );
+  return vMETSyst;
 
-  map<WRTau_Core::SearchRegion,bool> m_region = {
-    {WRTau_Core::GenDebug,!_isTauChannel},  // debug flag
-    {WRTau_Core::GenTauHTauH,_isGenTauHTauH},
-    {WRTau_Core::GenTauHTauEl,_isGenTauHTauEl},
-    {WRTau_Core::GenTauHTauMu,_isGenTauHTauMu},
-    {WRTau_Core::GenTauElTauH,_isGenTauElTauH},
-    {WRTau_Core::GenTauMuTauH,_isGenTauMuTauH},
-    {WRTau_Core::GenTauLTauL,_isGenTauLTauL}
-  };
+}
 
-  return m_region;
+map<TString, Particle> WRTau_Core::METMap( AnalyzerParameter param){
 
-}*/
+  vector<TString> vmets = {"T1xyCorr",
+                           "PuppiT1xyCorr",
+                           "T1",
+                           "PuppiT1",
+                           "PuppiT1xyULCorr",
+                           "T1xyULCorr"};
+
+
+  Particle METv      = GetMiniAODvMET("T1xyCorr");
+  Particle PuppiMETv = GetMiniAODvMET("PuppiT1xyCorr");
+  Particle METvNoPhi = GetMiniAODvMET("T1");
+  Particle PuppiMETvNoPhi = GetMiniAODvMET("PuppiT1");
+  Particle PuppiMETvULPhiCorr = GetMiniAODvMET("PuppiT1xyULCorr");
+  Particle METvULPhiCorr = GetMiniAODvMET("T1xyULCorr");
+  map<TString, Particle> mapmet;
+  for(auto i : vmets) {
+    mapmet[i] = GetvMET(i,param);
+    mapmet[i+"_propsmear"] = GetvMET(i,param,true);
+    mapmet[i+"_SmearJet_propsmear"] = GetvMET(i+"SmearJet",param,true);
+    mapmet[i+"_SmearMuon_propsmear"] = GetvMET(i+"SmearMuon",param,true);
+  }
+
+  return mapmet;
+}
+
+Particle WRTau_Core::GetMiniAODvMET(TString METType){
+  //PuppiT1xyULCorr
+  bool IsType1      = METType.Contains("T1");
+  bool IsxyCorr     = METType.Contains("xyCorr");
+  bool UsePuppi     = METType.Contains("Puppi");
+  bool IsFixxyCorr  = METType.Contains("xyULCorr");
+
+  //METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)r                                                          
+
+  
+  double Met_pt(0.), Met_phi(0.);
+
+  Particle vMET;
+
+  if(UsePuppi && IsType1  && IsxyCorr)  { Met_pt = PuppiMET_Type1_PhiCor_pt ; Met_phi = PuppiMET_Type1_PhiCor_phi;}
+  if(UsePuppi && IsType1  && !IsxyCorr) { Met_pt = PuppiMET_Type1_pt;         Met_phi = PuppiMET_Type1_phi;}
+  if(UsePuppi && !IsType1 && !IsxyCorr) { Met_pt = PuppiMET_pt;               Met_phi = PuppiMET_phi;}
+
+  if(!UsePuppi&& IsType1  && IsxyCorr)  { Met_pt = pfMET_Type1_PhiCor_pt;     Met_phi = pfMET_Type1_PhiCor_phi;}
+  if(!UsePuppi&& IsType1  && !IsxyCorr) { Met_pt = pfMET_Type1_pt;            Met_phi = pfMET_Type1_phi;}
+  if(!UsePuppi&& !IsType1 && !IsxyCorr) { Met_pt = pfMET_pt;                  Met_phi = pfMET_phi;}
+
+  if(IsFixxyCorr) {
+    TString Year= "2016";
+    if(DataYear==2017) Year= "2017";
+    if(DataYear==2018) Year= "2018";
+    std::pair<double,double> METPair = METXYCorr_Met_MetPhi(Met_pt, Met_phi, run, Year, !IsData, nPV, true,UsePuppi);
+    Met_pt=METPair.first;
+    Met_phi=METPair.second;
+  }
+
+
+  vMET.SetPtEtaPhiM(Met_pt, 0., Met_phi, 0.);
+  return vMET;
+
+}
+
+double WRTau_Core::GetTauTriggerSF(const int syst){
+  
+  // https://twiki.cern.ch/twiki/bin/view/CMS/TauTrigger#Run_II_Trigger_Scale_Factors
+  // Flat SF given for single highpt hadronic tau triggers
+  
+  if(DataYear == 2016) return 0.88 + syst * 0.08 ;
+  if(DataYear == 2017) return 1.08 + syst * 0.10 ;
+  if(DataYear == 2018) return 0.87 + syst * 0.11 ;
+  
+  return 1.0;
+
+}
 
 
 WRTau_Core::WRTau_Core(){

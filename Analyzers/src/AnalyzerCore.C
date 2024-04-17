@@ -106,7 +106,7 @@ std::vector<Muon> AnalyzerCore::GetAllMuons(){
     mu.SetCharge(muon_charge->at(i));
     mu.SetMiniAODPt(muon_pt->at(i));
     mu.SetMiniAODTunePPt(muon_TuneP_pt->at(i));
-
+    mu.SetUncorrectedPt(muon_pt->at(i));
     double rc = muon_roch_sf->at(i);
     double rc_err = muon_roch_sf_up->at(i)-rc;
     //==== For the Rochester corection, up and down err are the same
@@ -251,7 +251,7 @@ std::vector<Electron> AnalyzerCore::GetAllElectrons(){
     double el_theta = el.Theta();
     double el_pt = electron_Energy->at(i) * TMath::Sin( el_theta );
     el.SetPtEtaPhiE( el_pt, electron_eta->at(i), electron_phi->at(i), electron_Energy->at(i));
-
+    el.SetUncorrectedPt(electron_EnergyUnCorr->at(i) * TMath::Sin( el_theta ));
     el.SetUncorrE(electron_EnergyUnCorr->at(i));
     el.SetSC(electron_scEta->at(i), electron_scPhi->at(i), electron_scEnergy->at(i));
     el.SetCharge(electron_charge->at(i));
@@ -611,6 +611,9 @@ std::vector<Jet> AnalyzerCore::GetAllJets(){
     Jet jet;
     jet.SetPtEtaPhiM(jet_pt->at(i), jet_eta->at(i), jet_phi->at(i), jet_m->at(i));
 
+    jet.SetPxUnSmeared(jet.Px());
+    jet.SetPyUnSmeared(jet.Py());
+
     //==== Jet energy up and down are 1.xx or 0.99, not energy
     jet.SetEnShift( jet_shiftedEnUp->at(i), jet_shiftedEnDown->at(i) );
     if(!IsDATA){
@@ -751,7 +754,8 @@ std::vector<FatJet> AnalyzerCore::GetAllFatJets(){
       jet.SetResShift( fatjet_smearedResUp->at(i)/fatjet_smearedRes->at(i), fatjet_smearedResDown->at(i)/fatjet_smearedRes->at(i) );
     }
     jet.SetCharge(fatjet_charge->at(i));
-
+    jet.SetPxUnSmeared(jet.Px());
+    jet.SetPyUnSmeared(jet.Py());
     jet.SetArea(fatjet_area->at(i));
     jet.SetGenFlavours(fatjet_partonFlavour->at(i), fatjet_hadronFlavour->at(i));
     std::vector<double> tvs = {
@@ -2681,16 +2685,16 @@ void AnalyzerCore::FillLeptonPlots(std::vector<Lepton *> leps, TString this_regi
     FillHist(this_region+"/Lepton_"+this_itoa+"_Pt", lep->Pt(), weight, 1000, 0., 1000.);
     FillHist(this_region+"/Lepton_"+this_itoa+"_Eta", lep->Eta(), weight, 60, -3., 3.);
     FillHist(this_region+"/Lepton_"+this_itoa+"_RelIso", lep->RelIso(), weight, 100, 0., 1.);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_MiniRelIso", lep->MiniRelIso(), weight, 100, 0., 1.);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_MiniRelIso", lep->MiniRelIso(), weight, 100, 0., 1.);
 
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dXY", fabs(lep->dXY()), weight, 500, 0., 0.05);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dXYSig", fabs(lep->dXY()/lep->dXYerr()), weight, 100, 0., 10);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dZ", fabs(lep->dZ()), weight, 500, 0., 0.5);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_dZSig", fabs(lep->dZ()/lep->dZerr()), weight, 100, 0., 10);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
-    FillHist(this_region+"/Lepton_"+this_itoa+"_IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_dXY", fabs(lep->dXY()), weight, 500, 0., 0.05);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_dXYSig", fabs(lep->dXY()/lep->dXYerr()), weight, 100, 0., 10);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_dZ", fabs(lep->dZ()), weight, 500, 0., 0.5);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_dZSig", fabs(lep->dZ()/lep->dZerr()), weight, 100, 0., 10);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_IP3D", fabs(lep->IP3D()), weight, 500, 0., 0.5);
+    //FillHist(this_region+"/Lepton_"+this_itoa+"_IP3DSig", fabs(lep->IP3D()/lep->IP3Derr()), weight, 100, 0., 10);
 
-    if(lep->LeptonFlavour()==Lepton::ELECTRON){
+    /*if(lep->LeptonFlavour()==Lepton::ELECTRON){
       Electron *el = (Electron *)lep;
       FillHist(this_region+"/Lepton_"+this_itoa+"_MVANoIso", el->MVANoIso(), weight, 200, -1., 1.);
     }
@@ -2702,7 +2706,7 @@ void AnalyzerCore::FillLeptonPlots(std::vector<Lepton *> leps, TString this_regi
     else{
       cout << "[AnalyzerCore::FillLeptonPlots] lepton flavour wrong.." << endl;
       exit(EXIT_FAILURE);
-    }
+    }*/
 
 
   }
@@ -2731,9 +2735,9 @@ void AnalyzerCore::FillJetPlots(std::vector<Jet> jets, std::vector<FatJet> fatje
       //cout << "[AnalyzerCore::FillJetPlots] FatJet"+this_itoa+"_LSF = " << fatjets.at(i).LSF()  << " @ "+ this_region << endl;
       //cout << "[AnalyzerCore::FillJetPlots] FatJet"+this_itoa+"_pt = " << fatjets.at(i).Pt()  << " @ "+ this_region << endl;
       //cout << "[AnalyzerCore::FillJetPlots] FatJet"+this_itoa+"_eta = " << fatjets.at(i).Eta()  << " @ "+ this_region << endl;
-      FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau21", fatjets.at(i).PuppiTau2()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
-      FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
-      FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
+      //FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau21", fatjets.at(i).PuppiTau2()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
+      //FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau31", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau1(), weight, 100, 0., 1.);
+      //FillHist(this_region+"/FatJet_"+this_itoa+"_PuppiTau32", fatjets.at(i).PuppiTau3()/fatjets.at(i).PuppiTau2(), weight, 100, 0., 1.);
     }
   }
 
@@ -3527,3 +3531,110 @@ bool AnalyzerCore::IsFinalPhotonSt23(std::vector<Gen>& TruthColl){
   //b) Daughter particle of status-23 photon is found. Thus status-23 photon is not the last history.
 }
 
+
+Particle AnalyzerCore::UpdateMETSyst(AnalyzerParameter param, const Particle& METv, std::vector<Jet> jets, std::vector<FatJet> fatjets, std::vector<Muon> muons, std::vector<Electron> electrons){
+
+  double met_x = METv.Px();
+  double met_y = METv.Py();
+
+  double px_orig(0.), py_orig(0.),px_corrected(0.), py_corrected(0.);
+
+  if(param.syst_ == AnalyzerParameter::JetResUp ||
+     param.syst_ == AnalyzerParameter::JetResDown ||
+     param.syst_ == AnalyzerParameter::JetEnUp ||
+     param.syst_ == AnalyzerParameter::JetEnDown){
+
+    for(unsigned int i=0; i<jets.size(); i++){
+      px_orig += jets.at(i).PxUnSmeared();
+      py_orig += jets.at(i).PyUnSmeared();
+      px_corrected += jets.at(i).Px();
+      py_corrected += jets.at(i).Py();
+    }
+  }
+
+  if(param.syst_ == AnalyzerParameter::JetResUp ||
+     param.syst_ == AnalyzerParameter::JetResDown ||
+     param.syst_ == AnalyzerParameter::JetEnUp ||
+     param.syst_ == AnalyzerParameter::JetEnDown ||
+     param.syst_ == AnalyzerParameter::JetMassSmearUp ||
+     param.syst_ == AnalyzerParameter::JetMassSmearDown){
+
+    for(unsigned int i=0; i<fatjets.size(); i++){
+      px_orig += fatjets.at(i).PxUnSmeared();
+      py_orig += fatjets.at(i).PyUnSmeared();
+      px_corrected += fatjets.at(i).Px();
+      py_corrected += fatjets.at(i).Py();
+    }
+  }
+
+  if(param.syst_ ==AnalyzerParameter::MuonEnUp || param.syst_ ==AnalyzerParameter::MuonEnDown){
+    for(unsigned int i=0; i<muons.size(); i++){
+      px_orig += muons.at(i).UncorrectedPt() * TMath::Cos(muons.at(i).Phi());
+      py_orig += muons.at(i).UncorrectedPt() * TMath::Sin(muons.at(i).Phi());
+      px_corrected += muons.at(i).Px();
+      py_corrected += muons.at(i).Py();
+    }
+  }
+  if(param.syst_ ==AnalyzerParameter::ElectronEnUp || param.syst_ ==AnalyzerParameter::ElectronEnDown ||
+     param.syst_ ==AnalyzerParameter::ElectronResUp || param.syst_ ==AnalyzerParameter::ElectronResDown){
+    for(unsigned int i=0; i<electrons.size(); i++){
+      px_orig += electrons.at(i).UncorrectedPt() * TMath::Cos(electrons.at(i).Phi());
+      py_orig += electrons.at(i).UncorrectedPt() * TMath::Sin(electrons.at(i).Phi());
+      px_corrected += electrons.at(i).Px();
+      py_corrected += electrons.at(i).Py();
+    }
+  }
+
+  met_x = met_x + px_orig - px_corrected;
+  met_y = met_y + py_orig - py_corrected;
+
+  Particle METout;
+  METout.SetPxPyPzE(met_x,met_y,0,sqrt(met_x*met_x+met_y*met_y));
+  return METout;
+
+}
+
+Particle AnalyzerCore::UpdateMETSyst(double met_pt, double met_phi, double met_shift_pt, double met_shift_phi, const Particle& METv){
+
+  double met_px = met_pt*TMath::Cos(met_phi);
+  double met_py = met_pt*TMath::Sin(met_phi);
+  double met_shift_px = met_shift_pt*TMath::Cos(met_shift_phi);
+  double met_shift_py = met_shift_pt*TMath::Sin(met_shift_phi);
+
+  double met_x = METv.Px();
+  double met_y = METv.Py();
+
+  met_x = met_x + met_shift_px - met_px;
+  met_y = met_y + met_shift_py - met_py;
+
+  Particle METout;
+  METout.SetPxPyPzE(met_x,met_y,0,sqrt(met_x*met_x+met_y*met_y));
+  return METout;
+
+
+}
+
+
+std::vector<Jet> AnalyzerCore::SelectJets(AnalyzerParameter param,TString id, double ptmin, double fetamax){
+
+  std::vector<Jet> jets_uncorr = All_Jets;
+  std::vector<Jet> jets;
+  if(param.syst_ == AnalyzerParameter::JetEnUp)            jets    = ScaleJets( jets_uncorr, +1 );
+  else if(param.syst_ == AnalyzerParameter::JetEnDown)     jets    = ScaleJets( jets_uncorr, -1 );
+  else if(param.syst_ == AnalyzerParameter::JetResUp)      jets    = SmearJets(jets_uncorr, +1 );
+  else if(param.syst_ == AnalyzerParameter::JetResDown)    jets    = SmearJets(jets_uncorr, -1 );
+  else jets =jets_uncorr;
+
+
+  std::vector<Jet> out;
+  for(unsigned int i=0; i<jets.size(); i++){
+    if(!( jets.at(i).Pt()> ptmin ))            continue;
+    if(!( fabs(jets.at(i).Eta() )< fetamax ))  continue;
+    if(!( jets.at(i).PassID( id) ))            continue;
+    out.push_back( jets.at(i) );
+  }
+
+  std::sort(out.begin(), out.end(), PtComparing);
+
+  return out;
+}

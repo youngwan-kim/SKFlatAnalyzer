@@ -34,6 +34,7 @@ public:
 
   int SystDir_PU,WriteOutVerbose;
 
+  /*
   enum Syst{
     Central,
     JetResUp, JetResDown,
@@ -57,6 +58,33 @@ public:
     CFUp,CFDown,
     FRUp,FRDown,
     PrefireUp,PrefireDown,
+    PUUp,PUDown,
+    JetPUIDUp, JetPUIDDown,
+    NSyst
+  };*/
+  enum Syst{
+    Central,
+    JetMassSmearUp,JetMassSmearDown,
+    JetResUp, JetResDown,
+    JetEnUp, JetEnDown,
+    JetMassUp,JetMassDown,
+    MuonRecoSFUp,MuonRecoSFDown,
+    MuonEnUp,MuonEnDown,
+    MuonIDSFUp,MuonIDSFDown,
+    MuonISOSFUp,MuonISOSFDown,
+    ElectronRecoSFUp,ElectronRecoSFDown,
+    ElectronResUp,ElectronResDown,
+    ElectronEnUp,ElectronEnDown,
+    ElectronIDSFUp,ElectronIDSFDown,
+    TauIDSFSystUp, TauIDSFSystDown,
+    TauIDSFStatUp, TauIDSFStatDown,
+    TauIDSFExtUp, TauIDSFExtDown,
+    TauTriggerSFUp,TauTriggerSFDown,
+    BTagSFHTagUp,BTagSFHTagDown,
+    BTagSFLTagUp,BTagSFLTagDown,
+    METUnclUp,METUnclDown,
+    PrefireUp,PrefireDown,
+    FRUp,FRDown,
     PUUp,PUDown,
     JetPUIDUp, JetPUIDDown,
     NSyst

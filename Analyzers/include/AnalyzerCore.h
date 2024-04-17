@@ -126,7 +126,7 @@ public:
   std::vector<Tau> SelectTaus_varWP(const std::vector<Tau>& taus, int vJet,int vEl,int vMu, double ptmin, double fetamax);
 
   std::vector<Jet> SelectJets(const std::vector<Jet>& jets, TString id, double ptmin, double fetamax);
-
+  std::vector<Jet> SelectJets(AnalyzerParameter param,TString id, double ptmin, double fetamax);
   std::vector<FatJet> SelectFatJets(const std::vector<FatJet>& jets, TString id, double ptmin, double fetamax);
 
   //==================
@@ -223,7 +223,9 @@ public:
   std::vector<FatJet> FatJetsVetoLeptonInside(const std::vector<FatJet>& jets, const std::vector<Lepton *> leps, double dR=0.8);
   std::vector<Jet> JetsAwayFromPhoton(const std::vector<Jet>& jets, const std::vector<Photon>& photons, double mindr);
   Particle AddFatJetAndLepton(const FatJet& fatjet, const Lepton& lep);
-  
+  Particle UpdateMETSyst(AnalyzerParameter param, const Particle& METv, std::vector<Jet> jets, std::vector<FatJet> fatjets, std::vector<Muon> muons, std::vector<Electron> electrons);
+  Particle UpdateMETSyst(double met_pt, double met_phi, double met_shift_pt, double met_shift_phi, const Particle& METv);
+
   bool IsPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens);
   bool IsNonPromptLepton(const Lepton& lepton, const std::vector<Gen>& gens);
 

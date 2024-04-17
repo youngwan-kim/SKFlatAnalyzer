@@ -12,6 +12,7 @@ Lepton::Lepton() : Particle() {
   j_RelIso = -999.;
   j_MiniRelIso = -999.;
   j_ptcone = -999.;
+  j_unCorrPt = -999.;
   j_LeptonFlavour = NONE;
   j_LeptonType = -999;
   j_LeptonIsCF = false;
@@ -19,6 +20,10 @@ Lepton::Lepton() : Particle() {
 
 Lepton::~Lepton(){
 
+}
+
+void Lepton::SetUncorrectedPt(double uncorrPt){
+  j_unCorrPt = uncorrPt;
 }
 
 void Lepton::SetdXY(double dXY, double dXYerr){

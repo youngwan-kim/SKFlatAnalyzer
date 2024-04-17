@@ -19,6 +19,11 @@ public:
   double LSF() const;
   double LSF_PID() const;
 
+  void SetPxUnSmeared(double px);
+  void SetPyUnSmeared(double py);
+  inline double PxUnSmeared()  const { return j_PxUnSmeared;}
+  inline double PyUnSmeared()  const { return j_PyUnSmeared;}
+
   void SetEnShift(double en_up, double en_down);
   double EnShift(int s){
     if(s==0) return 1.;
@@ -85,6 +90,8 @@ private:
   bool j_tightJetID, j_tightLepVetoJetID;
   double j_puppi_tau1, j_puppi_tau2, j_puppi_tau3, j_puppi_tau4;
   double j_SDMass;
+  double  j_PxUnSmeared;
+  double  j_PyUnSmeared;
 
   ClassDef(FatJet,1);
 };

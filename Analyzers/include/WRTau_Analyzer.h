@@ -11,6 +11,14 @@ public:
   void executeEventFromParameter(AnalyzerParameter param);
   void executeEvent();
 
+  bool runSystematics = false;
+  vector<AnalyzerParameter::Syst> skipSysts = { AnalyzerParameter::BTagSFHTagUp, AnalyzerParameter::BTagSFHTagDown,
+                                                AnalyzerParameter::BTagSFLTagUp, AnalyzerParameter::BTagSFLTagDown,
+                                                AnalyzerParameter::JetPUIDUp , AnalyzerParameter::JetPUIDDown,
+                                                AnalyzerParameter::MuonRecoSFUp, AnalyzerParameter::MuonRecoSFDown,
+                                                AnalyzerParameter::FRUp , AnalyzerParameter::FRDown
+                                              };
+
   vector<Muon> AllMuons;
   vector<Electron> AllElectrons;
   vector<Tau> AllTaus;

@@ -23,6 +23,9 @@ public:
     return "Pileup";
   }
 
+  inline double UncorrectedPt() const { return j_unCorrPt;}
+  void SetUncorrectedPt(double d);
+
   void SetdXY(double dXY, double dXYerr);
   inline double dXY() const {return j_dXY;}
   inline double dXYerr() const {return j_dXYerr;}
@@ -95,6 +98,7 @@ private:
   bool j_LeptonIsCF;
   Flavour j_LeptonFlavour;
 
+  double j_unCorrPt;
   double j_lep_jetptrel,j_lep_jetptratio;
   int j_lep_jetflavour;
 
