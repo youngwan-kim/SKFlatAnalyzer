@@ -1,0 +1,1134 @@
+// Do NOT change. Changes will be lost next time file is generated
+
+#define R__DICTIONARY_FILENAME srcdIDataFormats_Dict
+#define R__NO_DEPRECATION
+
+/*******************************************************************/
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#define G__DICTIONARY
+#include "RConfig.h"
+#include "TClass.h"
+#include "TDictAttributeMap.h"
+#include "TInterpreter.h"
+#include "TROOT.h"
+#include "TBuffer.h"
+#include "TMemberInspector.h"
+#include "TInterpreter.h"
+#include "TVirtualMutex.h"
+#include "TError.h"
+
+#ifndef G__ROOT
+#define G__ROOT
+#endif
+
+#include "RtypesImp.h"
+#include "TIsAProxy.h"
+#include "TFileMergeInfo.h"
+#include <algorithm>
+#include "TCollectionProxyInfo.h"
+/*******************************************************************/
+
+#include "TDataMember.h"
+
+// The generated code does not explicitly qualifies STL entities
+namespace std {} using namespace std;
+
+// Header files passed as explicit arguments
+#include "include/Electron.h"
+#include "include/Event.h"
+#include "include/FatJet.h"
+#include "include/Gen.h"
+#include "include/Jet.h"
+#include "include/JetTaggingParameters.h"
+#include "include/LHE.h"
+#include "include/Lepton.h"
+#include "include/Muon.h"
+#include "include/Particle.h"
+#include "include/Photon.h"
+#include "include/Tau.h"
+
+// Header files passed via #pragma extra_include
+
+namespace ROOT {
+   static void *new_Particle(void *p = 0);
+   static void *newArray_Particle(Long_t size, void *p);
+   static void delete_Particle(void *p);
+   static void deleteArray_Particle(void *p);
+   static void destruct_Particle(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Particle*)
+   {
+      ::Particle *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Particle >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Particle", ::Particle::Class_Version(), "Particle.h", 9,
+                  typeid(::Particle), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Particle::Dictionary, isa_proxy, 4,
+                  sizeof(::Particle) );
+      instance.SetNew(&new_Particle);
+      instance.SetNewArray(&newArray_Particle);
+      instance.SetDelete(&delete_Particle);
+      instance.SetDeleteArray(&deleteArray_Particle);
+      instance.SetDestructor(&destruct_Particle);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Particle*)
+   {
+      return GenerateInitInstanceLocal((::Particle*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Particle*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Lepton(void *p = 0);
+   static void *newArray_Lepton(Long_t size, void *p);
+   static void delete_Lepton(void *p);
+   static void deleteArray_Lepton(void *p);
+   static void destruct_Lepton(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Lepton*)
+   {
+      ::Lepton *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Lepton >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Lepton", ::Lepton::Class_Version(), "Lepton.h", 6,
+                  typeid(::Lepton), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Lepton::Dictionary, isa_proxy, 4,
+                  sizeof(::Lepton) );
+      instance.SetNew(&new_Lepton);
+      instance.SetNewArray(&newArray_Lepton);
+      instance.SetDelete(&delete_Lepton);
+      instance.SetDeleteArray(&deleteArray_Lepton);
+      instance.SetDestructor(&destruct_Lepton);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Lepton*)
+   {
+      return GenerateInitInstanceLocal((::Lepton*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Lepton*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Electron(void *p = 0);
+   static void *newArray_Electron(Long_t size, void *p);
+   static void delete_Electron(void *p);
+   static void deleteArray_Electron(void *p);
+   static void destruct_Electron(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Electron*)
+   {
+      ::Electron *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Electron >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Electron", ::Electron::Class_Version(), "Electron.h", 7,
+                  typeid(::Electron), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Electron::Dictionary, isa_proxy, 4,
+                  sizeof(::Electron) );
+      instance.SetNew(&new_Electron);
+      instance.SetNewArray(&newArray_Electron);
+      instance.SetDelete(&delete_Electron);
+      instance.SetDeleteArray(&deleteArray_Electron);
+      instance.SetDestructor(&destruct_Electron);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Electron*)
+   {
+      return GenerateInitInstanceLocal((::Electron*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Electron*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Event(void *p = 0);
+   static void *newArray_Event(Long_t size, void *p);
+   static void delete_Event(void *p);
+   static void deleteArray_Event(void *p);
+   static void destruct_Event(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Event*)
+   {
+      ::Event *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Event >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Event", ::Event::Class_Version(), "Event.h", 8,
+                  typeid(::Event), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Event::Dictionary, isa_proxy, 4,
+                  sizeof(::Event) );
+      instance.SetNew(&new_Event);
+      instance.SetNewArray(&newArray_Event);
+      instance.SetDelete(&delete_Event);
+      instance.SetDeleteArray(&deleteArray_Event);
+      instance.SetDestructor(&destruct_Event);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Event*)
+   {
+      return GenerateInitInstanceLocal((::Event*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Event*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_FatJet(void *p = 0);
+   static void *newArray_FatJet(Long_t size, void *p);
+   static void delete_FatJet(void *p);
+   static void deleteArray_FatJet(void *p);
+   static void destruct_FatJet(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::FatJet*)
+   {
+      ::FatJet *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::FatJet >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("FatJet", ::FatJet::Class_Version(), "FatJet.h", 7,
+                  typeid(::FatJet), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::FatJet::Dictionary, isa_proxy, 4,
+                  sizeof(::FatJet) );
+      instance.SetNew(&new_FatJet);
+      instance.SetNewArray(&newArray_FatJet);
+      instance.SetDelete(&delete_FatJet);
+      instance.SetDeleteArray(&deleteArray_FatJet);
+      instance.SetDestructor(&destruct_FatJet);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::FatJet*)
+   {
+      return GenerateInitInstanceLocal((::FatJet*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::FatJet*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Gen(void *p = 0);
+   static void *newArray_Gen(Long_t size, void *p);
+   static void delete_Gen(void *p);
+   static void deleteArray_Gen(void *p);
+   static void destruct_Gen(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Gen*)
+   {
+      ::Gen *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Gen >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Gen", ::Gen::Class_Version(), "Gen.h", 6,
+                  typeid(::Gen), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Gen::Dictionary, isa_proxy, 4,
+                  sizeof(::Gen) );
+      instance.SetNew(&new_Gen);
+      instance.SetNewArray(&newArray_Gen);
+      instance.SetDelete(&delete_Gen);
+      instance.SetDeleteArray(&deleteArray_Gen);
+      instance.SetDestructor(&destruct_Gen);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Gen*)
+   {
+      return GenerateInitInstanceLocal((::Gen*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Gen*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Jet(void *p = 0);
+   static void *newArray_Jet(Long_t size, void *p);
+   static void delete_Jet(void *p);
+   static void deleteArray_Jet(void *p);
+   static void destruct_Jet(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Jet*)
+   {
+      ::Jet *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Jet >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Jet", ::Jet::Class_Version(), "Jet.h", 7,
+                  typeid(::Jet), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Jet::Dictionary, isa_proxy, 4,
+                  sizeof(::Jet) );
+      instance.SetNew(&new_Jet);
+      instance.SetNewArray(&newArray_Jet);
+      instance.SetDelete(&delete_Jet);
+      instance.SetDeleteArray(&deleteArray_Jet);
+      instance.SetDestructor(&destruct_Jet);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Jet*)
+   {
+      return GenerateInitInstanceLocal((::Jet*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Jet*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_LHE(void *p = 0);
+   static void *newArray_LHE(Long_t size, void *p);
+   static void delete_LHE(void *p);
+   static void deleteArray_LHE(void *p);
+   static void destruct_LHE(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::LHE*)
+   {
+      ::LHE *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::LHE >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("LHE", ::LHE::Class_Version(), "LHE.h", 6,
+                  typeid(::LHE), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::LHE::Dictionary, isa_proxy, 4,
+                  sizeof(::LHE) );
+      instance.SetNew(&new_LHE);
+      instance.SetNewArray(&newArray_LHE);
+      instance.SetDelete(&delete_LHE);
+      instance.SetDeleteArray(&deleteArray_LHE);
+      instance.SetDestructor(&destruct_LHE);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::LHE*)
+   {
+      return GenerateInitInstanceLocal((::LHE*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::LHE*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Muon(void *p = 0);
+   static void *newArray_Muon(Long_t size, void *p);
+   static void delete_Muon(void *p);
+   static void deleteArray_Muon(void *p);
+   static void destruct_Muon(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Muon*)
+   {
+      ::Muon *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Muon >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Muon", ::Muon::Class_Version(), "Muon.h", 7,
+                  typeid(::Muon), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Muon::Dictionary, isa_proxy, 4,
+                  sizeof(::Muon) );
+      instance.SetNew(&new_Muon);
+      instance.SetNewArray(&newArray_Muon);
+      instance.SetDelete(&delete_Muon);
+      instance.SetDeleteArray(&deleteArray_Muon);
+      instance.SetDestructor(&destruct_Muon);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Muon*)
+   {
+      return GenerateInitInstanceLocal((::Muon*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Muon*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Photon(void *p = 0);
+   static void *newArray_Photon(Long_t size, void *p);
+   static void delete_Photon(void *p);
+   static void deleteArray_Photon(void *p);
+   static void destruct_Photon(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Photon*)
+   {
+      ::Photon *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Photon >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Photon", ::Photon::Class_Version(), "Photon.h", 6,
+                  typeid(::Photon), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Photon::Dictionary, isa_proxy, 4,
+                  sizeof(::Photon) );
+      instance.SetNew(&new_Photon);
+      instance.SetNewArray(&newArray_Photon);
+      instance.SetDelete(&delete_Photon);
+      instance.SetDeleteArray(&deleteArray_Photon);
+      instance.SetDestructor(&destruct_Photon);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Photon*)
+   {
+      return GenerateInitInstanceLocal((::Photon*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Photon*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Tau(void *p = 0);
+   static void *newArray_Tau(Long_t size, void *p);
+   static void delete_Tau(void *p);
+   static void deleteArray_Tau(void *p);
+   static void destruct_Tau(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Tau*)
+   {
+      ::Tau *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Tau >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Tau", ::Tau::Class_Version(), "Tau.h", 7,
+                  typeid(::Tau), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Tau::Dictionary, isa_proxy, 4,
+                  sizeof(::Tau) );
+      instance.SetNew(&new_Tau);
+      instance.SetNewArray(&newArray_Tau);
+      instance.SetDelete(&delete_Tau);
+      instance.SetDeleteArray(&deleteArray_Tau);
+      instance.SetDestructor(&destruct_Tau);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Tau*)
+   {
+      return GenerateInitInstanceLocal((::Tau*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Tau*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+//______________________________________________________________________________
+atomic_TClass_ptr Particle::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Particle::Class_Name()
+{
+   return "Particle";
+}
+
+//______________________________________________________________________________
+const char *Particle::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Particle*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Particle::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Particle*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Particle::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Particle*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Particle::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Particle*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Lepton::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Lepton::Class_Name()
+{
+   return "Lepton";
+}
+
+//______________________________________________________________________________
+const char *Lepton::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Lepton*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Lepton::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Lepton*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Lepton::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Lepton*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Lepton::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Lepton*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Electron::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Electron::Class_Name()
+{
+   return "Electron";
+}
+
+//______________________________________________________________________________
+const char *Electron::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Electron*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Electron::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Electron*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Electron::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Electron*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Electron::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Electron*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Event::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Event::Class_Name()
+{
+   return "Event";
+}
+
+//______________________________________________________________________________
+const char *Event::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Event*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Event::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Event*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Event::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Event*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Event::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Event*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr FatJet::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *FatJet::Class_Name()
+{
+   return "FatJet";
+}
+
+//______________________________________________________________________________
+const char *FatJet::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::FatJet*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int FatJet::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::FatJet*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *FatJet::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::FatJet*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *FatJet::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::FatJet*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Gen::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Gen::Class_Name()
+{
+   return "Gen";
+}
+
+//______________________________________________________________________________
+const char *Gen::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Gen*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Gen::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Gen*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Gen::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Gen*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Gen::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Gen*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Jet::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Jet::Class_Name()
+{
+   return "Jet";
+}
+
+//______________________________________________________________________________
+const char *Jet::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Jet*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Jet::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Jet*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Jet::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Jet*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Jet::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Jet*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr LHE::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *LHE::Class_Name()
+{
+   return "LHE";
+}
+
+//______________________________________________________________________________
+const char *LHE::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::LHE*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int LHE::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::LHE*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *LHE::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::LHE*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *LHE::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::LHE*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Muon::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Muon::Class_Name()
+{
+   return "Muon";
+}
+
+//______________________________________________________________________________
+const char *Muon::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Muon*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Muon::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Muon*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Muon::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Muon*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Muon::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Muon*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Photon::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Photon::Class_Name()
+{
+   return "Photon";
+}
+
+//______________________________________________________________________________
+const char *Photon::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Photon*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Photon::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Photon*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Photon::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Photon*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Photon::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Photon*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+atomic_TClass_ptr Tau::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Tau::Class_Name()
+{
+   return "Tau";
+}
+
+//______________________________________________________________________________
+const char *Tau::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Tau*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Tau::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Tau*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Tau::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Tau*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Tau::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Tau*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+void Particle::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Particle.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Particle::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Particle::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Particle(void *p) {
+      return  p ? new(p) ::Particle : new ::Particle;
+   }
+   static void *newArray_Particle(Long_t nElements, void *p) {
+      return p ? new(p) ::Particle[nElements] : new ::Particle[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Particle(void *p) {
+      delete ((::Particle*)p);
+   }
+   static void deleteArray_Particle(void *p) {
+      delete [] ((::Particle*)p);
+   }
+   static void destruct_Particle(void *p) {
+      typedef ::Particle current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Particle
+
+//______________________________________________________________________________
+void Lepton::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Lepton.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Lepton::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Lepton::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Lepton(void *p) {
+      return  p ? new(p) ::Lepton : new ::Lepton;
+   }
+   static void *newArray_Lepton(Long_t nElements, void *p) {
+      return p ? new(p) ::Lepton[nElements] : new ::Lepton[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Lepton(void *p) {
+      delete ((::Lepton*)p);
+   }
+   static void deleteArray_Lepton(void *p) {
+      delete [] ((::Lepton*)p);
+   }
+   static void destruct_Lepton(void *p) {
+      typedef ::Lepton current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Lepton
+
+//______________________________________________________________________________
+void Electron::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Electron.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Electron::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Electron::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Electron(void *p) {
+      return  p ? new(p) ::Electron : new ::Electron;
+   }
+   static void *newArray_Electron(Long_t nElements, void *p) {
+      return p ? new(p) ::Electron[nElements] : new ::Electron[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Electron(void *p) {
+      delete ((::Electron*)p);
+   }
+   static void deleteArray_Electron(void *p) {
+      delete [] ((::Electron*)p);
+   }
+   static void destruct_Electron(void *p) {
+      typedef ::Electron current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Electron
+
+//______________________________________________________________________________
+void Event::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Event.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Event::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Event::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Event(void *p) {
+      return  p ? new(p) ::Event : new ::Event;
+   }
+   static void *newArray_Event(Long_t nElements, void *p) {
+      return p ? new(p) ::Event[nElements] : new ::Event[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Event(void *p) {
+      delete ((::Event*)p);
+   }
+   static void deleteArray_Event(void *p) {
+      delete [] ((::Event*)p);
+   }
+   static void destruct_Event(void *p) {
+      typedef ::Event current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Event
+
+//______________________________________________________________________________
+void FatJet::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class FatJet.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(FatJet::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(FatJet::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_FatJet(void *p) {
+      return  p ? new(p) ::FatJet : new ::FatJet;
+   }
+   static void *newArray_FatJet(Long_t nElements, void *p) {
+      return p ? new(p) ::FatJet[nElements] : new ::FatJet[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_FatJet(void *p) {
+      delete ((::FatJet*)p);
+   }
+   static void deleteArray_FatJet(void *p) {
+      delete [] ((::FatJet*)p);
+   }
+   static void destruct_FatJet(void *p) {
+      typedef ::FatJet current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::FatJet
+
+//______________________________________________________________________________
+void Gen::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Gen.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Gen::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Gen::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Gen(void *p) {
+      return  p ? new(p) ::Gen : new ::Gen;
+   }
+   static void *newArray_Gen(Long_t nElements, void *p) {
+      return p ? new(p) ::Gen[nElements] : new ::Gen[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Gen(void *p) {
+      delete ((::Gen*)p);
+   }
+   static void deleteArray_Gen(void *p) {
+      delete [] ((::Gen*)p);
+   }
+   static void destruct_Gen(void *p) {
+      typedef ::Gen current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Gen
+
+//______________________________________________________________________________
+void Jet::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Jet.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Jet::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Jet::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Jet(void *p) {
+      return  p ? new(p) ::Jet : new ::Jet;
+   }
+   static void *newArray_Jet(Long_t nElements, void *p) {
+      return p ? new(p) ::Jet[nElements] : new ::Jet[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Jet(void *p) {
+      delete ((::Jet*)p);
+   }
+   static void deleteArray_Jet(void *p) {
+      delete [] ((::Jet*)p);
+   }
+   static void destruct_Jet(void *p) {
+      typedef ::Jet current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Jet
+
+//______________________________________________________________________________
+void LHE::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class LHE.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(LHE::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(LHE::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_LHE(void *p) {
+      return  p ? new(p) ::LHE : new ::LHE;
+   }
+   static void *newArray_LHE(Long_t nElements, void *p) {
+      return p ? new(p) ::LHE[nElements] : new ::LHE[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_LHE(void *p) {
+      delete ((::LHE*)p);
+   }
+   static void deleteArray_LHE(void *p) {
+      delete [] ((::LHE*)p);
+   }
+   static void destruct_LHE(void *p) {
+      typedef ::LHE current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::LHE
+
+//______________________________________________________________________________
+void Muon::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Muon.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Muon::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Muon::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Muon(void *p) {
+      return  p ? new(p) ::Muon : new ::Muon;
+   }
+   static void *newArray_Muon(Long_t nElements, void *p) {
+      return p ? new(p) ::Muon[nElements] : new ::Muon[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Muon(void *p) {
+      delete ((::Muon*)p);
+   }
+   static void deleteArray_Muon(void *p) {
+      delete [] ((::Muon*)p);
+   }
+   static void destruct_Muon(void *p) {
+      typedef ::Muon current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Muon
+
+//______________________________________________________________________________
+void Photon::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Photon.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Photon::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Photon::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Photon(void *p) {
+      return  p ? new(p) ::Photon : new ::Photon;
+   }
+   static void *newArray_Photon(Long_t nElements, void *p) {
+      return p ? new(p) ::Photon[nElements] : new ::Photon[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Photon(void *p) {
+      delete ((::Photon*)p);
+   }
+   static void deleteArray_Photon(void *p) {
+      delete [] ((::Photon*)p);
+   }
+   static void destruct_Photon(void *p) {
+      typedef ::Photon current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Photon
+
+//______________________________________________________________________________
+void Tau::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Tau.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Tau::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Tau::Class(),this);
+   }
+}
+

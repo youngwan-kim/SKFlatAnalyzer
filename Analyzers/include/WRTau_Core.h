@@ -84,6 +84,7 @@ public:
 
   enum SearchRegion{
     None,
+    EXO_16_023_Preselection,
     BaselinePreselection,
     ResolvedPreselection,
     BoostedPreselection,
@@ -105,6 +106,9 @@ public:
     QCDEnrichedControlRegionAK8,
     FakeTTControlRegion,
     FakeDYControlRegion,
+    BenchmarkResolvedPreselection,
+    BenchmarkBoostedPreselection,
+
     //Generator level regions ()
     GenDebug                    = 100,
     GenTauHTauH                 = 101,
@@ -289,12 +293,15 @@ public:
   double GetMatchedWeight(const std::vector<Tau>& taus,const std::vector<Gen>& gens, std::tuple<int,int,int> idtuple, bool highpT);
   double GetTauIDLeptonFakeSF(const std::tuple<int,int,int> idtuple, const std::vector<Lepton*> leps, const std::vector<Gen>& gens);
   double GetTauTriggerSF(const int syst);
+  double LSFSF(WRTau_Core::Channel ch,const int syst); 
 
   // Fake Rates
   double GetTauFR(const Tau tau, WRTau_Core::SearchRegion region);
   double GetTauFR(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region, const int deg);
   double GetTauFRWeight(const Tau tau, const std::vector<Lepton *> leps, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region,const int deg);
   double GetElTauFRWeight(const Tau tau, const Electron el,const std::vector<Gen>& gens, WRTau_Core::SearchRegion region);
+
+  double GetTauFR_SingleFit(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region);
 
   // Others
   TDirectory* GetTempDir_WRTauCore();

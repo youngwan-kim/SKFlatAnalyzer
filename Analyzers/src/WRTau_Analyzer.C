@@ -37,6 +37,16 @@ void WRTau_Analyzer::initializeAnalyzer(){
                       WRTau_Core::BoostedSignalRegionMETInvert
                       };
 
+  if(HasFlag("EXO_16_023")){
+
+    RegionOfInterest.clear();
+    RegionOfInterest = {WRTau_Core::EXO_16_023_Preselection,
+                        WRTau_Core::BenchmarkBoostedPreselection,
+                        WRTau_Core::BenchmarkResolvedPreselection,
+                        WRTau_Core::BoostedSignalRegion};
+
+  }
+
 }
 
 void WRTau_Analyzer::executeEvent(){
@@ -76,9 +86,10 @@ void WRTau_Analyzer::executeEvent(){
   if(runSystematics){
     for(unsigned int i=0; i<AnalyzerParameter::NSyst; i++){
       param.syst_ = AnalyzerParameter::Syst(i);
+      // cout << "[WRTau_Analyzer::Debug] Syst : " << i << endl;
       param.Name = "Syst_"+ param.GetSystType();
       auto it = std::find(skipSysts.begin(), skipSysts.end(), param.syst_);
-      executeEventFromParameter(param);
+      if (it == skipSysts.end()) executeEventFromParameter(param);
     }
   }
 
@@ -182,13 +193,13 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         vector<Tau> taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
         vector<Tau> taus;
 
-        TString path = param.Name+"/"+idname;
+        TString path = param.Name ; //+"/"+idname;
         //TString path = param.Name+TauPromptString+LeptonPromptString"/"+idname;
-        if(taus_temp.size()>0){
+        /*if(taus_temp.size()>0){
           for(unsigned int i =0 ; i < taus_temp.size() ; i++){
             FillHist(path+"/TauType"+TString::Itoa(i,10),GetTauType(taus_temp.at(i),AllGens),weight,20,-10.,10.);
           }
-        }
+        }*/
         if(HasFlag("NonpromptTau")) taus = TauFakeOnly(taus_temp,AllGens);
         else if(HasFlag("PromptTau")) taus = TauPromptOnly(taus_temp,AllGens);
         else taus = taus_temp;
@@ -220,18 +231,55 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         FillHist(path+"/Cutflow",0.,weight,10,0.,10.);
 
-        if(MCSample.Contains("WRtoTauNtoTauTauJets")){
+        if(MCSample.Contains("WRtoTauNtoTauTauJets") && HasFlag("SignalDebug")){
 
+          vector<Tau> baselineTau = SelectTaus(AllTaus,"Baseline",50,2.4);
+          vector<Tau> baseline_L_Tau = SelectTaus(AllTaus,"BaselineWithvJetLoose",50,2.4);
+          vector<Tau> baseline_T_Tau = SelectTaus(AllTaus,"BaselineWithvJetTight",50,2.4);
+          vector<Tau> baseline_TL_Tau = SelectTaus(AllTaus,"BaselineWithvJetTightvElLoose",50,2.4);
+          vector<Tau> baseline_TT_Tau = SelectTaus(AllTaus,"BaselineWithvJetTightvElTight",50,2.4);
+          vector<Tau> baseline_TLL_Tau = SelectTaus(AllTaus,"BaselineWithvJetTightvElLoosevMuLoose",50,2.4);
+          vector<Tau> baseline_TTL_Tau = SelectTaus(AllTaus,"BaselineWithvJetTightvElTightvMuLoose",50,2.4);
+          vector<Tau> baseline_TLT_Tau = SelectTaus(AllTaus,"BaselineWithvJetTightvElLoosevMuTight",50,2.4);
+          vector<Tau> baseline_TTT_Tau = SelectTaus(AllTaus,"BaselineWithvJetTightvElTightvMuTight",50,2.4);
+
+          FillHist(path+"/nAllTaus",AllTaus.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaselineTaus",baselineTau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_L_Taus",baseline_L_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_T_Taus",baseline_T_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_TL_Taus",baseline_TL_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_TT_Taus",baseline_TT_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_TLL_Taus",baseline_TLL_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_TTL_Taus",baseline_TTL_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_TLT_Taus",baseline_TLT_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nBaseline_TTT_Taus",baseline_TTT_Tau.size(),weight,10,0.,10.);
+          FillHist(path+"/nTaus",taus.size(),weight,10,0.,10.);
           std::map<WRTau_Core::SearchRegion,bool> genChannelMap = getGenLevelChannelMap(AllGens);
           for(auto const& region : genChannelMap){
 
-            if(region.second) FillHist(path+"/GenLevelChannel",region.first-100,weight,10,0.,10.);
+            if(region.second){
+              FillHist(path+"/GenLevelChannel",region.first-100,weight,10,0.,10.);
+              FillHist(path+"/GenLevelChannel_"+TString::Itoa(region.first-100,10)+"_nAllTaus",AllTaus.size(),weight,10,0.,10.);
+              FillHist(path+"/GenLevelChannel_"+TString::Itoa(region.first-100,10)+"_nTaus",taus.size(),weight,10,0.,10.);
+            }
 
           }
-
+          continue;
         }
 
-        
+        if(MCSample.Contains("WRtoTauNtoTauTauJets")){
+          std::map<WRTau_Core::SearchRegion,bool> genChannelMap = getGenLevelChannelMap(AllGens);
+          for(auto const& region : genChannelMap){
+
+            if(region.second){
+              FillHist(path+"/GenLevelChannel",region.first-100,weight,10,0.,10.);
+              FillHist(path+"/GenLevelChannel_"+TString::Itoa(region.first-100,10)+"_nAllTaus",AllTaus.size(),weight,10,0.,10.);
+              FillHist(path+"/GenLevelChannel_"+TString::Itoa(region.first-100,10)+"_nTaus",taus.size(),weight,10,0.,10.);
+            }
+
+          }
+        }
+
         /*bool PassTrg(false);
         if(param.Name == "WRTau_SignalSingleTauTrg" || HasFlag("MuIsoCutOpt") ){
           if(ev.PassTrigger(TriggerList)) PassTrg = true;
@@ -298,6 +346,10 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         else{
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
             FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+          }
+          if(MCSample.Contains("WRtoTauNtoTauTauJets")){
+            if(map_regions[WRTau_Core::BoostedSignalRegion]) cout << "(run,lumi,event) = " << run << ", " << lumi << ", " << event << endl;
+            if(map_regions[WRTau_Core::ResolvedSignalRegion]) cout << "Resolved (run,lumi,event) = " << run << ", " << lumi << ", " << event << endl;
           }
         }
 

@@ -38,6 +38,94 @@ bool Tau::PassID(TString ID) const{
   // === list of IDs for analyis
   if(ID=="NoCut") return true;
 
+  if(ID=="EXO_16_023"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!( fabs(dXY())<0.05 )) return false;
+      if(!(passLIDvJet() && passTIDvEl() && passLIDvMu())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="Baseline"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetLoose"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!passLIDvJet()) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTight"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!passTIDvJet()) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTightvElLoose"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passTIDvJet() && passLIDvEl())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTightvElTight"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passTIDvJet() && passTIDvEl())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTightvElTightvMuLoose"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passTIDvJet() && passTIDvEl() && passLIDvMu())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTightvElLoosevMuLoose"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passTIDvJet() && passLIDvEl() && passLIDvMu())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTightvElLoosevMuTight"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passTIDvJet() && passLIDvEl() && passTIDvMu())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="BaselineWithvJetTightvElTightvMuTight"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passTIDvJet() && passTIDvEl() && passTIDvMu())) return false;
+      return true;
+    }
+  }
+
   if(ID=="HNVeto") {
 
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11) {

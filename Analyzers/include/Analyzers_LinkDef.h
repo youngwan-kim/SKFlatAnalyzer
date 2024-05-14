@@ -26,6 +26,7 @@
 #pragma link C++ class WRTau_SignalStudy+;
 #pragma link C++ class TauQCDFakeStudy+;
 #pragma link C++ class ZTauTau+;
+#pragma link C++ class EXO_16_023+;
 #pragma link C++ class LeptonicTauStudy+;
 #pragma link C++ class TauHLTDebug+;
 #pragma link C++ class TauolaValidation+;

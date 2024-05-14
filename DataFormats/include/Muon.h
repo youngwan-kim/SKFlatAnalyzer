@@ -113,6 +113,8 @@ public:
   bool Pass_POGHighPtWithLooseTrkIso() const;             // LRSM Tight ID
   bool Pass_POGHighPtWithTrkIsoTest(double isocut) const; // LRSM Tight ID with different iso cut
   bool Pass_TESTID() const; 
+  bool Pass_EXO_16_023() const;
+  bool Pass_EXO_16_023_Veto() const;
 
   bool Pass_TriLepMuLoose() const;
   bool Pass_TriLepMuFO() const;

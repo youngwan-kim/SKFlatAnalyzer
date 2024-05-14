@@ -16,7 +16,8 @@ public:
                                                 AnalyzerParameter::BTagSFLTagUp, AnalyzerParameter::BTagSFLTagDown,
                                                 AnalyzerParameter::JetPUIDUp , AnalyzerParameter::JetPUIDDown,
                                                 AnalyzerParameter::MuonRecoSFUp, AnalyzerParameter::MuonRecoSFDown,
-                                                AnalyzerParameter::FRUp , AnalyzerParameter::FRDown
+                                                AnalyzerParameter::FRUp , AnalyzerParameter::FRDown,
+                                                AnalyzerParameter::JetMassSmearUp,AnalyzerParameter::JetMassSmearDown
                                               };
 
   vector<Muon> AllMuons;

@@ -85,6 +85,36 @@ void FakeBackgroundEstimator::ReadHistograms(){
   delete file4;
   origDir->cd();
 
+  // Tau FakeRate Functions
+  TString datapath_taufake = getenv("DATA_DIR");
+  datapath_taufake += "/TauFake";
+
+  TFile *fileTauFR = new TFile(datapath_taufake+"/FitResultsNew.root");
+
+  std::vector<TString> region  = {"ResolvedSignalRegionMETInvert", "BoostedSignalRegionMETInvert"};
+  std::vector<TString> channel = {"ElTau", "MuTau"};
+  
+  TString YearString;
+  YearString.Form("%d",GetYear()); 
+
+  for(TString rg : region) {
+      for(TString ch : channel) {
+          histDir->cd();
+          map_TF1_tau[rg+"_"+ch+"_"+YearString]    =  (TF1 *)  fileTauFR->Get(rg+"_"+ch+"_"+YearString);
+          cout << rg+"_"+ch+"_"+YearString << endl;
+          //fileTauFR->Close();
+          //delete fileTauFR;
+          origDir->cd();
+
+          //histDir->cd();
+          //dir->cd();
+          //map_FitErr_tau[rg+"_"+ch+"_"+YearString] =  (TH1D *) dir->Get("unc")->Clone(rg+"_"+ch+"_"+YearString+"_err");
+          //fileTauFR->Close();
+          //delete fileTauFR;
+          //origDir->cd();
+      }
+  }
+
 }
 
 FakeBackgroundEstimator::~FakeBackgroundEstimator(){

@@ -125,12 +125,29 @@ bool Muon::PassID(TString ID) const {
   if(ID=="TriLepMuFO") return Pass_TriLepMuFO();
   if(ID=="TriLepMuTight") return Pass_TriLepMuTight();
 
+  if(ID=="EXO_16_023") return Pass_EXO_16_023();
+  if(ID=="EXO_16_023_Veto") return Pass_EXO_16_023_Veto();
+
   cout << "[Electron::PassID] No id : " << ID << endl;
   exit(ENODATA);
 
   return false;
 
 }
+
+bool Muon::Pass_EXO_16_023_Veto() const{
+  if(!( isPOGLoose() )) return false;
+  if(!( RelIso()<0.25 ))  return false;
+  return true;
+}
+
+bool Muon::Pass_EXO_16_023() const{
+  if(!( isPOGTight() )) return false;
+  if(!( fabs(dXY())<0.045 && fabs(dZ())<0.2 )) return false;
+  if(!( RelIso()<0.15 ))  return false;
+  return true;
+}
+
 bool Muon::Pass_POGTightWithTightIso() const {
   if(!( isPOGTight() )) return false;
   if(!( RelIso()<0.15 ))  return false;
