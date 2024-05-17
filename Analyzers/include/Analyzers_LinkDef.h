@@ -14,7 +14,13 @@
 #pragma link C++ class SkimTree_LRSMHighPt+;
 #pragma link C++ class SkimTree_Dilepton+;
 #pragma link C++ class SkimTree_HNFake+;
+#pragma link C++ class SkimTree_HighPt1LJets+;
+#pragma link C++ class SkimTree_HNMultiLep+;
 #pragma link C++ class MeasureJetTaggingEfficiency+;
+<<<<<<< HEAD
 #pragma link C++ class WMassChargeAsymmetry+;
+=======
+#pragma link C++ class SkimTree_Dilepton+;
+>>>>>>> 0a5a35dc0927a81989a6462a293143b511c3dbc1
 
 #endif

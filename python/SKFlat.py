@@ -19,16 +19,25 @@ parser.add_argument('-l', dest='InputSampleList', default="")
 parser.add_argument('-n', dest='NJobs', default=1, type=int)
 parser.add_argument('-o', dest='Outputdir', default="")
 parser.add_argument('-q', dest='Queue', default="fastq")
-parser.add_argument('-y', dest='Year', default="2017")
-parser.add_argument('--skim', dest='Skim', default="")
+parser.add_argument('-e', dest='Era', default="2017",help="2016preVFP(2016a), 2016postVFP(2016b), 2017, 2018")
+parser.add_argument('-y', dest='Year', default="",help="deprecated. use -e")
+parser.add_argument('--skim', dest='Skim', default="", help="ex) SkimTree_Dilepton")
 parser.add_argument('--no_exec', action='store_true')
 parser.add_argument('--FastSim', action='store_true')
 parser.add_argument('--userflags', dest='Userflags', default="")
-parser.add_argument('--nmax', dest='NMax', default=0, type=int)
+parser.add_argument('--tagoutput', dest='TagOutput', default="")
+parser.add_argument('--nmax', dest='NMax', default=0, type=int, help="maximum running jobs")
 parser.add_argument('--reduction', dest='Reduction', default=1, type=float)
 parser.add_argument('--memory', dest='Memory', default=0, type=float)
 parser.add_argument('--batchname',dest='BatchName', default="")
 args = parser.parse_args()
+
+if args.Year!="":
+  print("-y is deprecated. Using -e (Era) instead")
+  args.Era=args.Year
+
+if args.Era=="2016a": args.Era="2016preVFP"
+if args.Era=="2016b": args.Era="2016postVFP"
 
 ## make userflags as a list
 Userflags = []
@@ -53,7 +62,11 @@ string_ThisTime = ""
 ## Environment Variables
 
 USER = os.environ['USER']
-exec('from UserInfo_'+USER+' import *')
+if os.path.exists(os.environ['SKFlat_WD']+'/python/UserInfo_'+USER+'.py'):
+  exec('from UserInfo_'+USER+' import *')
+else:
+  print("No UserInfo file")
+  exit(1)
 SKFlatLogEmail = UserInfo['SKFlatLogEmail']
 SKFlatLogWebDir = UserInfo['SKFlatLogWebDir']
 LogEvery = UserInfo['LogEvery']
@@ -62,7 +75,7 @@ SCRAM_ARCH = os.environ['SCRAM_ARCH']
 cmsswrel = os.environ['cmsswrel']
 SKFlat_WD = os.environ['SKFlat_WD']
 SKFlatV = os.environ['SKFlatV']
-SAMPLE_DATA_DIR = SKFlat_WD+'/data/'+SKFlatV+'/'+args.Year+'/Sample/'
+SAMPLE_DATA_DIR = SKFlat_WD+'/data/'+SKFlatV+'/'+args.Era+'/Sample/'
 SKFlatRunlogDir = os.environ['SKFlatRunlogDir']
 SKFlatOutputDir = os.environ['SKFlatOutputDir']
 SKFlat_LIB_PATH = os.environ['SKFlat_LIB_PATH']
@@ -72,9 +85,9 @@ SampleHOSTNAME = HOSTNAME
 
 ## Check joblog email
 
+SendLogToEmail=True
 if SKFlatLogEmail=='':
-  print '[SKFlat.py] Put your email address in setup.sh'
-  exit()
+  SendLogToEmail=False
 SendLogToWeb = True
 if SKFlatLogWebDir=='':
   SendLogToWeb = False
@@ -105,27 +118,29 @@ if IsKNU:
 
 IsSkimTree = "SkimTree" in args.Analyzer
 if IsSkimTree:
-  if not IsTAMSA:
+  if args.NMax==0: args.NMax=100 ## Preventing from too heavy IO
+  if args.NJobs==1: args.NJobs=0 ## NJobs=0 means NJobs->NFiles
+  if not (IsTAMSA or IsKNU):
     print "Skimming only possible in SNU"
     exit()
 
 ## Machine-dependent variables
 
-if IsKNU:
-  args.Queue = "cms"
-
 ## Make Sample List
 
 InputSample_Data = ["DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron", "SinglePhoton", "MuonEG", "EGamma"]
 AvailableDataPeriods = []
-if args.Year == "2016":
-  AvailableDataPeriods = ["B_ver2","C","D","E","F","G","H"]
-elif args.Year == "2017":
+if args.Era == "2016preVFP":
+  AvailableDataPeriods = ["B_ver2","C","D","E","F"]
+elif args.Era == "2016postVFP":
+  AvailableDataPeriods = ["F","G","H"]
+elif args.Era == "2017":
   AvailableDataPeriods = ["B","C","D","E","F"]
-elif args.Year == "2018":
+elif args.Era == "2018":
   AvailableDataPeriods = ["A", "B","C","D"]
 else:
-  print "[SKFlat.py] Wrong Year : "+args.Year
+  print "[SKFlat.py] Wrong Era : "+args.Era
+  exit(1)
 
 InputSamples = []
 StringForHash = ""
@@ -160,7 +175,7 @@ for flag in Userflags:
 
 ## Get Random Number for webdir
 
-random.seed(hash(StringForHash+timestamp+args.Year))
+random.seed(hash(StringForHash+timestamp+args.Era))
 RandomNumber = int(random.random()*1000000)
 str_RandomNumber = str(RandomNumber)
 webdirname = timestamp+"_"+str_RandomNumber
@@ -176,7 +191,7 @@ if args.Skim!="":
 
 ## Define MasterJobDir
 
-MasterJobDir = SKFlatRunlogDir+'/'+timestamp+'__'+str_RandomNumber+"__"+args.Analyzer+'__'+'Year'+args.Year
+MasterJobDir = SKFlatRunlogDir+'/'+timestamp+'__'+str_RandomNumber+"__"+args.Analyzer+'__'+'Era'+args.Era
 if args.Skim!="":
   MasterJobDir += "__"+args.Skim
 for flag in Userflags:
@@ -223,15 +238,10 @@ for InputSample in InputSamples:
   os.system('mkdir -p '+base_rundir+'/output/')
 
   ## Create webdir
-  ## cf) base_rundir = $SKFlatRunlogDir/2019_02_26_222038__GetEffLumi__Year2016__KISTI/WW_pythia/
+  ## cf) base_rundir = $SKFlatRunlogDir/2019_02_26_222038__GetEffLumi__Era2016__KISTI/WW_pythia/
 
   this_webdir = webdirpathbase+'/'+base_rundir.replace(SKFlatRunlogDir,'').replace(HOSTNAME+'/',HOSTNAME+'__')
   os.system('mkdir -p '+this_webdir)
-
-  ## If KNU, copy grid cert
-
-  if IsKNU:
-    os.system('cp /tmp/x509up_u'+UID+' '+base_rundir)
 
   ## Get Sample Path
 
@@ -240,7 +250,7 @@ for InputSample in InputSamples:
   tmpfilepath = SAMPLE_DATA_DIR+'/For'+SampleHOSTNAME+'/'+SkimString+InputSample+'.txt'
   if IsDATA:
     tmpfilepath = SAMPLE_DATA_DIR+'/For'+SampleHOSTNAME+'/'+SkimString+InputSample+'_'+DataPeriod+'.txt'
-  lines_files = open(tmpfilepath).readlines()
+  lines_files = os.popen("sed 's/#.*//' "+tmpfilepath+"|grep '.root'").readlines()
   os.system('cp '+tmpfilepath+' '+base_rundir+'/input_filelist.txt')
 
   NTotalFiles = len(lines_files)
@@ -286,8 +296,12 @@ for InputSample in InputSamples:
 
   this_dasname = ""
   this_xsec = -1
+  this_sumsign = -1
   this_sumw = -1
-  if not IsDATA:
+  if not IsDATA and args.Analyzer!="GetEffLumi":
+    if not os.path.exists(SAMPLE_DATA_DIR+'/CommonSampleInfo/'+InputSample+'.txt'):
+      print("No "+SAMPLE_DATA_DIR+'/CommonSampleInfo/'+InputSample+'.txt')
+      exit(2)
     lines_SamplePath = open(SAMPLE_DATA_DIR+'/CommonSampleInfo/'+InputSample+'.txt').readlines()
     for line in lines_SamplePath:
       if line[0]=="#":
@@ -296,16 +310,17 @@ for InputSample in InputSamples:
       if InputSample==words[0]:
         this_dasname = words[1]
         this_xsec = words[2]
-        this_sumw = words[4]
+        this_sumsign = words[4]
+        this_sumw = words[5]
         break
 
   XsecForEachSample.append(this_xsec)
 
   ## Write run script
 
-  if IsKISTI or IsTAMSA:
+  if IsKISTI or IsTAMSA or IsKNU:
 
-    commandsfilename = args.Analyzer+'_'+args.Year+'_'+InputSample
+    commandsfilename = args.Analyzer+'_'+args.Era+'_'+InputSample
     if IsDATA:
       commandsfilename += '_'+DataPeriod
     for flag in Userflags:
@@ -315,7 +330,6 @@ for InputSample in InputSamples:
 SECTION=`printf $1`
 WORKDIR=`pwd`
 
-SumNoAuth=999
 Trial=0
 
 #### make sure use C locale
@@ -340,30 +354,26 @@ source /cvmfs/cms.cern.ch/$SCRAM_ARCH/cms/$cmsswrel/external/$SCRAM_ARCH/bin/thi
 ### modifying LD_LIBRARY_PATH to use libraries in base_rundir
 export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH|sed 's@'$SKFlat_WD'/lib@{0}/lib@')
 
-while [ "$SumNoAuth" -ne 0 ]; do
-
-  if [ "$Trial" -gt 9999 ]; then
-    break
-  fi
-
+while [ "$Trial" -lt 3 ]; do
   echo "#### running ####"
   echo "root -l -b -q {1}/run_${{SECTION}}.C"
-  root -l -b -q {1}/run_${{SECTION}}.C 2> err.log || echo "EXIT_FAILURE" >> err.log
-  NoAuthError_Open=`grep "Error in <TNetXNGFile::Open>" err.log -R | wc -l`
-  NoAuthError_Close=`grep "Error in <TNetXNGFile::Close>" err.log -R | wc -l`
-
-  SumNoAuth=$(($NoAuthError_Open + $NoAuthError_Close))
-
-  if [ "$SumNoAuth" -ne 0 ]; then
-    echo "SumNoAuth="$SumNoAuth
-    echo "AUTH error occured.. running again in 30 seconds.."
+  root -l -b -q {1}/run_${{SECTION}}.C 2> err.log 
+  EXITCODE=$?
+  if [ "$EXITCODE" -eq 5 ]; then
+    echo "IO error occured.. running again in 300 seconds.."
     Trial=$((Trial+=1))
-    sleep 30
+    sleep 300
+  else
+    break
   fi
-
 done
 
+if [ "$EXITCODE" -ne 0 ]; then
+  echo "ERROR errno=$EXITCODE" >> err.log
+fi
+
 cat err.log >&2
+exit $EXITCODE
 '''.format(MasterJobDir, base_rundir, SCRAM_ARCH, cmsswrel)
     run_commands.close()
 
@@ -401,7 +411,7 @@ transfer_output_remaps = "hists.root = output/hists_$(Process).root"
 queue {0}
 '''.format(str(NJobs), commandsfilename)
       submit_command.close()
-    elif IsTAMSA:
+    elif IsTAMSA or IsKNU:
       concurrency_limits=''
       if args.NMax:
         concurrency_limits='concurrency_limits = n'+str(args.NMax)+'.'+os.getenv("USER")
@@ -409,6 +419,7 @@ queue {0}
       if args.Memory:
         request_memory='request_memory = '+str(args.Memory)
       print>>submit_command,'''executable = {1}.sh
+jobbatchname = {1}
 universe   = vanilla
 arguments  = $(Process)
 log = condor.log
@@ -438,14 +449,14 @@ queue {0}
     runfunctionname = "run"
     libdir = (MasterJobDir+'/lib').replace('///','/').replace('//','/')+'/'
     runCfileFullPath = ""
-    if IsKISTI or IsTAMSA:
+    if IsKISTI or IsTAMSA or IsKNU:
       runfunctionname = "run_"+str(it_job)
       runCfileFullPath = base_rundir+'/run_'+str(it_job)+'.C'
     else:
       os.system('mkdir -p '+thisjob_dir)
       runCfileFullPath = thisjob_dir+'run.C'
 
-    IncludeLine = 'R__LOAD_LIBRARY(/cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/lhapdf/6.2.1-gnimlf3/lib/libLHAPDF.so)\n'
+    IncludeLine = 'R__LOAD_LIBRARY(/cvmfs/cms.cern.ch/slc7_amd64_gcc900/external/lhapdf/6.2.3/lib/libLHAPDF.so)\n'
 
     out = open(runCfileFullPath, 'w')
     print>>out,'''{3}
@@ -466,6 +477,7 @@ void {2}(){{
       out.write('  m.MCSample = "'+InputSample+'";\n');
       out.write('  m.IsDATA = false;\n')
       out.write('  m.xsec = '+str(this_xsec)+';\n')
+      out.write('  m.sumSign = '+str(this_sumsign)+';\n')
       out.write('  m.sumW = '+str(this_sumw)+';\n')
 
       if args.FastSim:
@@ -473,7 +485,7 @@ void {2}(){{
       else:
         out.write('  m.IsFastSim = false;\n')
 
-    out.write('  m.DataYear = '+str(args.Year)+';\n')
+    out.write('  m.SetEra("'+str(args.Era)+'");\n')
 
     if len(Userflags)>0:
       out.write('  m.Userflags = {\n')
@@ -483,27 +495,28 @@ void {2}(){{
 
     for it_file in FileRanges[it_job]:
       thisfilename = lines_files[it_file].strip('\n')
-      out.write('  m.AddFile("'+thisfilename+'");\n')
+      out.write('  if(!m.AddFile("'+thisfilename+'")) exit(EIO);\n')
 
     if IsSkimTree:
       tmp_filename = lines_files[ FileRanges[it_job][0] ].strip('\n')
       ## /data7/DATA/SKFlat/v949cand2_2/2017/DATA/SingleMuon/periodB/181107_231447/0000/SKFlatNtuple_2017_DATA_100.root
       ## /data7/DATA/SKFlat/v949cand2_2/2017/MC/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/181108_152345/0000/SKFlatNtuple_2017_MC_100.root
-      skimoutdir = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Year+'/'
+      skimoutdir = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Era+'/'
+      if args.Outputdir!='': skimoutdir=args.Outputdir+'/'+SKFlatV+'/'+args.Era+'/'
       skimoutfilename = ""
       if IsDATA:
         skimoutdir += "DATA_"+args.Analyzer+"/"+InputSample+"/period"+DataPeriod+"/"
-        skimoutfilename = "SKFlatNtuple_"+args.Year+"_DATA_"+str(it_job)+".root"
+        skimoutfilename = "SKFlatNtuple_"+args.Era+"_DATA_"+str(it_job)+".root"
       else:
         skimoutdir += "MC_"+args.Analyzer+"/"+this_dasname+"/"
-        skimoutfilename = "SKFlatNtuple_"+args.Year+"_MC_"+str(it_job)+".root"
+        skimoutfilename = "SKFlatNtuple_"+args.Era+"_MC_"+str(it_job)+".root"
       skimoutdir += timestamp+"/"
 
       os.system('mkdir -p '+skimoutdir)
       out.write('  m.SetOutfilePath("'+skimoutdir+skimoutfilename+'");\n')
 
     else:
-      if IsKISTI or IsTAMSA:
+      if IsKISTI or IsTAMSA or IsKNU:
         out.write('  m.SetOutfilePath("hists.root");\n')
       else:
         out.write('  m.SetOutfilePath("'+thisjob_dir+'/hists.root");\n')
@@ -523,28 +536,7 @@ void {2}(){{
 
     out.close()
 
-    if IsKNU:
-      run_commands = open(thisjob_dir+'commands.sh','w')
-      print>>run_commands,'''cd {0}
-cp ../x509up_u{1} /tmp/
-echo "[SKFlat.py] Okay, let's run the analysis"
-root -l -b -q run.C 1>stdout.log 2>stderr.log
-'''.format(thisjob_dir,UID)
-      run_commands.close()
-
-      jobname = 'job_'+str(it_job)+'_'+args.Analyzer
-      cmd = 'qsub -V -q '+args.Queue+' -N '+jobname+' commands.sh'
-
-      if not args.no_exec:
-        cwd = os.getcwd()
-        os.chdir(thisjob_dir)
-        os.system(cmd+' > submitlog.log')
-        os.chdir(cwd)
-      sublog = open(thisjob_dir+'/submitlog.log','a')
-      sublog.write('\nSubmission command was : '+cmd+'\n')
-      sublog.close()
-
-  if IsKISTI or IsTAMSA:
+  if IsKISTI or IsTAMSA or IsKNU:
 
     cwd = os.getcwd()
     os.chdir(base_rundir)
@@ -570,6 +562,7 @@ root -l -b -q run.C 1>stdout.log 2>stderr.log
     KillCommand.close()
 
 if args.no_exec:
+  print '- RunDir = '+base_rundir
   exit()
 
 ## Set Output directory
@@ -577,13 +570,13 @@ if args.no_exec:
 
 FinalOutputPath = args.Outputdir
 if args.Outputdir=="":
-  FinalOutputPath = SKFlatOutputDir+'/'+SKFlatV+'/'+args.Analyzer+'/'+args.Year+'/'
+  FinalOutputPath = SKFlatOutputDir+'/'+SKFlatV+'/'+args.Analyzer+'/'+args.Era+'/'
   for flag in Userflags:
     FinalOutputPath += flag+"__"
   if IsDATA:
     FinalOutputPath += '/DATA/'
-if IsSkimTree:
-  FinalOutputPath = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Year+'/'
+  if IsSkimTree:
+    FinalOutputPath = '/gv0/DATA/SKFlat/'+SKFlatV+'/'+args.Era+'/'
 
 os.system('mkdir -p '+FinalOutputPath)
 
@@ -595,11 +588,10 @@ print '- Skim = '+args.Skim
 print '- InputSamples =',
 print InputSamples
 print '- NJobs = '+str(NJobs)
-print '- Year = '+args.Year
+print '- Era = '+args.Era
 print '- UserFlags =',
 print Userflags
-if IsKNU:
-  print '- Queue = '+args.Queue
+print '- RunDir = '+base_rundir
 print '- output will be send to : '+FinalOutputPath
 print '##################################################'
 
@@ -651,7 +643,7 @@ try:
         base_rundir = base_rundir+'_period'+DataPeriod
       base_rundir = base_rundir+"/"
 
-      ## base_rundir = $SKFlatRunlogDir/2019_02_26_222038__GetEffLumi__Year2016__KISTI/WW_pythia/
+      ## base_rundir = $SKFlatRunlogDir/2019_02_26_222038__GetEffLumi__Era2016__KISTI/WW_pythia/
 
       this_webdir = webdirpathbase+'/'+base_rundir.replace(SKFlatRunlogDir,'').replace(HOSTNAME+'/',HOSTNAME+'__')
 
@@ -683,7 +675,7 @@ try:
         for it_job in range(0,len(FileRanges)):
 
           thisjob_dir = base_rundir+'/'
-          if IsKISTI or IsTAMSA:
+          if IsKISTI or IsTAMSA or IsKNU:
             thisjob_dir = base_rundir
 
           this_status = ""
@@ -839,6 +831,9 @@ try:
           if IsDATA:
             outputname += '_'+DataPeriod
 
+          if args.TagOutput != '':
+            outputname += '_' + args.TagOutput
+
           if not GotError:
             cwd = os.getcwd()
             os.chdir(base_rundir)
@@ -846,7 +841,9 @@ try:
             #### if number of job is 1, we can just move the file, not hadd
             nFiles = len( FileRangesForEachSample[it_sample] )
             if nFiles==1:
-              if IsKISTI or IsTAMSA:
+
+              if IsKISTI or IsTAMSA or IsKNU:
+
                 os.system('echo "nFiles = 1, so skipping hadd and just move the file" >> JobStatus.log')
                 os.system('ls -1 output/*.root >> JobStatus.log')
                 os.system('mv output/hists_0.root '+outputname+'.root')
@@ -856,9 +853,15 @@ try:
                 os.system('mv job_0/hists.root '+outputname+'.root')
 
             else:
-              if IsKISTI or IsTAMSA:
+              if IsKISTI or IsTAMSA or IsKNU:
+                while True:
+                  nhadd=int(os.popen("pgrep -x hadd -u $USER |wc -l").read().strip())
+                  if nhadd<4: break
+                  os.system('echo "Too many hadd currently (nhadd='+str(nhadd)+'). Sleep 60s" >> JobStatus.log')
+                  time.sleep(60)                  
                 os.system('hadd -f '+outputname+'.root output/*.root >> JobStatus.log')
                 os.system('rm output/*.root')
+                #os.system('condor_run -a request_cpus=10 "hadd -j 10 -f '+outputname+'.root output/*.root 2>&1 >> JobStatus.log"')
               else:
                 os.system('hadd -f '+outputname+'.root job_*/*.root >> JobStatus.log')
                 os.system('rm job_*/*.root')
@@ -881,33 +884,28 @@ except KeyboardInterrupt:
 
 ## Send Email now
 
-from SendEmail import *
-JobFinishEmail = '''#### Job Info ####
-HOST = {3}
-JobID = {6}
-Analyzer = {0}
-Year = {7}
-Skim = {5}
-# of Jobs = {4}
-InputSample = {1}
-{8}
-Output sent to : {2}
-'''.format(args.Analyzer,InputSamples,FinalOutputPath,HOSTNAME,NJobs,args.Skim,str_RandomNumber,args.Year,GetXSECTable(InputSamples,XsecForEachSample))
-JobFinishEmail += '''##################
-Job started at {0}
-Job finished at {1}
-'''.format(string_JobStartTime,string_ThisTime)
-
-if IsKNU:
-  JobFinishEmail += 'Queue = '+args.Queue+'\n'
-
-EmailTitle = '['+HOSTNAME+']'+' Summary of JobID '+str_RandomNumber
-if GotError:
-  JobFinishEmail = "#### ERROR OCCURED ####\n"+JobFinishEmail
-  JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
-  EmailTitle = '[ERROR] Summary of JobID '+str_RandomNumber
-
-if IsKNU:
-  SendEmailbyGMail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)
-else:
+if SendLogToEmail: 
+  from SendEmail import *
+  JobFinishEmail = '''#### Job Info ####
+  HOST = {3}
+  JobID = {6}
+  Analyzer = {0}
+  Era = {7}
+  Skim = {5}
+  # of Jobs = {4}
+  InputSample = {1}
+  {8}
+  Output sent to : {2}
+  '''.format(args.Analyzer,InputSamples,FinalOutputPath,HOSTNAME,NJobs,args.Skim,str_RandomNumber,args.Era,GetXSECTable(InputSamples,XsecForEachSample))
+  JobFinishEmail += '''##################
+  Job started at {0}
+  Job finished at {1}
+  '''.format(string_JobStartTime,string_ThisTime)
+  
+  EmailTitle = '['+HOSTNAME+']'+' Summary of JobID '+str_RandomNumber
+  if GotError:
+    JobFinishEmail = "#### ERROR OCCURED ####\n"+JobFinishEmail
+    JobFinishEmail = ErrorLog+"\n------------------------------------------------\n"+JobFinishEmail
+    EmailTitle = '[ERROR] Summary of JobID '+str_RandomNumber
+  
   SendEmail(USER,SKFlatLogEmail,EmailTitle,JobFinishEmail)

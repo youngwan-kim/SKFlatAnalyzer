@@ -15,6 +15,7 @@
 #include "Lepton.h"
 #include "Muon.h"
 #include "Electron.h"
+#include "Tau.h"
 #include "Photon.h"
 #include "JetTaggingParameters.h"
 #include "Jet.h"
@@ -64,10 +65,13 @@ public:
 
 
   std::vector<Electron> GetAllElectrons();
-  std::vector<Electron> GetElectrons(TString id, double ptmin, double fetamax);
+  std::vector<Electron> GetElectrons(TString id, double ptmin, double fetamax, bool vetoHEM = false);
 
   std::vector<Muon> GetAllMuons();
   std::vector<Muon> GetMuons(TString id, double ptmin, double fetamax);
+
+  std::vector<Tau> GetAllTaus();
+  std::vector<Tau> GetTaus(TString id, double ptmin, double fetamax);
 
   std::vector<Photon> GetAllPhotons();
   std::vector<Photon> GetPhotons(TString id, double ptmin, double fetamax);
@@ -91,10 +95,13 @@ public:
   //==== Get AllObject in the begining, and apply cut
   //==================================================+
 
-  std::vector<Electron> SelectElectrons(const std::vector<Electron>& electrons, TString id, double ptmin, double fetamax);
+  std::vector<Electron> SelectElectrons(const std::vector<Electron>& electrons, TString id, double ptmin, double fetamax, bool vetoHEM = false);
 
   std::vector<Muon> UseTunePMuon(const std::vector<Muon>& muons);
   std::vector<Muon> SelectMuons(const std::vector<Muon>& muons, TString id, double ptmin, double fetamax);
+
+  std::vector<Tau> SelectTaus(const std::vector<Tau>& taus, TString id, double ptmin, double fetamax);
+
 
   std::vector<Jet> SelectJets(const std::vector<Jet>& jets, TString id, double ptmin, double fetamax);
 
@@ -110,6 +117,7 @@ public:
   std::vector<Muon> ScaleMuons(const std::vector<Muon>& muons, int sys);
 
   std::vector<Jet> ScaleJets(const std::vector<Jet>& jets, int sys);
+  std::vector<Jet> ScaleJetsIndividualSource(const std::vector<Jet>& jets, int sys, TString source);
   std::vector<Jet> SmearJets(const std::vector<Jet>& jets, int sys);
 
   std::vector<FatJet> ScaleFatJets(const std::vector<FatJet>& jets, int sys);
@@ -129,11 +137,14 @@ public:
 
   //===== Estimators
 
-  MCCorrection *mcCorr;
-  PuppiSoftdropMassCorr *puppiCorr;
-  FakeBackgroundEstimator *fakeEst;
-  CFBackgroundEstimator *cfEst;
+  MCCorrection *mcCorr=NULL;
+  PuppiSoftdropMassCorr *puppiCorr=NULL;
+  FakeBackgroundEstimator *fakeEst=NULL;
+  CFBackgroundEstimator *cfEst=NULL;
   void initializeAnalyzerTools();
+
+  //==== MCweight
+  double MCweight(bool usesign=true, bool norm_1invpb=true) const;
 
   //==== Prefire
   double GetPrefireWeight(int sys);
@@ -142,11 +153,11 @@ public:
   double GetPileUpWeight(int N_pileup, int syst);
 
   //==== Muon GeneralizedEngpoint momentum scaling
-  GeneralizedEndpoint *muonGE;
-  GEScaleSyst *muonGEScaleSyst;
+  GeneralizedEndpoint *muonGE=NULL;
+  GEScaleSyst *muonGEScaleSyst=NULL;
 
   //==== Using new PDF set
-  PDFReweight *pdfReweight;
+  PDFReweight *pdfReweight=NULL;
   double GetPDFWeight(LHAPDF::PDF* pdf_);
   //==== NewCentral/ProdCentral
   double GetPDFReweight();
@@ -181,22 +192,36 @@ public:
   //==== GenMatching
 
   void PrintGen(const std::vector<Gen>& gens);
-  Gen GetGenMatchedLepton(const Lepton& lep, const std::vector<Gen>& gens);
-  Gen GetGenMatchedPhoton(const Lepton& lep, const std::vector<Gen>& gens);
-  vector<int> TrackGenSelfHistory(const Gen& me, const std::vector<Gen>& gens);
+  static Gen GetGenMatchedLepton(const Lepton& lep, const std::vector<Gen>& gens);
+  static Gen GetGenMatchedPhoton(const Lepton& lep, const std::vector<Gen>& gens);
+  static vector<int> TrackGenSelfHistory(const Gen& me, const std::vector<Gen>& gens);
   bool IsFromHadron(const Gen& me, const std::vector<Gen>& gens);
   int GetLeptonType(const Lepton& lep, const std::vector<Gen>& gens);
   int GetLeptonType_Public(int TruthIdx, const std::vector<Gen>& TruthColl);
   int GetGenPhotonType(const Gen& genph, const std::vector<Gen>& gens);
-  bool IsFinalPhotonSt23_Public(const std::vector<Gen>& TruthColl);
+  static bool IsFinalPhotonSt23_Public(const std::vector<Gen>& TruthColl);
   int  GetPrElType_InSameSCRange_Public(int TruthIdx, const std::vector<Gen>& TruthColl);
   bool IsSignalPID(int pid);
+  bool FindHEMElectron(Electron electron);
+
+  //============ JEC Uncertainty
+  float GetJECUncertainty(TString source, TString JetType,  float eta, float pt, int sys);
+  void  SetupJECUncertainty(TString source , TString JetType="AK4PFchs");
+
 
   //==== Plotting
 
   std::map< TString, TH1D* > maphist_TH1D;
   std::map< TString, TH2D* > maphist_TH2D;
   std::map< TString, TH3D* > maphist_TH3D;
+
+  // Map for JEC
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK4CHSJECUncMap;
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK4PUPPIJECUncMap;
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK8CHSJECUncMap;
+  std::map<TString, std::vector<std::map<float, std::vector<float> > > > AK8PUPPIJECUncMap;
+  vector<TString> JECSources;
+
 
   TH1D* GetHist1D(TString histname);
   TH2D* GetHist2D(TString histname);
@@ -223,9 +248,9 @@ public:
   void FillHist(TString histname,
 		double value_x, double value_y, double value_z,
 		double weight,
-		int n_binx, double *xbins,
-		int n_biny, double *ybins,
-		int n_binz, double *zbins);
+		int n_binx, const double *xbins,
+		int n_biny, const double *ybins,
+		int n_binz, const double *zbins);
 
   //==== JSFillHist : 1D
   std::map< TString, std::map<TString, TH1D*> > JSmaphist_TH1D;
@@ -253,7 +278,7 @@ public:
 
   //==== Output rootfile
   void SwitchToTempDir();
-  TFile *outfile;
+  TFile *outfile=NULL;
   void SetOutfilePath(TString outname);
 
 };

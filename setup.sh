@@ -3,15 +3,15 @@ export SKFlat_LIB_PATH=$SKFlat_WD/lib/
 mkdir -p $SKFlat_LIB_PATH
 mkdir -p $SKFlat_WD/tar
 
-export SKFlatV="Run2Legacy_v4"
+export SKFlatV="Run2UltraLegacy_v3"
 mkdir -p $SKFlat_WD/data/$SKFlatV
 export DATA_DIR=$SKFlat_WD/data/$SKFlatV
 
 #### use cvmfs for root ####
 export CMS_PATH=/cvmfs/cms.cern.ch
 source $CMS_PATH/cmsset_default.sh
-export SCRAM_ARCH=slc7_amd64_gcc700
-export cmsswrel='cmssw-patch/CMSSW_10_4_0_patch1'
+export SCRAM_ARCH=slc7_amd64_gcc900
+export cmsswrel='cmssw/CMSSW_11_2_5'
 cd /cvmfs/cms.cern.ch/$SCRAM_ARCH/cms/$cmsswrel/src
 echo "@@@@ SCRAM_ARCH = "$SCRAM_ARCH
 echo "@@@@ cmsswrel = "$cmsswrel
@@ -41,10 +41,13 @@ elif [[ $HOSTNAME == *"tamsa2"* ]]; then
 elif [[ $HOSTNAME == *"knu"* ]]; then
 
   echo "@@@@ Working on KNU"
-  export SKFlatRunlogDir="/u/user/$USER/scratch/SKFlatRunlog/"
-  export SKFlatOutputDir="/u/user/$USER/scratch/SKFlatOutput/"
+  export SKFlatRunlogDir="/d0/scratch/$USER/SKFlatRunlog/"
+  export SKFlatOutputDir="/d0/scratch/$USER/SKFlatOutput/"
 
 fi
+
+mkdir -p $SKFlatRunlogDir
+mkdir -p $SKFlatOutputDir
 
 alias skout="cd $SKFlatOutputDir/$SKFlatV/"
 
@@ -60,14 +63,22 @@ source $SKFlat_WD/bin/BashColorSets.sh
 ## submodules ##
 #source bin/CheckSubmodules.sh
 
+if [ "$1" = "-q" ];then
+    return
+fi
+
 ## Todo list ##
 python python/PrintToDoLists.py
 source $SKFlat_WD/tmp/ToDoLists.sh
 rm $SKFlat_WD/tmp/ToDoLists.sh
 
-## Log Dir ##
-echo "* Your Log Directory Usage"
-du -sh $SKFlatRunlogDir
-echo "-----------------------------------------------------------------"
 CurrentGitBranch=`git branch | grep \* | cut -d ' ' -f2`
 printf "> Current SKFlatAnalyzer branch : "${BRed}$CurrentGitBranch${Color_Off}"\n"
+echo "-----------------------------------------------------------------"
+
+## Log Dir ##
+python python/PrintOldLogs.py
+source $SKFlat_WD/tmp/OldLogs.sh
+rm $SKFlat_WD/tmp/OldLogs.sh
+echo "* Your Log Directory Usage (ctrl+c to skip)"
+du -sh $SKFlatRunlogDir
