@@ -7,8 +7,11 @@ void WRTau_Analyzer::initializeAnalyzer(){
 
   vJet_vec.clear(); vEl_vec.clear(); vMu_vec.clear();
   vJet_vec = {5}; vEl_vec = {13}; vMu_vec = {21};
-  if(HasFlag("TauFake")) vJet_vec = {0};
-
+  if(HasFlag("TauFake")){
+    vJet_vec = {0};
+    runTauFake = true;
+  }
+  if(HasFlag("LooseTauPrompt")) vJet_vec = {0};
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
   if(DataYear==2016){
@@ -34,8 +37,23 @@ void WRTau_Analyzer::initializeAnalyzer(){
                       WRTau_Core::BoostedSignalRegion,
                       WRTau_Core::ResolvedSignalRegion,
                       WRTau_Core::ResolvedSignalRegionMETInvert,
-                      WRTau_Core::BoostedSignalRegionMETInvert
+                      WRTau_Core::BoostedSignalRegionMETInvert,
+                      //WRTau_Core::BenchmarkResolvedPreselection,
+                      //WRTau_Core::BenchmarkBoostedPreselection,
+                      WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                      WRTau_Core::BoostedSignalRegionMETInvertMTSame
                       };
+
+  if(HasFlag("2DScan")){
+
+    RegionOfInterest.clear();
+    RegionOfInterest = {
+      WRTau_Core::BenchmarkResolvedPreselection,
+      WRTau_Core::BenchmarkBoostedPreselection
+    };
+
+  }
+
 
   if(HasFlag("EXO_16_023")){
 
@@ -81,7 +99,7 @@ void WRTau_Analyzer::executeEvent(){
   AllFatJets = GetAllFatJets();
   AllGens = GetGens();
   AllLHEs = GetLHEs();
-
+  TauFRErr = 0 ;
   executeEventFromParameter(param);
   if(runSystematics){
     for(unsigned int i=0; i<AnalyzerParameter::NSyst; i++){
@@ -92,6 +110,15 @@ void WRTau_Analyzer::executeEvent(){
       if (it == skipSysts.end()) executeEventFromParameter(param);
     }
   }
+  if(runTauFake){
+    param.Name = "Central_TauFRErrUp";
+    TauFRErr = 1 ;
+    executeEventFromParameter(param);
+    param.Name = "Central_TauFRErrDown";
+    TauFRErr = -1 ;
+    executeEventFromParameter(param);
+    
+  }
 
 }
 
@@ -101,6 +128,8 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
   Event ev = GetEvent();
   double weight(1.);
+
+  //if(HasFlag("debugFRfromBins")) cout << param.Name << "with TauFRErr = " << TauFRErr << endl;
 
   vector<Jet> this_AllJets = AllJets;
   vector<FatJet> this_AllFatJets = AllFatJets;
@@ -345,12 +374,13 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         else{
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
-            FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+            if(HasFlag("2DScan")) FillPassingRegions_2DScan(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+            else FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           }
-          if(MCSample.Contains("WRtoTauNtoTauTauJets")){
+          /*if(MCSample.Contains("WRtoTauNtoTauTauJets")){
             if(map_regions[WRTau_Core::BoostedSignalRegion]) cout << "(run,lumi,event) = " << run << ", " << lumi << ", " << event << endl;
             if(map_regions[WRTau_Core::ResolvedSignalRegion]) cout << "Resolved (run,lumi,event) = " << run << ", " << lumi << ", " << event << endl;
-          }
+          }*/
         }
 
       }

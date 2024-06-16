@@ -10,7 +10,7 @@ void WRTau_TauFake::initializeAnalyzer(){
   if(DataYear==2016){
 
     SingleTauTriggers = { "HLT_VLooseIsoPFTau140_Trk50_eta2p1_v" };
-
+    TriggerSafeTauPtCut = 150.;
   }
 
   if(DataYear==2017){
@@ -19,12 +19,14 @@ void WRTau_TauFake::initializeAnalyzer(){
     SingleMuonTriggers = {"HLT_Mu50_v"};
     SingleTauTriggers = {"HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"};
     SingleLeptonTriggers = {"HLT_Mu27_v","HLT_Ele35_WPTight_Gsf_v"};
+    TriggerSafeTauPtCut = 190.;
 
   }
 
   if(DataYear==2018){
 
     SingleTauTriggers = {"HLT_MediumChargedIsoPFTau180HighPtRelaxedIso_Trk50_eta2p1_v"};
+    TriggerSafeTauPtCut = 190.;
 
   }
 
@@ -70,8 +72,7 @@ void WRTau_TauFake::executeEvent(){
 
 void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
 
-  TriggerSafeTauPtCut = 190.;
-
+  
   if(!PassMETFilter()) return;
 
   Event ev = GetEvent();

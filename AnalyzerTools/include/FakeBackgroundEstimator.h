@@ -48,6 +48,7 @@ public:
   TH1D* Tau_PR_Boosted_Mu;
   std::map< TString, TF1* >  map_TF1_tau;
   std::map< TString, TH1D* > map_FitErr_tau;
+  std::map< TString, TH1D* > map_hist_tau;
 
   double GetElectronFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
   double GetMuonFakeRate(TString ID, TString key, double eta, double pt, int sys=0);

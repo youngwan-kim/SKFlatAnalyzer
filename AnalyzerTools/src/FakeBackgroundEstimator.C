@@ -59,28 +59,28 @@ void FakeBackgroundEstimator::ReadHistograms(){
   // Tau histogram 
   TFile *file1 = new TFile(datapath+"/Tau/PromptRate.root");
   histDir->cd();
-  Tau_PR_Boosted_El  = (TH1D *) file1->Get("BoostedSignalRegionMETInvert_ElTau_PRNonSubtract_All_All")->Clone();
+  Tau_PR_Boosted_El  = (TH1D *) file1->Get("BoostedSignalRegionMETInvertMTSame_ElTau_PRSubtract_All_All")->Clone();
   file1->Close();
   delete file1;
   origDir->cd();
 
   TFile *file2 = new TFile(datapath+"/Tau/PromptRate.root");
   histDir->cd();
-  Tau_PR_Resolved_El = (TH1D *) file2->Get("ResolvedSignalRegionMETInvert_ElTau_PRNonSubtract_All_All")->Clone();
+  Tau_PR_Resolved_El = (TH1D *) file2->Get("ResolvedSignalRegionMETInvertMTSame_ElTau_PRSubtract_All_All")->Clone();
   file2->Close();
   delete file2;
   origDir->cd();
 
   TFile *file3 = new TFile(datapath+"/Tau/PromptRate.root");
   histDir->cd();
-  Tau_PR_Boosted_Mu  = (TH1D *) file3->Get("BoostedSignalRegionMETInvert_MuTau_PRNonSubtract_All_All")->Clone();
+  Tau_PR_Boosted_Mu  = (TH1D *) file3->Get("BoostedSignalRegionMETInvertMTSame_MuTau_PRSubtract_All_All")->Clone();
   file3->Close();
   delete file3;
   origDir->cd();
 
   TFile *file4 = new TFile(datapath+"/Tau/PromptRate.root");
   histDir->cd();
-  Tau_PR_Resolved_Mu = (TH1D *) file4->Get("ResolvedSignalRegionMETInvert_MuTau_PRNonSubtract_All_All")->Clone();
+  Tau_PR_Resolved_Mu = (TH1D *) file4->Get("ResolvedSignalRegionMETInvertMTSame_MuTau_PRSubtract_All_All")->Clone();
   file4->Close();
   delete file4;
   origDir->cd();
@@ -101,19 +101,46 @@ void FakeBackgroundEstimator::ReadHistograms(){
       for(TString ch : channel) {
           histDir->cd();
           map_TF1_tau[rg+"_"+ch+"_"+YearString]    =  (TF1 *)  fileTauFR->Get(rg+"_"+ch+"_"+YearString);
-          cout << rg+"_"+ch+"_"+YearString << endl;
+          cout << "Set " << rg+"_"+ch+"_"+YearString << "fit TF1 @ " << map_TF1_tau[rg+"_"+ch+"_"+YearString] << endl;
           //fileTauFR->Close();
           //delete fileTauFR;
           origDir->cd();
-
-          //histDir->cd();
-          //dir->cd();
-          //map_FitErr_tau[rg+"_"+ch+"_"+YearString] =  (TH1D *) dir->Get("unc")->Clone(rg+"_"+ch+"_"+YearString+"_err");
-          //fileTauFR->Close();
-          //delete fileTauFR;
-          //origDir->cd();
       }
   }
+
+  fileTauFR->Close();
+  delete fileTauFR;
+
+  TFile *fileTauFR_ = new TFile(datapath_taufake+"/FitResultsNew_Unc.root");
+
+  for(TString rg : region) {
+      for(TString ch : channel) {
+          histDir->cd();
+          map_FitErr_tau[rg+"_"+ch+"_"+YearString] = (TH1D*) fileTauFR_->Get(rg+"_"+ch+"_"+YearString+"_err")->Clone();
+          cout << "Set " << rg+"_"+ch+"_"+YearString << " fit err TH1D @ " << map_FitErr_tau[rg+"_"+ch+"_"+YearString] << endl;
+          origDir->cd();
+      }
+  }
+
+  fileTauFR_->Close();
+  delete fileTauFR_;
+
+  std::vector<TString> region_new  = {"ResolvedSignalRegionMETInvertMTSame", "BoostedSignalRegionMETInvertMTSame"};
+
+  // Tau FR Histogram
+  TFile *fileTauFR_Binned = new TFile(datapath_taufake+"/"+YearString+".root");
+  for(TString rg : region_new) {
+      for(TString ch : channel) {
+          histDir->cd();
+          map_hist_tau[rg+"_"+ch] = (TH1D*) fileTauFR_->Get(rg+"_"+ch+"_DataDrivenSubtract_All_All")->Clone();
+          cout << "Set " << rg+"_"+ch << " TH1D @ " << map_hist_tau[rg+"_"+ch] << endl;
+          origDir->cd();
+      }
+  }
+
+  fileTauFR_Binned->Close();
+  delete fileTauFR_Binned;
+
 
 }
 

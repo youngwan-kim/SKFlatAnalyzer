@@ -12,6 +12,7 @@ public:
   void executeEvent();
 
   bool runSystematics = false;
+  bool runTauFake = false;
   vector<AnalyzerParameter::Syst> skipSysts = { AnalyzerParameter::BTagSFHTagUp, AnalyzerParameter::BTagSFHTagDown,
                                                 AnalyzerParameter::BTagSFLTagUp, AnalyzerParameter::BTagSFLTagDown,
                                                 AnalyzerParameter::JetPUIDUp , AnalyzerParameter::JetPUIDDown,

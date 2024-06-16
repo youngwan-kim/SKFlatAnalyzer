@@ -24,7 +24,7 @@ public:
   // Cut Values
   double LSFOptCut = 0.6;
   double METCut = 100;
-  double MTCut = 450;
+  double MTCut = 900;
   double MRecoCut = 1200;
   
   double TriggerSafeTauPtCut = 0.0;
@@ -108,6 +108,8 @@ public:
     FakeDYControlRegion,
     BenchmarkResolvedPreselection,
     BenchmarkBoostedPreselection,
+    BoostedSignalRegionMETInvertMTSame,
+    ResolvedSignalRegionMETInvertMTSame,
 
     //Generator level regions ()
     GenDebug                    = 100,
@@ -139,26 +141,32 @@ public:
   int Syst_PU = 0;
   int Syst_Prefire = 0;
 
+  int TauFRErr = 0;
+
   vector<WRTau_Core::SearchRegion> BoostedRegions = {WRTau_Core::BoostedLowMassControlRegionMass1,
                                                      WRTau_Core::BoostedLowMassControlRegion,
                                                      WRTau_Core::BoostedMassOptSel,
                                                      WRTau_Core::BoostedSignalRegion,
                                                      WRTau_Core::BoostedSignalRegionMass1,
-                                                     WRTau_Core::BoostedSignalRegionMETInvert};
+                                                     WRTau_Core::BoostedSignalRegionMETInvert,
+                                                     WRTau_Core::BoostedSignalRegionMETInvertMTSame,
+                                                     WRTau_Core::BenchmarkBoostedPreselection};
 
   vector<WRTau_Core::SearchRegion> ResolvedRegions = {WRTau_Core::ResolvedLowMassControlRegionMass1,
                                                       WRTau_Core::ResolvedLowMassControlRegion,
                                                       WRTau_Core::ResolvedMassOptSel,
                                                       WRTau_Core::ResolvedSignalRegion,
                                                       WRTau_Core::ResolvedSignalRegionMass1,
-                                                      WRTau_Core::ResolvedSignalRegionMETInvert};
+                                                      WRTau_Core::ResolvedSignalRegionMETInvert,
+                                                      WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                                                      WRTau_Core::BenchmarkResolvedPreselection};
 
 
   vector<WRTau_Core::SearchRegion> MassOptRegions = {WRTau_Core::BoostedMassOptSel,
                                                      WRTau_Core::ResolvedMassOptSel};
 
-  vector<WRTau_Core::SearchRegion> FakeMeasurementRegion = {WRTau_Core::BoostedSignalRegionMETInvert,
-                                                            WRTau_Core::ResolvedSignalRegionMETInvert};
+  vector<WRTau_Core::SearchRegion> FakeMeasurementRegion = {WRTau_Core::BoostedSignalRegionMETInvertMTSame,
+                                                            WRTau_Core::ResolvedSignalRegionMETInvertMTSame};
 
   vector<WRTau_Core::SearchRegion> FakeMeasurementRegion_Lepton = {WRTau_Core::BoostedSignalRegionLSFInvert,
                                                                   };
@@ -252,6 +260,27 @@ public:
 
   double GetResolvedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons,bool ignoreMET);
   double GetBoostedSRMass(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons,bool ignoreMET);
+  double GetBoostedSRMass(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedSRMass(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  
+  double GetBoostedST(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedST(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  
+  double GetBoostedLT(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedLT(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  
+  double GetBoostedHT(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedHT(const std::vector<Tau>& taus,const std::vector<Jet>& jets,const std::vector<Lepton *> TightLeptons);
+  
+  double GetBoostedSTwithMET(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedSTwithMET(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+
+  double GetBoostedDeltaPhiLepTau(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedDeltaPhiLepTau(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  
+  double GetBoostedDeltaPhiLepJets(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
+  double GetResolvedDeltaPhiLepJets(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
+  
   double GetResolvedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
   double GetBoostedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons);
   double GetResolvedSRMassN_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons);
@@ -259,6 +288,9 @@ public:
   
   //map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
   //                                             const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons); // TODO Implement getregion with gen level version
+  void FillPassingRegions_2DScan(map<WRTau_Core::SearchRegion,bool> m_region,WRTau_Core::SearchRegion r,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
+                        TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
   void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
                         TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
@@ -297,6 +329,7 @@ public:
 
   // Fake Rates
   double GetTauFR(const Tau tau, WRTau_Core::SearchRegion region);
+  double GetTauFRfromBins(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region);
   double GetTauFR(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region, const int deg);
   double GetTauFRWeight(const Tau tau, const std::vector<Lepton *> leps, const std::vector<Gen>& gens, WRTau_Core::SearchRegion region,const int deg);
   double GetElTauFRWeight(const Tau tau, const Electron el,const std::vector<Gen>& gens, WRTau_Core::SearchRegion region);

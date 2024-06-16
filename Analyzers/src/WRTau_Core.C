@@ -462,7 +462,10 @@ int WRTau_Core::GetTauType(const Tau tau, const std::vector<Gen>& gens){
 
   //cout << "[WRTau_Core::GetTauType] Start" << endl;
   int TauType = 0, MatchedTruthIdx = -1;
-  if(gen_closest.IsEmpty()) TauType = -1;
+  if(gen_closest.IsEmpty()){
+    //cout << "[WRTau_Core::GetTauType] no close gen" << endl;
+    TauType = -1;
+  }
   else{
     MatchedTruthIdx = gen_closest.Index();
     //cout << "[WRTau_Core::GetTauType] MatchedTruthIdx : " << MatchedTruthIdx << endl;
@@ -492,8 +495,10 @@ int WRTau_Core::GetTauType_Public(int TruthIdx, const std::vector<Gen>& TruthCol
   // ==== >0 : Non-fake
   // ==== <0 : Fakes (Unmatched or misid.)
 
-  if(TruthIdx<2) return 0;
-
+  if(TruthIdx<2) {
+    //cout << "[WRTau_Core::GetTauType_Public,Error] Point1, TruthIdx " <<  TruthIdx  <<  endl;
+    return -7;
+  }
   //cout << "[WRTau_Core::GetTauType_Public] Point1, TruthIdx " <<  TruthIdx  <<  endl;
   int TauType = 0;
   int PID = 0, MPID = 0, GrMPID = 0;
@@ -543,7 +548,10 @@ int WRTau_Core::GetTauType_Public(int TruthIdx, const std::vector<Gen>& TruthCol
   }
 
   //cout << "[WRTau_Core::GetTauType_Public] Point7" << endl;
-  if(TruthIdx == -1)                                                                                  TauType = 0;
+  if(TruthIdx == -1){
+    TauType = 0;
+    //cout << "[WRTau_Core::GetTauType_Public,Error] Point2, TruthIdx " <<  TruthIdx  <<  endl;
+  }
   else if(HasTauAncestor){ 
     
     // Has a tau ancestor ; track tau again for radiation correction etc.
@@ -578,6 +586,11 @@ int WRTau_Core::GetTauType_Public(int TruthIdx, const std::vector<Gen>& TruthCol
         if(IsFromHadron(TruthColl.at(PhotonMotherIndex),TruthColl))                                   TauType = -3;
       }
     }
+  }
+
+  if(TauType == 0){
+    if(HasFlag("debugTauGenMatch")) TruthColl.at(TruthIdx).Print();
+    if(TruthColl.at(TruthIdx).MotherIndex() == 0 || TruthColl.at(TruthIdx).MotherIndex() == 1 ) TauType = -8 ;
   }
 
   return TauType;
@@ -816,8 +829,9 @@ std::string WRTau_Core::GetRegionString(WRTau_Core::SearchRegion region){
   if (region == WRTau_Core::BoostedSignalRegionLSFInvert)       region_string = "BoostedSignalRegionLSFInvert";
   if (region == WRTau_Core::BenchmarkResolvedPreselection)      region_string = "BenchmarkResolvedPreselection";
   if (region == WRTau_Core::BenchmarkBoostedPreselection)       region_string = "BenchmarkBoostedPreselection";
-
-
+  if (region == WRTau_Core::BoostedSignalRegionMETInvertMTSame) region_string = "BoostedSignalRegionMETInvertMTSame";
+  if (region == WRTau_Core::ResolvedSignalRegionMETInvertMTSame) region_string = "ResolvedSignalRegionMETInvertMTSame";
+  
   return region_string;
 }
 
@@ -856,6 +870,189 @@ double WRTau_Core::GetResolvedSRMass(Particle METv,const std::vector<Tau>& taus,
   }  
 
   return mass;
+
+}
+
+
+double WRTau_Core::GetResolvedSRMass(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double mass = -999;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      Particle wr = taus.at(0) + *TightLeptons.at(0) + jets.at(0) + jets.at(1);
+      mass = wr.M();
+    }
+  }  
+
+  return mass;
+
+}
+
+
+double WRTau_Core::GetResolvedST(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double st = -999;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      st = taus.at(0).Pt() + TightLeptons.at(0)->Pt() + jets.at(0).Pt() + jets.at(1).Pt();
+    }
+  }  
+
+  return st;
+
+}
+
+double WRTau_Core::GetResolvedLT(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double lt = 0;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      for(const auto &l : TightLeptons){
+        lt += l->Pt();
+      }
+    }
+  }  
+
+  return lt;
+
+}
+
+double WRTau_Core::GetResolvedHT(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double ht = 0;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      for(const auto &j : jets_ResolvedSR){
+        if(j.Pt()>40) ht += j.Pt();
+      }
+    }
+  }  
+
+  return ht;
+
+}
+
+double WRTau_Core::GetResolvedSTwithMET(Particle METv, const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double st = -999;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      st = taus.at(0).Pt() + TightLeptons.at(0)->Pt() + jets.at(0).Pt() + jets.at(1).Pt() + METv.Pt();
+    }
+  }  
+
+  return st;
+
+}
+
+double WRTau_Core::GetResolvedDeltaPhiLepTau(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double delta = 0;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      delta = taus.at(0).DeltaPhi(*TightLeptons.at(0));
+    }
+  }  
+
+  return delta;
+
+}
+
+double WRTau_Core::GetResolvedDeltaPhiLepJets(const std::vector<Tau>& taus,const std::vector<Jet>& jets, const std::vector<Lepton *> TightLeptons){
+
+  double delta = 0;
+
+  vector<Jet> jets_ResolvedSR;
+  vector<Particle> leptons_ResolvedSR;
+
+  jets_ResolvedSR = {jets.at(0),jets.at(1)};
+  if(TightLeptons.at(0)->Pt()>53){
+    leptons_ResolvedSR = {(Particle)taus.at(0),(Particle)*TightLeptons.at(0)};
+    vector<double> dRlj;
+    for(const auto &lep : leptons_ResolvedSR){
+      for(const auto &j : jets_ResolvedSR){
+        dRlj.push_back(j.DeltaR(lep));
+      }
+    }
+    if(*min_element(dRlj.begin(),dRlj.end())>0.4){
+      Particle jets_ = jets.at(0) + jets.at(1);
+      delta = jets_.DeltaPhi(*TightLeptons.at(0));
+    }
+  }  
+
+  return delta;
 
 }
 
@@ -943,6 +1140,201 @@ double WRTau_Core::GetBoostedSRMass(Particle METv,const std::vector<Tau>& taus,c
   return mass;
 
 }
+
+
+
+double WRTau_Core::GetBoostedSRMass(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double mass = -999;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      Particle wr = taus.at(0) + AddFatJetAndLepton(fatjet_BoostedSR,*leptons_BoostedSR.at(0)) ;
+      mass = wr.M();
+    }
+  }
+
+  return mass;
+
+}
+
+
+double WRTau_Core::GetBoostedST(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double st = -999;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      st = taus.at(0).Pt() + AddFatJetAndLepton(fatjet_BoostedSR,*leptons_BoostedSR.at(0)).Pt() ;
+    }
+  }
+
+  return st;
+
+}
+
+double WRTau_Core::GetBoostedLT(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double lt = 0;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      for(const auto &lep : leptons_BoostedSR){
+        lt += lep->Pt();
+      }
+    }
+  }
+
+  return lt;
+
+}
+
+double WRTau_Core::GetBoostedHT(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double ht = 0;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      for(const auto &J : fatjets_BoostedSR){
+        if(J.Pt()>40) ht += J.Pt();
+      }
+    }
+  }
+
+  return ht;
+
+}
+
+double WRTau_Core::GetBoostedSTwithMET(Particle METv , const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double st = -999;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      st = taus.at(0).Pt() + AddFatJetAndLepton(fatjet_BoostedSR,*leptons_BoostedSR.at(0)).Pt() + METv.Pt();
+    }
+  }
+
+  return st;
+
+}
+
+
+
+double WRTau_Core::GetBoostedDeltaPhiLepJets(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double delta = 0;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      delta = fatjet_BoostedSR.DeltaPhi(*leptons_BoostedSR.at(0));
+    }
+  }
+
+  return delta;
+
+}
+
+
+
+double WRTau_Core::GetBoostedDeltaPhiLepTau(const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
+
+  double delta = 0;
+
+  vector<FatJet> fatjets_BoostedSR;
+  vector<Lepton *> leptons_BoostedSR;
+  FatJet fatjet_BoostedSR;
+
+  for(const auto &J : fatjets){
+    if(J.DeltaPhi(taus.at(0))>2.0) fatjets_BoostedSR.push_back(J);
+  }
+
+  if(fatjets_BoostedSR.size()>0){
+    fatjet_BoostedSR = fatjets_BoostedSR.at(0);
+    for(const auto &looselep : LooseLeptons){
+      if(fatjet_BoostedSR.DeltaR(*looselep)<0.8) leptons_BoostedSR.push_back(looselep);
+    }
+    if(leptons_BoostedSR.size()>0 ){
+      delta = taus.at(0).DeltaPhi(*leptons_BoostedSR.at(0));
+    }
+  }
+
+  return delta;
+
+}
+
 
 double WRTau_Core::GetBoostedSRMass_RecoNeutrino(Particle METv,const std::vector<Tau>& taus,const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons){
 
@@ -1059,6 +1451,8 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool _isBoostedPreselectionWithLSF(false);
   bool _isBenchmarkResolvedPreselection(false);
   bool _isBenchmarkBoostedPreselection(false);
+  bool _isResolvedSignalRegionMETInvertMTSame(false);
+  bool _isBoostedSignalRegionMETInvertMTSame(false);
 
 
   bool hasAtLeast2AK4Jets = jets.size()>1;
@@ -1115,11 +1509,18 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
 
         _isBenchmarkResolvedPreselection = true;
 
-        if(METv.Pt()>METCut) _isResolvedMassOptSel = true;
-        else _isResolvedSignalRegionMETInvert = true;
-
         double mwr1 = GetResolvedSRMass_RecoNeutrino(METv,taus,jets,TightLeptons);
-        double mwr  = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
+        //double mwr  = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);
+        double mwr  = GetResolvedSRMass(taus,jets,TightLeptons);
+
+        if(METv.Pt()>METCut) _isResolvedMassOptSel = true;
+        else{
+          _isResolvedSignalRegionMETInvert = true;
+          if(mwr>MTCut){
+            _isResolvedSignalRegionMETInvertMTSame = true;
+            //cout << "_isResolvedSignalRegionMETInvertMTSame" << endl;
+          }
+        }
         
         if(mwr<MTCut) _isResolvedLowMassControlRegion = true ; // TODO : study mass cut optimization ; make a submethod to vary mass cuts and check significance in 2D
         else if(mwr>MTCut && METv.Pt()>METCut) _isResolvedSignalRegion = true;
@@ -1161,14 +1562,20 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
 
           _isBenchmarkBoostedPreselection = true;
 
+          //double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true); 
+          double mwr  = GetBoostedSRMass(taus,fatjets,LooseLeptons); 
+          double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
+
+          //cout << " MET,mWR = " << METv.Pt() << " , " << mwr << endl;
           if(METv.Pt()>METCut) _isBoostedMassOptSel = true;
           else {
             _isBoostedSignalRegionMETInvert = true;
+            if(mwr>MTCut){
+              //cout << "_isBoostedSignalRegionMETInvertMTSame MET,mWR = " << METv.Pt() << " , " << mwr << endl;
+              _isBoostedSignalRegionMETInvertMTSame = true;
+            }
           }
-
-          double mwr  = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
-          double mwr1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
-
+          
           if(mwr<MTCut) _isBoostedLowMassControlRegion = true ;
           else if(mwr>MTCut && METv.Pt()>METCut) _isBoostedSignalRegion = true;
 
@@ -1203,7 +1610,9 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
     {WRTau_Core::BoostedSignalRegionMETInvert,_isBoostedSignalRegionMETInvert},
     {WRTau_Core::WJetsControlRegion,_isWJetsControlRegion},
     {WRTau_Core::BoostedMassOptSel,_isBoostedMassOptSel},
-    {WRTau_Core::ResolvedMassOptSel,_isResolvedMassOptSel}
+    {WRTau_Core::ResolvedMassOptSel,_isResolvedMassOptSel},
+    {WRTau_Core::ResolvedSignalRegionMETInvertMTSame,_isResolvedSignalRegionMETInvertMTSame},
+    {WRTau_Core::BoostedSignalRegionMETInvertMTSame,_isBoostedSignalRegionMETInvertMTSame}
   };
 
   return m_region;
@@ -1506,6 +1915,10 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
       for(const auto str : fillstr){
 
+        if(HasFlag("TauFake")){
+          FillHist(str+"/TauFakeWeight",GetTauFRWeight(taus.at(0),leptons,gens,r,2),1.,5000,0.,50.);
+          FillHist(str+"/TauFakeRate",GetTauFRfromBins(taus.at(0),leptons,r),1.,100,0.,1.);
+        }
         //CopyHist(fillpath+"/Cutflow",str+"/Cutflow");
         FillHist(str+"/Nevents",0,weight,1,0.,1.);
         FillHist(str+"/MET",METv.Pt(),weight,2500,0.,2500.);
@@ -1529,27 +1942,47 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), r);
         auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), r);
 
-
         if( it_b != BoostedRegions.end() ){
 
+          if(HasFlag("debugFill")) cout << str << endl;
           FillLeptonPlots(leptons,str+"/HighPtLoose",weight);
           FillHist(str+"/dRJtau",taus.at(0).DeltaR(fatjets.at(0)),weight,60,0.,6.);
           double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
-          double M2 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
+          double M2 = GetBoostedSRMass(taus,fatjets,LooseLeptons);
+          double ST = GetBoostedST(taus,fatjets,LooseLeptons);
           if(M1>0) FillHist(str+"/ProperMTWR",M1,weight,20000,0.,20000.);
           if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight,20000,0.,20000.);
+          if(ST>0) FillHist(str+"/BoostedST",M2,weight,20000,0.,20000.);
+          if( GetRegionString(r) == "BenchmarkBoostedPreselection" ){
+            if(HasFlag("debugFill")) cout << "fill BenchmarkBoostedPreselection" << endl;
+            //FillHist(str+"/MET_MtWR",METv.Pt(),M1,weight,2500,0.,2500.,5000,0.,5000);
+            //FillHist(str+"/MET_MeffWR",METv.Pt(),M2,weight,2500,0.,2500.,10000,0.,10000);
+            FillHist(str+"/MET_ST",METv.Pt(),ST,weight,2500,0.,2500.,10000,0.,10000);
+            FillHist(str+"/MET_METoverST",METv.Pt(),METv.Pt()/ST,weight,2500,0.,2500.,10000,0.,10000);
+            FillHist(str+"/MET_MET2overST",METv.Pt(),METv.Pt()*METv.Pt()/ST,weight,2500,0.,2500.,10000,0.,10000);
+          }
 
         }
 
         if( it_r != ResolvedRegions.end() ){
-          
+          if(HasFlag("debugFill")) cout << str << endl;
           FillLeptonPlots(leptons,str+"/HighPtTight",weight);
           FillHist(str+"/dRj0tau",taus.at(0).DeltaR(jets.at(0)),weight,60,0.,6.);
           FillHist(str+"/dRj1tau",taus.at(0).DeltaR(jets.at(1)),weight,60,0.,6.);
           double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
-          double M2 = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);
+          double M2 = GetResolvedSRMass(taus,jets,TightLeptons);
+          double ST = GetResolvedST(taus,jets,TightLeptons);
           if(M1>0) FillHist(str+"/ProperMTWR",M1,weight,20000,0.,20000.);
           if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight,20000,0.,20000.);
+          if(ST>0) FillHist(str+"/BoostedST",M2,weight,20000,0.,20000.);
+          if( GetRegionString(r) == "BenchmarkResolvedPreselection" ){
+            if(HasFlag("debugFill")) cout << "fill BenchmarkResolvedPreselection" << endl;
+            //FillHist(str+"/MET_MtWR",METv.Pt(),M1,weight,2500,0.,2500.,5000,0.,5000);
+            //FillHist(str+"/MET_MeffWR",METv.Pt(),M2,weight,2500,0.,2500.,10000,0.,10000);
+            FillHist(str+"/MET_ST",METv.Pt(),ST,weight,2500,0.,2500.,10000,0.,10000);
+            FillHist(str+"/MET_METoverST",METv.Pt(),METv.Pt()/ST,weight,2500,0.,2500.,10000,0.,10000);
+            FillHist(str+"/MET_MET2overST",METv.Pt(),METv.Pt()*METv.Pt()/ST,weight,2500,0.,2500.,10000,0.,10000);
+          }
 
         }
       }
@@ -1600,8 +2033,8 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
             double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
             double M2 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,true);
-            if(M1>0) FillHist(str+"/ProperMTWR",M1,weight_var,5000,0.,5000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight_var,5000,0.,5000.);
+            if(M1>0) FillHist(str+"/ProperMTWR",M1,weight_var,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight_var,20000,0.,20000.);
 
           }
 
@@ -1609,12 +2042,109 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
             double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
             double M2 = GetResolvedSRMass(METv,taus,jets,TightLeptons,true);
-            if(M1>0) FillHist(str+"/ProperMTWR",M1,weight_var,5000,0.,5000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight_var,5000,0.,5000.);
+            if(M1>0) FillHist(str+"/ProperMTWR",M1,weight_var,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR",M2,weight_var,20000,0.,20000.);
 
           }
         }
       }
+      
+    }
+  
+  return;
+
+}
+
+void WRTau_Core::FillPassingRegions_2DScan(map<WRTau_Core::SearchRegion,bool> m_region,WRTau_Core::SearchRegion r,Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
+                        TString fillpath, double MCweight,std::tuple<int,int,int> idtuple, bool highpT){
+  
+    if(m_region[r]==true){
+
+      std::pair<std::vector<Lepton *>,std::vector<Lepton *>> PairVecLeps = std::make_pair(LooseLeptons,TightLeptons);
+      vector<Lepton *> leptons = ChooseLeptonColl(r,PairVecLeps);
+
+      TString TauPromptString = "";
+      TString LeptonPromptString = "";
+
+      if(!IsDATA){
+        if(!isSignalSample()){
+          if(taus.size()>0 && taus.at(0).Pt()>=TriggerSafeTauPtCut){
+            if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
+            else return;
+          }
+    
+          if(leptons.size()>0){
+            if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
+            else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
+            else return;
+          }
+        }
+      }
+
+      WRTau_Core::Channel ch = GetChannel(leptons);
+      if(TauPromptString!="") TauPromptString = "/"+TauPromptString;
+      TString label = fillpath+TauPromptString+LeptonPromptString+"/"+GetRegionString(r); 
+      TString label_channel = label + "_"+GetChannelString(ch);
+
+      if(HasFlag("debugFill")) cout << "[WRTau_Core::FillPassingRegions] label = " << label << endl;
+      if(HasFlag("debugFill")) cout << "[WRTau_Core::FillPassingRegions] label_channel = " << label_channel << endl;
+
+      std::vector<TString> fillstr = {label_channel};
+      
+      double weight_var;
+      double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
+      weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
+      if(HasFlag("TauFake")){
+        weight_var = weight * GetTauFRWeight(taus.at(0),leptons,gens,r,3);
+        weight *= GetTauFRWeight(taus.at(0),leptons,gens,r,2);
+      }
+      if(HasFlag("unweighted")) weight = 1;
+      if(isBoostedRegion(r)){
+        weight *= LSFSF(ch,Syst_LSFSF);
+      }
+
+      for(const auto str : fillstr){
+
+
+        auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), r);
+        auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), r);
+
+        double STwithMET = 0.;
+        double LT = 0.;
+        double HT = 0.;
+        double DeltaPhiLepTau = 0.;
+        double DeltaPhiLepJets = 0.;
+
+
+        if( it_b != BoostedRegions.end() ){
+
+          STwithMET = GetBoostedSTwithMET(METv,taus,fatjets,LooseLeptons);
+          LT = GetBoostedLT(taus,fatjets,LooseLeptons);
+          HT = GetBoostedHT(taus,fatjets,LooseLeptons);
+          DeltaPhiLepTau = GetBoostedDeltaPhiLepTau(taus,fatjets,LooseLeptons);
+          DeltaPhiLepJets = GetBoostedDeltaPhiLepJets(taus,fatjets,LooseLeptons);
+
+        }
+
+        if( it_r != ResolvedRegions.end() ){
+
+          STwithMET = GetResolvedSTwithMET(METv,taus,jets,TightLeptons);
+          LT = GetResolvedLT(taus,jets,TightLeptons);
+          HT = GetResolvedHT(taus,jets,TightLeptons);
+          DeltaPhiLepTau =  GetResolvedDeltaPhiLepTau(taus,jets,TightLeptons);
+          DeltaPhiLepJets = GetResolvedDeltaPhiLepJets(taus,jets,TightLeptons);
+          
+        }
+
+        FillHist(str+"/MET_ST",METv.Pt(),STwithMET,weight,2500,0.,2500.,10000,0.,10000);
+        FillHist(str+"/MET_LT",METv.Pt(),LT,weight,2500,0.,2500.,10000,0.,10000);
+        FillHist(str+"/MET_HT",METv.Pt(),HT,weight,2500,0.,2500.,10000,0.,10000);
+        FillHist(str+"/MET_dPhiLepTau",METv.Pt(),DeltaPhiLepTau,weight,2500,0.,2500.,6500,0.,6.5);
+        FillHist(str+"/MET_dPhiLepjets",METv.Pt(),DeltaPhiLepJets,weight,2500,0.,2500.,6500,0.,6.5);
+
+      }
+
       
     }
   
@@ -1840,11 +2370,10 @@ double WRTau_Core::GetTauFR(const Tau tau, WRTau_Core::SearchRegion region){
 
 double WRTau_Core::GetTauFR_SingleFit(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region){
 
-  double x = 0.;
+  double x = tau.Pt();
   double value = 0.;
 
   if(tau.Pt() > 1000.) x = 999.;
-  else x = tau.Pt() ;
 
   std::string rg = "";
   TString ch = GetChannelString(GetChannel(leps));
@@ -1859,13 +2388,79 @@ double WRTau_Core::GetTauFR_SingleFit(const Tau tau, const std::vector<Lepton *>
   mapit = fakeEst->map_TF1_tau.find(rg+"_"+ch+"_"+YearString);
 
   if(mapit == fakeEst->map_TF1_tau.end()){
-    cout << "[WRTauCore::GetTauFR_SingleFit] No "  << rg+"_"+ch+"_"+YearString << endl;
+    cout << "[WRTauCore::GetTauFR_SingleFit] TF1 No "  << rg+"_"+ch+"_"+YearString << endl;
     exit(ENODATA);
   }
 
-  value = (mapit->second)->Eval(x);
+  /*for (const auto& pair : fakeEst->map_FitErr_tau) {
+    std::cout << pair.first << ": " << pair.second << " , " << pair.second->GetNbinsX() << " , " << pair.second.GetBinContent(1) << std::endl;
+  }*/
 
-  return value;
+  std::map< TString, TH1D* >::const_iterator mapit_h;
+  mapit_h = fakeEst->map_FitErr_tau.find(rg+"_"+ch+"_"+YearString);
+
+  if(mapit_h == fakeEst->map_FitErr_tau.end()){
+    cout << "[WRTauCore::GetTauFR_SingleFit] TH1D No "  << rg+"_"+ch+"_"+YearString << endl;
+    exit(ENODATA);
+  }
+  //cout << "[WRTauCore::GetTauFR_SingleFit] "  << (mapit_h->second)->Get << endl;
+
+  TH1D* h_err = (TH1D*) (mapit_h->second)->Clone();
+
+  //cout << "[WRTauCore::GetTauFR_SingleFit] "  
+
+  value = (mapit->second)->Eval(x);
+  //int this_bin = 0;
+  int this_bin = int(x)-189;
+  this_bin = h_err->FindBin(x);
+
+  //cout << x << " , " << this_bin << " , " << value << endl;
+  double err = 0.;
+  double err_raw = h_err->GetBinError(this_bin);
+  //cout << x << " , " << this_bin << " , " << value << " + " << TauFRErr << "*" << err_raw << endl;
+  err = std::max(0.0, h_err->GetBinError(this_bin));
+  //cout << x << " , " << this_bin << " , " << value << " + " << TauFRErr << "*" << err << endl;
+
+  return value + TauFRErr * err ;
+
+}
+
+double WRTau_Core::GetTauFRfromBins(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region){
+
+  double x = tau.Pt();
+  double value = 0.;
+
+  if(tau.Pt() > 1000.) x = 999.;
+
+  std::string rg = "";
+  TString ch = GetChannelString(GetChannel(leps));
+
+  if(isBoostedRegion(region)) rg = "BoostedSignalRegionMETInvertMTSame";
+  else if(isResolvedRegion(region)) rg = "ResolvedSignalRegionMETInvertMTSame";
+
+  TString YearString;
+  YearString.Form("%d",GetYear()); 
+
+  std::map< TString, TH1D* >::const_iterator mapit;
+  mapit = fakeEst->map_hist_tau.find(rg+"_"+ch);
+
+  if(mapit == fakeEst->map_hist_tau.end()){
+    cout << "[WRTauCore::GetTauFRfromBins] No "  << rg+"_"+ch << endl;
+    exit(ENODATA);
+  }
+
+  TH1D* h = (TH1D*) (mapit->second)->Clone();
+
+  int this_bin = 0 ;
+  this_bin = h->FindBin(x);
+
+  double err = 0.;
+  double val = 0.;
+  val = h->GetBinContent(this_bin);
+  err = h->GetBinError(this_bin);  
+
+  if(HasFlag("debugFRfromBins")) cout << val << " + " << TauFRErr << " * " << err << endl;
+  return value + TauFRErr * err ;
 
 }
 
@@ -1948,7 +2543,7 @@ double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Lepton *> lep
   
     //cout << "[WRTau_Core::GetTauFRWeight] Method called ... " << endl;
 
-  double r_f = GetTauFR_SingleFit(tau,leps,region);
+  double r_f = GetTauFRfromBins(tau,leps,region);
   double w_f = r_f / (1-r_f);
   double w_p = 1.; double r_p = 0.;
   double x = 0.;

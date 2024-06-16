@@ -2444,6 +2444,8 @@ void AnalyzerCore::FillHist(TString histname,
     maphist_TH2D[histname] = this_hist;
   }
 
+  if(HasFlag("debugFill")) cout << histname << " , " << value_x << " , " << value_y << endl;
+
   this_hist->Fill(value_x, value_y, weight);
 
 }
