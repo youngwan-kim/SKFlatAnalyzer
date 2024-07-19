@@ -110,6 +110,8 @@ public:
     BenchmarkBoostedPreselection,
     BoostedSignalRegionMETInvertMTSame,
     ResolvedSignalRegionMETInvertMTSame,
+    TTEnrichedRegion,
+    TTFakeMeasureRegion,
 
     //Generator level regions ()
     GenDebug                    = 100,
@@ -166,7 +168,8 @@ public:
                                                      WRTau_Core::ResolvedMassOptSel};
 
   vector<WRTau_Core::SearchRegion> FakeMeasurementRegion = {WRTau_Core::BoostedSignalRegionMETInvertMTSame,
-                                                            WRTau_Core::ResolvedSignalRegionMETInvertMTSame};
+                                                            WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                                                            WRTau_Core::TTFakeMeasureRegion};
 
   vector<WRTau_Core::SearchRegion> FakeMeasurementRegion_Lepton = {WRTau_Core::BoostedSignalRegionLSFInvert,
                                                                   };

@@ -40,7 +40,7 @@ void WRTau_TauFake::executeEvent(){
   param.Clear();
   TriggerList.clear();
   
-  TriggerList = SingleLeptonTriggers;
+  TriggerList = SingleTauTriggers;
 
   param.Name = "WRTauFake";
   param.Electron_Tight_ID = "LRSMTight";
@@ -83,6 +83,8 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
 
   double weight(1.);
 
+  if(!ev.PassTrigger(TriggerList)) return;
+
   if(!IsDATA){
     if(HasFlag("unweighted")) weight *= 1.;
     else if(HasFlag("genWeight")) weight *= MCweight(true,false);
@@ -95,7 +97,7 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   vector<Muon> this_AllMuons = AllMuons;
   vector<Electron> this_AllElectrons = AllElectrons;
 
-  vector<Tau> this_AllTaus = SelectTaus(AllTaus,"NoCut",50.,2.4);
+  vector<Tau> this_AllTaus = SelectTaus(AllTaus,"NoCut",TriggerSafeTauPtCut,2.1);
   //cout << this_AllTaus.size() << endl ;
   //vector<Tau> this_AllTaus = TauFakeOnly(this_AllTaus_tmp,AllGens);
   //vector<Tau> this_AllTaus_Prompt = TauPromptOnly(this_AllTaus_tmp,AllGens);
@@ -117,6 +119,7 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   vector<Lepton *> TightLeptons = CombineLeptonPointerVector(electrons,muons);
 
   vector<Tau> taus = VetoLeptonsFromTaus(VetoLeps,this_AllTaus);
+  //vector<Tau> taus  = SelectTaus(taus_,"LRSMLoose",50,2.1);
   vector<Jet> jets_tauVeto = VetoTauFromJets(this_AllJets,taus); 
   vector<FatJet> fatjets_tmp = VetoTauFromFatJets(this_AllFatJets,taus);
   vector<Jet> jets_lepVeto_tauVeto = JetsVetoLeptonInside(jets_tauVeto,electrons_veto,muons_veto,0.4);
@@ -152,80 +155,116 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
 
   for(auto const& r : FakeMeasurementRegion){
 
+    //cout << "[WRTau_TauFake::FillTauKinematics] Start region loop" << endl;
+
     if(map_regions[r] == true){
 
-      std::pair<std::vector<Lepton *>,std::vector<Lepton *>> PairVecLeps = std::make_pair(LooseLeptons,TightLeptons);
-      vector<Lepton *> leptons = ChooseLeptonColl(r,PairVecLeps);
+      //cout << "\t[WRTau_TauFake::FillTauKinematics] Grabbed passed region : " << GetRegionString(r) << endl;
+        
+      WRTau_Core::Channel ch;
+      /*if(r != WRTau_Core::TTFakeMeasureRegion){
+        std::pair<std::vector<Lepton *>,std::vector<Lepton *>> PairVecLeps = std::make_pair(LooseLeptons,TightLeptons);
+        vector<Lepton *> leptons = ChooseLeptonColl(r,PairVecLeps);
+        
+        ch = GetChannel(leptons);
+      }*/
 
-      WRTau_Core::Channel ch = GetChannel(leptons);
+      for(int i=0; i<taus.size(); i++){
       
-      TString geomTag = "";
-      TString genmatchTag = "";
+        //cout << "\t\t[WRTau_TauFake::FillTauKinematics] Start Tau loop : " << taus.size() << ":" << i+1 << " , " << GetRegionString(r) << endl;
 
-      if(!IsDATA){
-        if(IsPromptTau(taus.at(0),gens)){         genmatchTag = "Prompt";
-          if(IsPromptLepton(*leptons.at(0),gens)) genmatchTag = "PromptSubtract";
+        TString geomTag = "";
+        TString genmatchTag = "";
+
+        if(!IsDATA){
+          if(IsPromptTau(taus.at(i),gens))          genmatchTag = "Prompt";
+          else if(IsNonPromptTau(taus.at(i),gens))  genmatchTag = "Fake";
+          else                                      genmatchTag = "Error";
         }
-        else if(IsNonPromptTau(taus.at(0),gens))  genmatchTag = "Fake";
-        else                                      genmatchTag = "Error";
+        else                                        genmatchTag = "Data"; 
+
+        TString label = fillpath+"/"+GetRegionString(r) + "/"+ genmatchTag;
+        //TString label_channel = fillpath+"/"+GetRegionString(r) + "_"+GetChannelString(ch) + "/"+ genmatchTag;
+      
+        std::vector<TString> fillstr = {label};
+
+        bool isEndCap = fabs(taus.at(i).Eta())>=1.479;
+        bool isBarrel = fabs(taus.at(i).Eta())<1.479;
+
+        TString NjTag = "";
+
+        bool isLoose = taus.at(i).PassID("LRSMLoose");
+        bool isTight = taus.at(i).PassID("WRTauTight"); 
+      
+        if(isBoostedRegion(r) || r == WRTau_Core::TTFakeMeasureRegion ){
+          if(jets.size()<2) NjTag = TString::Itoa(jets.size(),10);
+          else NjTag = "2";
+        }
+
+        else if(isResolvedRegion(r)){
+          if(jets.size()<4) NjTag = TString::Itoa(jets.size(),10);
+          else NjTag = "4";
+        }
+
+        TString DM = "";
+        int dm_int = taus.at(i).DecayMode();
+        DM = TString::Itoa(dm_int,10);
+
+        //cout << "\t\t[WRTau_TauFake::FillTauKinematics] Initialized variables : Njtag = " << NjTag << " , label =" << label << endl;
+
+        //double w_looseTau = GetMatchedWeight(taus,gens,tauid_LTT,highpT)*GetTauIDLeptonFakeSF(tauid_LTT,leptons,gens);
+        //double w_tightTau = GetMatchedWeight(taus,gens,tauid_TTT,highpT)*GetTauIDLeptonFakeSF(tauid_TTT,leptons,gens);
+
+        double w_looseTau = 1.0 ; double w_tightTau = 1.0;
+
+        for(const auto str : fillstr){
+
+          //cout << "\t\t\t[WRTau_TauFake::FillTauKinematics] Start Fill loop : " << str << endl;
+
+          // All Inclusive 
+          if(isLoose)  FillHist(str+"/TauPt_Loose_All_All",taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+          if(isTight)  FillHist(str+"/TauPt_Tight_All_All",taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+
+          // Njet Inclusive + 
+          if(isEndCap){
+            if(isLoose){
+              FillHist(str+"/TauPt_Loose_EC_All",taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+              FillHist(str+"/TauPt_Loose_EC_"+NjTag,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+              FillHist(str+"/TauPt_Loose_EC_DM"+DM,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+            }
+            if(isTight){
+              FillHist(str+"/TauPt_Tight_EC_All",taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+              FillHist(str+"/TauPt_Tight_EC_"+NjTag,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+              FillHist(str+"/TauPt_Tight_EC_DM"+DM,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+            }
+          }  
+          else if(isBarrel){
+            if(isLoose){
+              FillHist(str+"/TauPt_Loose_B_All",taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+              FillHist(str+"/TauPt_Loose_B_DM"+DM,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+            }
+            if(isTight){
+              FillHist(str+"/TauPt_Tight_B_All",taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+              FillHist(str+"/TauPt_Tight_B_DM"+DM,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+            }
+          } 
+
+          // Geometry Inclusive
+          if(isLoose)  FillHist(str+"/TauPt_Loose_All_"+NjTag,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+          if(isTight)  FillHist(str+"/TauPt_Tight_All_"+NjTag,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+
+          if(isLoose)  FillHist(str+"/TauPt_Loose_All_DM"+DM,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+          if(isTight)  FillHist(str+"/TauPt_Tight_All_DM"+DM,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
+
+
+        }
+
+        //cout << "\t\t\t[WRTau_TauFake::FillTauKinematics] End Fill loop "  << endl;
+
       }
-      else                                        genmatchTag = "Data"; 
 
-      //cout << taus.size() << endl;
-      //cout << GetTauType(taus.at(0),gens) << " , " << genmatchTag << endl;
-
-      TString label = fillpath+"/"+GetRegionString(r) + "/"+ genmatchTag;
-      TString label_channel = fillpath+"/"+GetRegionString(r) + "_"+GetChannelString(ch) + "/"+ genmatchTag;
-      
-      std::vector<TString> fillstr = {label,label_channel};
-
-      bool isEndCap = fabs(taus.at(0).Eta())>=1.479;
-      bool isBarrel = fabs(taus.at(0).Eta())<1.479;
-
-      bool isLoose = taus.at(0).PassID("FakeBase") && taus.at(0).passVVVLIDvJet();
-      bool isTight = isLoose && taus.at(0).passTIDvJet();
-
-      int Nj = jets.size();
-      TString NjTag = "";
-      
-      if(Nj<4) NjTag = TString::Itoa(Nj,10);
-      else NjTag = "4";
-
-      //double w_looseTau = GetMatchedWeight(taus,gens,tauid_LTT,highpT)*GetTauIDLeptonFakeSF(tauid_LTT,leptons,gens);
-      //double w_tightTau = GetMatchedWeight(taus,gens,tauid_TTT,highpT)*GetTauIDLeptonFakeSF(tauid_TTT,leptons,gens);
-
-      double w_looseTau = 1.0 ; double w_tightTau = 1.0;
-
-      for(const auto str : fillstr){
-
-        // All Inclusive 
-        if(isLoose)  FillHist(str+"/TauPt_Loose_All_All",taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
-        if(isTight)  FillHist(str+"/TauPt_Tight_All_All",taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
-
-        // Njet Inclusive + 
-        if(isEndCap){
-          if(isLoose){
-            FillHist(str+"/TauPt_Loose_EC_All",taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
-            FillHist(str+"/TauPt_Loose_EC_"+NjTag,taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
-          }
-          if(isTight){
-            FillHist(str+"/TauPt_Tight_EC_All",taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
-            FillHist(str+"/TauPt_Tight_EC_"+NjTag,taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
-          }
-        }  
-        else if(isBarrel){
-          if(isLoose)  FillHist(str+"/TauPt_Loose_B_All",taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
-          if(isTight)  FillHist(str+"/TauPt_Tight_B_All",taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
-        } 
-
-        // Geometry Inclusive
-        if(isLoose)  FillHist(str+"/TauPt_Loose_All_"+NjTag,taus.at(0).Pt(),weight*w_looseTau,2000,0.,2000.);
-        if(isTight)  FillHist(str+"/TauPt_Tight_All_"+NjTag,taus.at(0).Pt(),weight*w_tightTau,2000,0.,2000.);
-
-      }
-      
+      //cout << "\t\t[WRTau_TauFake::FillTauKinematics] End Tau loop " << endl;
     }
-
   }
   
   return;
@@ -313,7 +352,7 @@ void WRTau_TauFake::FillPassingFakeRegions(map<WRTau_Core::SearchRegion,std::pai
       double taupT = taus.at(0).Pt();
       double tauAbsEta = fabs(taus.at(0).Eta());
       if(taupT > 1000.) taupT = 999.;
-      if(tauAbsEta > 2.5) tauAbsEta = 2.499;
+      if(tauAbsEta > 2.1) tauAbsEta = 2.099;
       
       if(!IsDATA){
           if(GetTauType(taus.at(0),gens)==0){

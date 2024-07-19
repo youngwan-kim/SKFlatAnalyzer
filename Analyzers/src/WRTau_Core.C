@@ -221,6 +221,7 @@ void WRTau_Core::FillPreselHists(TString region,const std::vector<Tau>& taus, co
     //FillHist(region+"/MET",METv.Pt(),weight,2500,0.,2500.);
     FillHist(region+"/Tauh_pT",taus.at(0).Pt(),weight,5000,0.,5000.);
     FillHist(region+"/Tauh_eta",taus.at(0).Eta(),weight,100,-5.,5.);
+    FillHist(region+"/Tauh_DM",taus.at(0).DecayMode(),weight,15,0.,15.);
     //FillLeptonPlots(TightLeptons,region+"/HighPtTight",weight);
     //FillLeptonPlots(LooseLeptons,region+"/HighPtLoose",weight);
     //cout << "[WRTauCore::FillPreselHists] region : " << region << endl;
@@ -831,6 +832,8 @@ std::string WRTau_Core::GetRegionString(WRTau_Core::SearchRegion region){
   if (region == WRTau_Core::BenchmarkBoostedPreselection)       region_string = "BenchmarkBoostedPreselection";
   if (region == WRTau_Core::BoostedSignalRegionMETInvertMTSame) region_string = "BoostedSignalRegionMETInvertMTSame";
   if (region == WRTau_Core::ResolvedSignalRegionMETInvertMTSame) region_string = "ResolvedSignalRegionMETInvertMTSame";
+  if (region == WRTau_Core::TTEnrichedRegion)                    region_string = "TTEnrichedRegion";
+  if (region == WRTau_Core::TTFakeMeasureRegion)                 region_string = "TTFakeMeasureRegion";
   
   return region_string;
 }
@@ -1453,6 +1456,8 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool _isBenchmarkBoostedPreselection(false);
   bool _isResolvedSignalRegionMETInvertMTSame(false);
   bool _isBoostedSignalRegionMETInvertMTSame(false);
+  bool _isTTEnrichedRegion(false);
+  bool _isTTFakeMeasureRegion(false);
 
 
   bool hasAtLeast2AK4Jets = jets.size()>1;
@@ -1460,6 +1465,8 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
   bool hasAtLeast1TightLeptons = TightLeptons.size()>0;
   bool hasAtLeast1LooseLeptons = LooseLeptons.size()>0;
   
+  _isTTFakeMeasureRegion = taus.size() > 0 ;
+  _isTTEnrichedRegion = jets.size()>1 && bjets.size()>0 ;
 
   _isBaselinePreselection = taus.size()>0 && taus.at(0).Pt()>TriggerSafeTauPtCut        && LooseLeptons.size()==1;
   _isResolvedPreselection = _isBaselinePreselection && hasAtLeast2AK4Jets && TightLeptons.size()==1;
@@ -1612,7 +1619,9 @@ map<WRTau_Core::SearchRegion,bool> WRTau_Core::GetRegion(Particle METv, const st
     {WRTau_Core::BoostedMassOptSel,_isBoostedMassOptSel},
     {WRTau_Core::ResolvedMassOptSel,_isResolvedMassOptSel},
     {WRTau_Core::ResolvedSignalRegionMETInvertMTSame,_isResolvedSignalRegionMETInvertMTSame},
-    {WRTau_Core::BoostedSignalRegionMETInvertMTSame,_isBoostedSignalRegionMETInvertMTSame}
+    {WRTau_Core::BoostedSignalRegionMETInvertMTSame,_isBoostedSignalRegionMETInvertMTSame},
+    {WRTau_Core::TTEnrichedRegion,_isTTEnrichedRegion},
+    {WRTau_Core::TTFakeMeasureRegion,_isTTFakeMeasureRegion},
   };
 
   return m_region;
@@ -1880,6 +1889,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         if(!isSignalSample()){
           if(taus.size()>0 && taus.at(0).Pt()>=TriggerSafeTauPtCut){
             if(IsPromptTau(taus.at(0),gens)) TauPromptString = "__PromptTau";
+            else if(IsNonPromptTau(taus.at(0),gens) && HasFlag("RunApplicationRegion")) TauPromptString = "__NonPromptTau";
             else return;
           }
     
@@ -1891,6 +1901,12 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         }
       }
 
+      if(HasFlag("PromptTau")){
+        TauPromptString = "";
+        LeptonPromptString = "";
+      }
+      if(HasFlag("RunApplicationRegion")) LeptonPromptString = "";
+
       WRTau_Core::Channel ch = GetChannel(leptons);
       if(TauPromptString!="") TauPromptString = "/"+TauPromptString;
       TString label = fillpath+TauPromptString+LeptonPromptString+"/"+GetRegionString(r); 
@@ -1901,6 +1917,23 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
       std::vector<TString> fillstr = {label_channel};
       
+      if(HasFlag("RunApplicationRegion")){
+        fillstr.clear();
+        fillstr.push_back(label);
+        TString nJets = "";
+        if(isBoostedRegion(r)){
+          if(jets.size()<2) nJets = TString::Itoa(jets.size(),10);
+          else nJets = "2";
+        }
+        else if(isResolvedRegion(r)){
+          if(jets.size()<4) nJets = TString::Itoa(jets.size(),10);
+          else nJets = "4";
+        }
+        TString DM = TString::Itoa(taus.at(0).DecayMode(),10);
+        fillstr.push_back(label+"_j"+nJets);
+        fillstr.push_back(label+"_DM"+DM); 
+      }
+
       double weight_var;
       double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
       weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
@@ -1909,9 +1942,11 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         weight *= GetTauFRWeight(taus.at(0),leptons,gens,r,2);
       }
       if(HasFlag("unweighted")) weight = 1;
-      if(isBoostedRegion(r)){
+      if(isBoostedRegion(r) && !IsDATA){
         weight *= LSFSF(ch,Syst_LSFSF);
       }
+
+      if(IsDATA) weight = 1.0;
 
       for(const auto str : fillstr){
 
@@ -2428,7 +2463,7 @@ double WRTau_Core::GetTauFR_SingleFit(const Tau tau, const std::vector<Lepton *>
 double WRTau_Core::GetTauFRfromBins(const Tau tau, const std::vector<Lepton *> leps, WRTau_Core::SearchRegion region){
 
   double x = tau.Pt();
-  double value = 0.;
+  //double value = 0.;
 
   if(tau.Pt() > 1000.) x = 999.;
 
@@ -2459,8 +2494,8 @@ double WRTau_Core::GetTauFRfromBins(const Tau tau, const std::vector<Lepton *> l
   val = h->GetBinContent(this_bin);
   err = h->GetBinError(this_bin);  
 
-  if(HasFlag("debugFRfromBins")) cout << val << " + " << TauFRErr << " * " << err << endl;
-  return value + TauFRErr * err ;
+  if(HasFlag("TauFRDebug")) cout << val << " + " << TauFRErr << " * " << err << endl;
+  return val + TauFRErr * err ;
 
 }
 
@@ -2552,23 +2587,54 @@ double WRTau_Core::GetTauFRWeight(const Tau tau, const std::vector<Lepton *> lep
 
   TString channel = GetChannelString(GetChannel(leps));
 
-  //cout << "[WRTau_Core::GetTauFRWeight] GetChannelString : " << channel << endl;
-
   if(tau.Pt() > 1000.) x = 999.;
   else x = tau.Pt() ;
+
+  //cout << "[WRTau_Core::GetTauFRWeight] GetChannelString : " << channel << endl;
 
   if(isResolvedRegion(region)) r_p = fakeEst->GetTauPromptRate("Resolved",channel,x);
   if(isBoostedRegion(region))  r_p = fakeEst->GetTauPromptRate("Boosted",channel,x);
   w_p = (1-r_p)/r_p;
-  double coeff = 1.;
+  double coeff = 1./(1.-w_f*w_p);
+
+  if(HasFlag("TauFRDebug")) cout << GetRegionString(region) << "_" << channel << " : pt,r_f,r_p,w_f,w_p,coeff,TauFRErr = " << x << " , " << r_f << " , " << r_p << " , " << w_f << " , " << w_p << " , " << coeff << " , " << TauFRErr << endl; 
 
   //cout << "[WRTau_Core::GetTauFRWeight] GetTauPromptRate : " << r_p << endl;
 
-  if(!tau.passTIDvJet()) return coeff*w_f;
-  if(IsNonPromptTau(tau,gens)){
-    if(tau.passTIDvJet()) return coeff*w_f * w_p; 
+  /* AN2016-261 matrix method :
+  The number of fake passing leptons is given by the total number of events with no leptons
+  passing the tight cut multiplied by e, from which we subtract the number of events with 1
+  lepton passing, multiplied by eη .
+  In conclusion, all leptons (prompt or fake) which fail the tight cuts have to be weighted by e,
+  fake leptons which pass by eη and prompt leptons which pass by 1.
+  */
+  if(!tau.passTIDvJet()){
+    if(HasFlag("TauFRDebug")) cout << "weight = " << coeff << " * " << w_f << " = " << coeff*w_f << endl;
+    return w_f;
   }
-  else return coeff;
+  else {
+    if(HasFlag("TauFRDebug")) cout << "weight = -" << coeff << " * " << w_f << " * " << w_p <<  " = " << -coeff*w_f*w_p << endl;
+    return 1.;
+  }
+  /*
+  else{
+    if(IsNonPromptTau(tau,gens)){
+      return coeff*w_f * w_p; 
+    }
+    else if(!IsNonPromptTau(tau,gens)){
+      return coeff;
+    }
+  }
+  if(IsNonPromptTau(tau,gens)){
+    if(tau.passTIDvJet()){
+      if(HasFlag("FRTest")) cout << "case 2 called" << endl;
+      return coeff*w_f * w_p; 
+    }
+  }
+  else{
+    if(HasFlag("FRTest")) cout << "none called, returning with 1.0" << endl;
+    return coeff;
+  }*/
 
 }
 

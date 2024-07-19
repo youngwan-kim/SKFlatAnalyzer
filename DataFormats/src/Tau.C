@@ -54,6 +54,16 @@ bool Tau::PassID(TString ID) const{
     }
   }
 
+  if(ID=="LRSMLoose"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!(passVVVLIDvJet() && !passTIDvJet())) return false;
+      if(!(passTIDvMu() && passTIDvEl())) return false;
+      return true;
+    }
+  }
+
   if(ID=="BaselineWithvJetLoose"){
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
@@ -157,7 +167,7 @@ bool Tau::PassID(TString ID) const{
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 2 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
       if(!( fabs(dZ())<0.2 )) return false;
-      if(!( passTIDvJet() && passLIDvEl() && passLIDvMu() )) return false;
+      if(!( passTIDvJet() && passTIDvEl() && passTIDvMu() )) return false;
       return true;
     }
   }

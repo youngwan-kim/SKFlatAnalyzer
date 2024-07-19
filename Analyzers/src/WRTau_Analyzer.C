@@ -12,6 +12,8 @@ void WRTau_Analyzer::initializeAnalyzer(){
     runTauFake = true;
   }
   if(HasFlag("LooseTauPrompt")) vJet_vec = {0};
+  if(HasFlag("RunApplicationRegion")) vJet_vec = {0};
+
   GetTauIDSFTools(vJet_vec,vEl_vec,vMu_vec);
 
   if(DataYear==2016){
@@ -44,6 +46,11 @@ void WRTau_Analyzer::initializeAnalyzer(){
                       WRTau_Core::BoostedSignalRegionMETInvertMTSame
                       };
 
+  if(HasFlag("RunApplicationRegion")){
+    RegionOfInterest = {WRTau_Core::BoostedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegion};
+  }
+
   if(HasFlag("2DScan")){
 
     RegionOfInterest.clear();
@@ -52,6 +59,10 @@ void WRTau_Analyzer::initializeAnalyzer(){
       WRTau_Core::BenchmarkBoostedPreselection
     };
 
+  }
+
+  if(HasFlag("RunTTEnrichedRegion")){
+    RegionOfInterest = {WRTau_Core::TTEnrichedRegion};
   }
 
 
@@ -219,7 +230,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         std::tuple<int,int,int> IDtuple = std::make_tuple(vJet_vec[i],vEl_vec[j],vMu_vec[k]);
         TString idname = "vJet"+idname_map[vJet_vec.at(i)]+"_vEl"+idname_map[vEl_vec.at(j)]+"_vMu"+idname_map[vMu_vec.at(k)];
-        vector<Tau> taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.4);
+        vector<Tau> taus_temp = SelectTaus_varWP(taus_lepVeto,vJet_vec[i],vEl_vec[j],vMu_vec[k],50,2.1);
         vector<Tau> taus;
 
         TString path = param.Name ; //+"/"+idname;
@@ -231,6 +242,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }*/
         if(HasFlag("NonpromptTau")) taus = TauFakeOnly(taus_temp,AllGens);
         else if(HasFlag("PromptTau")) taus = TauPromptOnly(taus_temp,AllGens);
+        else if(HasFlag("RunApplicationRegion")) taus = SelectTaus(taus_lepVeto,"LRSMLoose",50,2.1);
         else taus = taus_temp;
         std::sort(taus.begin(),taus.end(),PtComparing);
 

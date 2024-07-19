@@ -132,7 +132,7 @@ void FakeBackgroundEstimator::ReadHistograms(){
   for(TString rg : region_new) {
       for(TString ch : channel) {
           histDir->cd();
-          map_hist_tau[rg+"_"+ch] = (TH1D*) fileTauFR_->Get(rg+"_"+ch+"_DataDrivenSubtract_All_All")->Clone();
+          map_hist_tau[rg+"_"+ch] = (TH1D*) fileTauFR_Binned->Get(rg+"_"+ch+"_DataDrivenSubtract_All_All")->Clone();
           cout << "Set " << rg+"_"+ch << " TH1D @ " << map_hist_tau[rg+"_"+ch] << endl;
           origDir->cd();
       }
@@ -160,11 +160,13 @@ double FakeBackgroundEstimator::GetTauPromptRate(TString region,TString channel,
   if(region == "Boosted"){
 
     if(channel == "ElTau") {
+      //cout << "[FakeBackgroundEstimator::GetTauPromptRate] Boosted ElTau Called " << endl;
       int this_bin = Tau_PR_Boosted_El->FindBin(pt);
       value = Tau_PR_Boosted_El->GetBinContent(this_bin);
       error = Tau_PR_Boosted_El->GetBinError(this_bin); 
     }
     else if(channel == "MuTau") {
+      //cout << "[FakeBackgroundEstimator::GetTauPromptRate] Boosted MuTau Called " << endl;
       int this_bin = Tau_PR_Boosted_Mu->FindBin(pt);
       value = Tau_PR_Boosted_Mu->GetBinContent(this_bin);
       error = Tau_PR_Boosted_Mu->GetBinError(this_bin); 
@@ -173,11 +175,13 @@ double FakeBackgroundEstimator::GetTauPromptRate(TString region,TString channel,
   else if(region == "Resolved"){
 
     if(channel == "ElTau"){
+      //cout << "[FakeBackgroundEstimator::GetTauPromptRate] Resolved ElTau Called " << endl;
       int this_bin = Tau_PR_Resolved_El->FindBin(pt);
       value = Tau_PR_Resolved_El->GetBinContent(this_bin);
       error = Tau_PR_Resolved_El->GetBinError(this_bin); 
     }
     else if(channel == "MuTau"){
+      //cout << "[FakeBackgroundEstimator::GetTauPromptRate] Resolved MuTau Called " << endl;
       int this_bin = Tau_PR_Resolved_Mu->FindBin(pt);
       value = Tau_PR_Resolved_Mu->GetBinContent(this_bin);
       error = Tau_PR_Resolved_Mu->GetBinError(this_bin); 
