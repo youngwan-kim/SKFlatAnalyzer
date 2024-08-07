@@ -58,8 +58,16 @@ bool Tau::PassID(TString ID) const{
     if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
       if(!( fabs(dZ())<0.2 )) return false;
-      if(!(passVVVLIDvJet() && !passTIDvJet())) return false;
-      if(!(passTIDvMu() && passTIDvEl())) return false;
+      if(!(passVVVLIDvJet() && !passTIDvJet() && passTIDvMu() && passTIDvEl())) return false;
+      return true;
+    }
+  }
+
+  if(ID=="LRSMTight"){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
+      if(!DecayModeNewDM()) return false;
+      if(!( fabs(dZ())<0.2 )) return false;
+      if(!( passTIDvJet() && passTIDvMu() && passTIDvEl())) return false;
       return true;
     }
   }
@@ -164,7 +172,7 @@ bool Tau::PassID(TString ID) const{
   }
 
   if(ID=="WRTauTight"){
-    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 2 || j_decaymode == 10 || j_decaymode ==11){
+    if(j_decaymode == 0 || j_decaymode == 1 || j_decaymode == 10 || j_decaymode ==11){
       if(!DecayModeNewDM()) return false;
       if(!( fabs(dZ())<0.2 )) return false;
       if(!( passTIDvJet() && passTIDvEl() && passTIDvMu() )) return false;

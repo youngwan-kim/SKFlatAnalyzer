@@ -81,10 +81,15 @@ void WRTau_TauFake::executeEventFromParameter(AnalyzerParameter param){
   tauid_LTT = make_tuple(3,13,21);
   tauid_TTT = make_tuple(5,13,21);
 
+
+
   double weight(1.);
+  //if(!IsDATA) weight *= MCweight(true,false);
+  FillHist("CutFlow",0.,weight,5,0.,5.);
 
   if(!ev.PassTrigger(TriggerList)) return;
-
+  FillHist("CutFlow",1.,weight,5,0.,5.);
+  
   if(!IsDATA){
     if(HasFlag("unweighted")) weight *= 1.;
     else if(HasFlag("genWeight")) weight *= MCweight(true,false);
@@ -178,8 +183,8 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
 
         if(!IsDATA){
           if(IsPromptTau(taus.at(i),gens))          genmatchTag = "Prompt";
-          else if(IsNonPromptTau(taus.at(i),gens))  genmatchTag = "Fake";
-          else                                      genmatchTag = "Error";
+          else                                      genmatchTag = "Fake";
+          //else                                      genmatchTag = "Error";
         }
         else                                        genmatchTag = "Data"; 
 
@@ -194,7 +199,7 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
         TString NjTag = "";
 
         bool isLoose = taus.at(i).PassID("LRSMLoose");
-        bool isTight = taus.at(i).PassID("WRTauTight"); 
+        bool isTight = taus.at(i).PassID("LRSMTight"); 
       
         if(isBoostedRegion(r) || r == WRTau_Core::TTFakeMeasureRegion ){
           if(jets.size()<2) NjTag = TString::Itoa(jets.size(),10);
@@ -210,12 +215,27 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
         int dm_int = taus.at(i).DecayMode();
         DM = TString::Itoa(dm_int,10);
 
+        TString prongTag = "";
+        if(dm_int==0 || dm_int==1) prongTag = "1prong";
+        else if(dm_int==10 || dm_int==11) prongTag = "3prong";
+
+        /*if(taus.at(i).Pt()>999.){
+          cout << "[debug highpT Tau] (pT,Eta,Phi) = " << taus.at(i).Pt() << " , " << taus.at(i).Eta() << " , " << taus.at(i).Phi() << endl;
+          cout << "[debug highpT Tau] IDBit = " << taus.at(i).IDBit() << endl; 
+          cout << "[debug highpT Tau] DecayMode = " << taus.at(i).DecayMode() << endl; 
+          cout << "[debug highpT Tau] isLoose,isTight = " << isLoose << " , " << isTight << endl; 
+        }*/
+
         //cout << "\t\t[WRTau_TauFake::FillTauKinematics] Initialized variables : Njtag = " << NjTag << " , label =" << label << endl;
 
         //double w_looseTau = GetMatchedWeight(taus,gens,tauid_LTT,highpT)*GetTauIDLeptonFakeSF(tauid_LTT,leptons,gens);
         //double w_tightTau = GetMatchedWeight(taus,gens,tauid_TTT,highpT)*GetTauIDLeptonFakeSF(tauid_TTT,leptons,gens);
 
         double w_looseTau = 1.0 ; double w_tightTau = 1.0;
+
+        if(r != WRTau_Core::TTFakeMeasureRegion ){
+          fillstr.push_back(fillpath+"/InclusiveQCDMR/"+ genmatchTag);
+        }
 
         for(const auto str : fillstr){
 
@@ -256,6 +276,8 @@ void WRTau_TauFake::FillTauKinematics(map<WRTau_Core::SearchRegion,bool> map_reg
           if(isLoose)  FillHist(str+"/TauPt_Loose_All_DM"+DM,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
           if(isTight)  FillHist(str+"/TauPt_Tight_All_DM"+DM,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
 
+          if(isLoose)  FillHist(str+"/TauPt_Loose_All_DM"+prongTag,taus.at(i).Pt(),weight*w_looseTau,2000,0.,2000.);
+          if(isTight)  FillHist(str+"/TauPt_Tight_All_DM"+prongTag,taus.at(i).Pt(),weight*w_tightTau,2000,0.,2000.);
 
         }
 

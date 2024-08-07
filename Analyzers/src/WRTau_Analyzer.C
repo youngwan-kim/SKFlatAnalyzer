@@ -47,8 +47,24 @@ void WRTau_Analyzer::initializeAnalyzer(){
                       };
 
   if(HasFlag("RunApplicationRegion")){
-    RegionOfInterest = {WRTau_Core::BoostedSignalRegion,
+    RegionOfInterest = { 
+                      WRTau_Core::BoostedLowMassControlRegion,
+                      WRTau_Core::ResolvedLowMassControlRegion,
+                      WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                      WRTau_Core::BoostedSignalRegionMETInvertMTSame,
+                      WRTau_Core::BoostedSignalRegion,
                       WRTau_Core::ResolvedSignalRegion};
+  }
+
+  if(HasFlag("TauFake")){
+      RegionOfInterest = {
+                      WRTau_Core::BoostedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegion,
+                      WRTau_Core::BoostedLowMassControlRegion,
+                      WRTau_Core::ResolvedLowMassControlRegion,
+                      WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                      WRTau_Core::BoostedSignalRegionMETInvertMTSame
+                      };
   }
 
   if(HasFlag("2DScan")){
@@ -113,12 +129,21 @@ void WRTau_Analyzer::executeEvent(){
   TauFRErr = 0 ;
   executeEventFromParameter(param);
   if(runSystematics){
+
+    RegionOfInterest = {
+                      WRTau_Core::BoostedLowMassControlRegion,
+                      WRTau_Core::ResolvedLowMassControlRegion,
+                      WRTau_Core::BoostedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                      WRTau_Core::BoostedSignalRegionMETInvertMTSame };
+    
     for(unsigned int i=0; i<AnalyzerParameter::NSyst; i++){
       param.syst_ = AnalyzerParameter::Syst(i);
       // cout << "[WRTau_Analyzer::Debug] Syst : " << i << endl;
       param.Name = "Syst_"+ param.GetSystType();
-      auto it = std::find(skipSysts.begin(), skipSysts.end(), param.syst_);
-      if (it == skipSysts.end()) executeEventFromParameter(param);
+      auto it = std::find(whiteSysts.begin(), whiteSysts.end(), param.syst_);
+      if (it != whiteSysts.end()) executeEventFromParameter(param);
     }
   }
   if(runTauFake){
@@ -145,7 +170,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   vector<Jet> this_AllJets = AllJets;
   vector<FatJet> this_AllFatJets = AllFatJets;
 
-  vector<Tau> this_AllTaus = AllTaus;
+  vector<Tau> this_AllTaus = ScaleTaus(AllTaus,0);
   vector<Muon> this_AllMuons = UseTunePMuon(AllMuons);
   vector<Electron> this_AllElectrons = AllElectrons;
 
@@ -173,6 +198,8 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   else if(param.syst_ == AnalyzerParameter::ElectronResDown)    this_AllElectrons = SmearElectrons(this_AllElectrons, -1);
   else if(param.syst_ == AnalyzerParameter::ElectronEnUp)       this_AllElectrons = ScaleElectrons(this_AllElectrons, +1);
   else if(param.syst_ == AnalyzerParameter::ElectronEnDown)     this_AllElectrons = ScaleElectrons(this_AllElectrons, -1);
+  else if(param.syst_ == AnalyzerParameter::TauEnUp)            this_AllTaus = ScaleTaus(this_AllTaus,+1);
+  else if(param.syst_ == AnalyzerParameter::TauEnDown)          this_AllTaus = ScaleTaus(this_AllTaus,-1);
   // TODO
   //else if(param.syst_ == AnalyzerParameter::MuonRecoSFUp)       Syst_MuonRecoSF = +1;
   //else if(param.syst_ == AnalyzerParameter::MuonRecoSFDown)     Syst_MuonRecoSF = -1; 

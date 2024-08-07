@@ -79,6 +79,7 @@ public:
     TauIDSFSystUp, TauIDSFSystDown,
     TauIDSFStatUp, TauIDSFStatDown,
     TauIDSFExtUp, TauIDSFExtDown,
+    TauEnUp, TauEnDown,
     TauTriggerSFUp,TauTriggerSFDown,
     BTagSFHTagUp,BTagSFHTagDown,
     BTagSFLTagUp,BTagSFLTagDown,

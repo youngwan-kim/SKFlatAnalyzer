@@ -1895,8 +1895,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
     
           if(leptons.size()>0){
             if(IsPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__PromptLepton";
-            else if(IsNonPromptLepton(*leptons.at(0),gens)) LeptonPromptString = "__NonPromptLepton";
-            else return;
+            else                                    LeptonPromptString = "__NonPromptLepton";
           }
         }
       }
@@ -1939,20 +1938,22 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
       weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
       if(HasFlag("TauFake")){
         weight_var = weight * GetTauFRWeight(taus.at(0),leptons,gens,r,3);
-        weight *= GetTauFRWeight(taus.at(0),leptons,gens,r,2);
+        //weight *= GetTauFRWeight(taus.at(0),leptons,gens,r,2);
+        weight *= GetTauFF(taus.at(0),r);
       }
       if(HasFlag("unweighted")) weight = 1;
       if(isBoostedRegion(r) && !IsDATA){
         weight *= LSFSF(ch,Syst_LSFSF);
       }
 
-      if(IsDATA) weight = 1.0;
+      //if(IsDATA) weight = 1.0;
 
       for(const auto str : fillstr){
 
         if(HasFlag("TauFake")){
-          FillHist(str+"/TauFakeWeight",GetTauFRWeight(taus.at(0),leptons,gens,r,2),1.,5000,0.,50.);
-          FillHist(str+"/TauFakeRate",GetTauFRfromBins(taus.at(0),leptons,r),1.,100,0.,1.);
+          //FillHist(str+"/TauFakeWeight",GetTauFRWeight(taus.at(0),leptons,gens,r,2),1.,5000,0.,50.);
+          //FillHist(str+"/TauFakeRate",GetTauFRfromBins(taus.at(0),leptons,r),1.,100,0.,1.);
+          FillHist(str+"/TauFakeWeight",GetTauFF(taus.at(0),r),1.,1000,0.,1.);
         }
         //CopyHist(fillpath+"/Cutflow",str+"/Cutflow");
         FillHist(str+"/Nevents",0,weight,1,0.,1.);
@@ -2022,7 +2023,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
         }
       }
 
-      if(HasFlag("TauFake")){
+      /*if(HasFlag("TauFake")){
         TString label_var = fillpath+TauPromptString+LeptonPromptString+"_TauFRWtVarDeg3/"+GetRegionString(r); 
         TString label_var_channel = label_var + "_"+GetChannelString(ch);
 
@@ -2082,7 +2083,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
           }
         }
-      }
+      }*/
       
     }
   
@@ -2457,6 +2458,152 @@ double WRTau_Core::GetTauFR_SingleFit(const Tau tau, const std::vector<Lepton *>
   //cout << x << " , " << this_bin << " , " << value << " + " << TauFRErr << "*" << err << endl;
 
   return value + TauFRErr * err ;
+
+}
+
+double WRTau_Core::GetTauFF_QCD(const Tau tau){
+
+  // QCD FF : (2016,2017,2018) * (DM0+1,DM10+11)
+  double x = tau.Pt();
+  int dm = tau.DecayMode();
+  TString DMTag = "";
+
+  if(dm == 0 || dm == 1) DMTag = "DM1prong";
+  else if(dm == 10 || dm == 11) DMTag = "DM3prong";
+  else{
+    cout << "[WRTau_Core::GetTauFF_QCD] DecayMode = " << dm << " unavailable" << endl;
+    exit(ENODATA);
+  }
+
+  TString YearString;
+  YearString.Form("%d",GetYear()); 
+  //cout << "debug 0" << endl;
+  std::map< TString, TH1D* >::const_iterator mapit;
+  mapit = fakeEst->map_TauFF_QCD.find(DMTag);
+  //cout << "debug 1" << endl;
+  if(mapit == fakeEst->map_TauFF_QCD.end()){
+    cout << "[WRTauCore::GetTauFF_QCD] No "  << DMTag << endl;
+    exit(ENODATA);
+  }
+
+  //cout << "debug 2" << endl;
+  TH1D* h = (TH1D*) (mapit->second)->Clone();
+  //cout << "debug 3" << endl;
+  int nBins = h->GetNbinsX();
+  double lastBinEdge = h->GetBinLowEdge(nBins + 1);
+  if(x > lastBinEdge) x = lastBinEdge-0.001;
+
+  //cout << nBins << " , " << lastBinEdge << " , " ;
+
+  int this_bin = 0 ;
+  this_bin = h->FindBin(x);
+
+  double err = 0.;
+  double val = 0.;
+  val = h->GetBinContent(this_bin);
+  err = h->GetBinError(this_bin);  
+
+  //cout << val + TauFRErr * err << endl;
+  return val + TauFRErr * err ;
+}
+
+
+double WRTau_Core::GetTauFF_TT(const Tau tau){
+
+  // QCD FF : (2016,2017,2018) * (DM0,DM1,DM10,DM11)
+  double x = tau.Pt();
+  int dm = tau.DecayMode();
+  TString DMTag = "";
+
+  DMTag = "DM"+TString::Itoa(dm,10);
+
+  TString YearString;
+  YearString.Form("%d",GetYear()); 
+
+  std::map< TString, TH1D* >::const_iterator mapit;
+  mapit = fakeEst->map_TauFF_TT.find(DMTag);
+
+  if(mapit == fakeEst->map_TauFF_TT.end()){
+    cout << "[WRTauCore::GetTauFF_TT] No "  << DMTag << endl;
+    exit(ENODATA);
+  }
+
+  TH1D* h = (TH1D*) (mapit->second)->Clone();
+  int nBins = h->GetNbinsX();
+  double lastBinEdge = h->GetBinLowEdge(nBins + 1);
+  if(x > lastBinEdge) x = lastBinEdge-0.001;
+
+  int this_bin = 0 ;
+  this_bin = h->FindBin(x);
+
+  double err = 0.;
+  double val = 0.;
+  val = h->GetBinContent(this_bin);
+  err = h->GetBinError(this_bin);  
+
+  return val + TauFRErr * err ;
+}
+
+double WRTau_Core::GetTauFF(const Tau tau, WRTau_Core::SearchRegion region){
+
+  // Ratio : (2016a,2016b,2017,2018) * (DM0,DM1,DM10,DM11) * AR(SR,LMCR,QCDMR)
+  double x = tau.Pt();
+  int dm = tau.DecayMode();
+  
+  std::string str_region = GetRegionString(region);
+  TString str_search = "";
+
+  std::string substrings_to_remove[] = {"Resolved", "Boosted"};
+
+  for (const auto& substr : substrings_to_remove) {
+      std::size_t start_pos = 0;
+      while ((start_pos = str_region.find(substr, start_pos)) != std::string::npos) {
+          str_region.replace(start_pos, substr.length(), "");
+      }
+  }
+
+  TString DMTag = "";
+  DMTag = "DM"+TString::Itoa(dm,10);
+  
+  double FF_QCD = GetTauFF_QCD(tau);
+  double FF_TT  = GetTauFF_TT(tau);
+
+  std::map< TString, TH1D* >::const_iterator mapit_QCD;
+  std::map< TString, TH1D* >::const_iterator mapit_TT;
+  mapit_QCD = fakeEst->map_TauFF_Ratio.find(DMTag+"_"+str_region+"_QCD");
+  mapit_TT  = fakeEst->map_TauFF_Ratio.find(DMTag+"_"+str_region+"_TT");
+
+  if(mapit_QCD == fakeEst->map_TauFF_Ratio.end()){
+    cout << "[WRTauCore::GetTauFF] No map_TauFF_Ratio for "  << DMTag+"_"+str_region+"_QCD" << endl;
+    exit(ENODATA);
+  }
+
+  if(mapit_TT == fakeEst->map_TauFF_Ratio.end()){
+    cout << "[WRTauCore::GetTauFF] No map_TauFF_Ratio for "  << DMTag+"_"+str_region+"_TT" << endl;
+    exit(ENODATA);
+  }
+
+  TH1D* h_QCD = (TH1D*) (mapit_QCD->second)->Clone();
+  int nBins_QCD = h_QCD->GetNbinsX();
+  double pt_QCD = x;
+  double lastBinEdge_QCD = h_QCD->GetBinLowEdge(nBins_QCD + 1);
+  if(pt_QCD > lastBinEdge_QCD) pt_QCD = lastBinEdge_QCD-0.001;
+
+  int this_bin_QCD = 0 ;
+  this_bin_QCD = h_QCD->FindBin(pt_QCD);
+  double ratio_QCD = h_QCD->GetBinContent(this_bin_QCD);
+
+  TH1D* h_TT = (TH1D*) (mapit_TT->second)->Clone();
+  int nBins_TT = h_TT->GetNbinsX();
+  double pt_TT = x;
+  double lastBinEdge_TT = h_TT->GetBinLowEdge(nBins_TT + 1);
+  if(pt_TT > lastBinEdge_TT) pt_TT = lastBinEdge_TT-0.001;
+
+  int this_bin_TT = 0 ;
+  this_bin_TT = h_TT->FindBin(pt_TT);
+  double ratio_TT = h_TT->GetBinContent(this_bin_TT);
+
+  return ratio_QCD * FF_QCD + ratio_TT * FF_TT;
 
 }
 
@@ -3470,48 +3617,17 @@ Particle WRTau_Core::GetvMET(TString METType, AnalyzerParameter param,
 
   int IdxSyst = -1;
   if(param.syst_ == AnalyzerParameter::METUnclUp)             IdxSyst = 10;
-  if(param.syst_ == AnalyzerParameter::METUnclDown)           IdxSyst = 11;
-  if(param.syst_ == AnalyzerParameter::JetResUp)              IdxSyst = 0;
-  if(param.syst_ == AnalyzerParameter::JetResDown)            IdxSyst = 1;
-  if(param.syst_ == AnalyzerParameter::JetEnUp)               IdxSyst = 2;
-  if(param.syst_ == AnalyzerParameter::JetEnDown)             IdxSyst = 3;
-  if(param.syst_ == AnalyzerParameter::MuonEnUp)              IdxSyst = 4;
-  if(param.syst_ == AnalyzerParameter::MuonEnDown)            IdxSyst = 5;
-  if(param.syst_ == AnalyzerParameter::ElectronEnUp)          IdxSyst = 6;
-  if(param.syst_ == AnalyzerParameter::ElectronEnDown)        IdxSyst = 7;
+  else if(param.syst_ == AnalyzerParameter::METUnclDown)           IdxSyst = 11;
+  else if(param.syst_ == AnalyzerParameter::JetResUp)              IdxSyst = 0;
+  else if(param.syst_ == AnalyzerParameter::JetResDown)            IdxSyst = 1;
+  else if(param.syst_ == AnalyzerParameter::JetEnUp)               IdxSyst = 2;
+  else if(param.syst_ == AnalyzerParameter::JetEnDown)             IdxSyst = 3;
+  else if(param.syst_ == AnalyzerParameter::MuonEnUp)              IdxSyst = 4;
+  else if(param.syst_ == AnalyzerParameter::MuonEnDown)            IdxSyst = 5;
+  else if(param.syst_ == AnalyzerParameter::ElectronEnUp)          IdxSyst = 6;
+  else if(param.syst_ == AnalyzerParameter::ElectronEnDown)        IdxSyst = 7;
   // syst source not defined in CMSSW
-  if(param.syst_ == AnalyzerParameter::JetMassUp)             IdxSyst = 20;
-  if(param.syst_ == AnalyzerParameter::JetMassDown)           IdxSyst = 21;
-  if(param.syst_ == AnalyzerParameter::JetMassSmearUp)        IdxSyst = 22;
-  if(param.syst_ == AnalyzerParameter::JetMassSmearDown)      IdxSyst = 23;
-  if(param.syst_ == AnalyzerParameter::MuonRecoSFUp)          IdxSyst = 24;
-  if(param.syst_ == AnalyzerParameter::MuonRecoSFDown)        IdxSyst = 25;
-  if(param.syst_ == AnalyzerParameter::MuonIDSFUp)            IdxSyst = 26;
-  if(param.syst_ == AnalyzerParameter::MuonIDSFDown)          IdxSyst = 27;
-  if(param.syst_ == AnalyzerParameter::MuonISOSFUp)           IdxSyst = 28;
-  if(param.syst_ == AnalyzerParameter::MuonISOSFDown)         IdxSyst = 29;
-  if(param.syst_ == AnalyzerParameter::TauIDSFSystUp)         IdxSyst = 30;
-  if(param.syst_ == AnalyzerParameter::TauIDSFSystDown)       IdxSyst = 31;
-  if(param.syst_ == AnalyzerParameter::ElectronRecoSFUp)      IdxSyst = 32;
-  if(param.syst_ == AnalyzerParameter::ElectronRecoSFDown)    IdxSyst = 33;
-  if(param.syst_ == AnalyzerParameter::ElectronResUp)         IdxSyst = 34;
-  if(param.syst_ == AnalyzerParameter::ElectronResDown)       IdxSyst = 35;
-  if(param.syst_ == AnalyzerParameter::ElectronIDSFUp)        IdxSyst = 36;
-  if(param.syst_ == AnalyzerParameter::ElectronIDSFDown)      IdxSyst = 37;
-  if(param.syst_ == AnalyzerParameter::TauIDSFStatUp)         IdxSyst = 38;
-  if(param.syst_ == AnalyzerParameter::TauIDSFStatDown)       IdxSyst = 39;
-  if(param.syst_ == AnalyzerParameter::BTagSFHTagUp)          IdxSyst = 40;
-  if(param.syst_ == AnalyzerParameter::BTagSFHTagDown)        IdxSyst = 41;
-  if(param.syst_ == AnalyzerParameter::BTagSFLTagUp)          IdxSyst = 42;
-  if(param.syst_ == AnalyzerParameter::BTagSFLTagDown)        IdxSyst = 43;
-  if(param.syst_ == AnalyzerParameter::PrefireUp)             IdxSyst = 44;
-  if(param.syst_ == AnalyzerParameter::PrefireDown)           IdxSyst = 45;
-  if(param.syst_ == AnalyzerParameter::PUUp)                  IdxSyst = 46;
-  if(param.syst_ == AnalyzerParameter::PUDown)                IdxSyst = 47;
-  if(param.syst_ == AnalyzerParameter::TauIDSFExtUp)          IdxSyst = 48;
-  if(param.syst_ == AnalyzerParameter::TauIDSFExtDown)        IdxSyst = 49;
-  if(param.syst_ == AnalyzerParameter::TauTriggerSFUp)        IdxSyst = 48;
-  if(param.syst_ == AnalyzerParameter::TauTriggerSFDown)      IdxSyst = 49;
+  else                                                        IdxSyst = 21;
 
   Particle vMETSyst = PropSmearing ? GetvCorrMET(METType,param,vStandMET) : vStandMET;
 
@@ -3532,7 +3648,7 @@ Particle WRTau_Core::GetvMET(TString METType, AnalyzerParameter param,
   }
   else{
     cout << "[WRTau_Core::GetvMET] There is no matched syst type;" << endl;
-    cout << "[WRTau_Core::GetvMET] Current syst index : " << IdxSyst << endl;
+    cout << "[WRTau_Core::GetvMET] Current syst index : " << IdxSyst << "," << param.GetSystType() << endl;
     exit(EXIT_FAILURE);
   }
 

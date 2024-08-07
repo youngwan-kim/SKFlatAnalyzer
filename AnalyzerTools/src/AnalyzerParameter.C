@@ -125,7 +125,8 @@ TString AnalyzerParameter::GetSystType(){
   else if(syst_==Syst::TauIDSFExtDown)        return "TauIDSFExtDown";
   else if(syst_==Syst::TauTriggerSFUp)        return "TauTriggerSFUp";
   else if(syst_==Syst::TauTriggerSFDown)      return "TauTriggerSFDown";
-
+  else if(syst_==Syst::TauEnUp)               return "TauEnUp";
+  else if(syst_==Syst::TauEnDown)             return "TauEnDown";
 
   else{
     cout << "[AnalyzerParameter::GetSystType] Wrong Syst" << endl;

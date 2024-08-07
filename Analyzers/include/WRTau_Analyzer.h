@@ -13,13 +13,34 @@ public:
 
   bool runSystematics = false;
   bool runTauFake = false;
-  vector<AnalyzerParameter::Syst> skipSysts = { AnalyzerParameter::BTagSFHTagUp, AnalyzerParameter::BTagSFHTagDown,
+  vector<AnalyzerParameter::Syst> skipSysts = { 
+                                                AnalyzerParameter::JetMassSmearUp, AnalyzerParameter::JetMassSmearDown,
+                                                AnalyzerParameter::JetResUp, AnalyzerParameter::JetResDown,
+                                                AnalyzerParameter::JetMassUp, AnalyzerParameter::JetMassDown,
+                                                AnalyzerParameter::BTagSFHTagUp, AnalyzerParameter::BTagSFHTagDown,
                                                 AnalyzerParameter::BTagSFLTagUp, AnalyzerParameter::BTagSFLTagDown,
                                                 AnalyzerParameter::JetPUIDUp , AnalyzerParameter::JetPUIDDown,
                                                 AnalyzerParameter::MuonRecoSFUp, AnalyzerParameter::MuonRecoSFDown,
+                                                AnalyzerParameter::MuonEnUp, AnalyzerParameter::MuonEnDown,
+                                                AnalyzerParameter::MuonIDSFUp, AnalyzerParameter::MuonIDSFDown,
                                                 AnalyzerParameter::FRUp , AnalyzerParameter::FRDown,
-                                                AnalyzerParameter::JetMassSmearUp,AnalyzerParameter::JetMassSmearDown
+                                                AnalyzerParameter::JetMassSmearUp,AnalyzerParameter::JetMassSmearDown,
+                                                
                                               };
+
+  vector<AnalyzerParameter::Syst> whiteSysts = {
+
+       // initial iteration of systematics : JES / TES / Tau ID / Tau Trigger / pdf (?) / Fakes
+
+                                                AnalyzerParameter::JetEnUp, AnalyzerParameter::JetEnDown,
+                                                AnalyzerParameter::TauIDSFSystUp, AnalyzerParameter::TauIDSFSystDown,
+                                                AnalyzerParameter::TauIDSFStatUp, AnalyzerParameter::TauIDSFStatDown,
+                                                AnalyzerParameter::TauIDSFExtUp, AnalyzerParameter::TauIDSFExtDown,
+                                                AnalyzerParameter::TauTriggerSFUp, AnalyzerParameter::TauTriggerSFDown,
+                                                AnalyzerParameter::TauEnUp,AnalyzerParameter::TauEnDown
+                                                
+                                                                                                
+  };
 
   vector<Muon> AllMuons;
   vector<Electron> AllElectrons;

@@ -50,6 +50,10 @@ public:
   std::map< TString, TH1D* > map_FitErr_tau;
   std::map< TString, TH1D* > map_hist_tau;
 
+  std::map< TString, TH1D* > map_TauFF_QCD;
+  std::map< TString, TH1D* > map_TauFF_TT;
+  std::map< TString, TH1D* > map_TauFF_Ratio;
+
   double GetElectronFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
   double GetMuonFakeRate(TString ID, TString key, double eta, double pt, int sys=0);
   double GetTauPromptRate(TString region,TString channel,double pt, int sys=0);

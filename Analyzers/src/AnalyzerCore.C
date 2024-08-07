@@ -428,6 +428,7 @@ std::vector<Tau> AnalyzerCore::GetTaus(TString id, double ptmin, double fetamax)
   std::vector<Tau> taus = GetAllTaus();
   std::vector<Tau> out;
 
+
   for(unsigned int i=0; i<taus.size(); i++){
     if(!( taus.at(i).Pt()>ptmin )){
       continue;
@@ -1185,6 +1186,53 @@ bool AnalyzerCore::FindHEMElectron(Electron electron){
     return false;
 
 }
+
+std::vector<Tau> AnalyzerCore::ScaleTaus(const std::vector<Tau>& taus, int sys){
+
+  std::vector<Tau> out;
+  for(unsigned int i=0; i<taus.size(); i++){
+
+    Tau this_tau = taus.at(i);
+    int this_DM = this_tau.DecayMode();
+    double shift = 1.;
+
+    // ad-hoc high pt TES implementation from Prelegacy ReReco 
+    // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TauIDRecommendationForRun2#Corrections_to_be_applied_to_gen
+
+    if(DataYear==2016){
+
+      if(this_DM == 0)          shift =  0.9910 + sys * 0.030;
+      else if(this_DM == 1)     shift =  1.0420 + sys * 0.020;
+      else if(this_DM == 10)    shift =  1.0040 + sys * 0.012;
+      else if(this_DM == 11)    shift =  0.9700 + sys * 0.027;
+    
+    }
+    else if(DataYear==2017){
+
+      if(this_DM == 0)          shift =  1.0040 + sys * 0.030;
+      else if(this_DM == 1)     shift =  1.0140 + sys * 0.027;
+      else if(this_DM == 10)    shift =  0.9780 + sys * 0.017;
+      else if(this_DM == 11)    shift =  0.9440 + sys * 0.040;
+
+    }
+    else if(DataYear==2018){
+
+      if(this_DM == 0)          shift =  0.9840 + sys * 0.030;
+      else if(this_DM == 1)     shift =  1.0040 + sys * 0.020;
+      else if(this_DM == 10)    shift =  1.0060 + sys * 0.011;
+      else if(this_DM == 11)    shift =  0.9550 + sys * 0.039;
+
+    }
+
+    this_tau *= shift;
+    out.push_back(this_tau);
+
+  }
+
+  return out;
+
+}
+
 
 std::vector<Muon> AnalyzerCore::ScaleMuons(const std::vector<Muon>& muons, int sys){
 

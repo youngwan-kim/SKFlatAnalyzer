@@ -141,6 +141,55 @@ void FakeBackgroundEstimator::ReadHistograms(){
   fileTauFR_Binned->Close();
   delete fileTauFR_Binned;
 
+  // FF Method 
+  datapath_taufake = getenv("DATA_DIR");
+  datapath_taufake += "/TauFF";
+
+  TString dir_QCDFF = datapath_taufake + "/FFQCD";
+  TString dir_TTFF = datapath_taufake + "/FFTT";
+  TString dir_Ratio = datapath_taufake + "/Ratio";
+  
+  std::vector<TString> DMs = {"DM0","DM1","DM10","DM11"};
+  std::vector<TString> DMsInclusive = {"DM0","DM1","DM10","DM11","DM1prong","DM3prong"};
+  std::vector<TString> Bkgs = {"TT","QCD"};
+  std::vector<TString> regions = {"SignalRegion","LowMassControlRegion","SignalRegionMETInvertMTSame"};
+
+  TFile *fileTauFF_Ratio = new TFile(dir_Ratio+"/"+GetEra()+".root");
+  for(TString region : regions){
+    for(TString dm : DMs){
+      for(TString bkg : Bkgs){
+        histDir->cd();
+        map_TauFF_Ratio[dm+"_"+region+"_"+bkg] = (TH1D*) fileTauFF_Ratio->Get("Inclusive"+region+"_"+dm+"_"+bkg+"_Tauh_pT")->Clone();
+        cout << "Set map_TauFF_Ratio[" << dm+"_"+region+"_"+bkg+"]" << " TH1D @ " << map_TauFF_Ratio[dm+"_"+region+"_"+bkg] << endl;
+        origDir->cd();
+      }
+    }
+  }
+
+  fileTauFF_Ratio->Close();
+  delete fileTauFF_Ratio;
+
+  TFile *fileTauFF_QCD = new TFile(dir_QCDFF+"/"+YearString+".root");
+  for(TString dm : DMsInclusive){
+    histDir->cd();
+    map_TauFF_QCD[dm] = (TH1D*) fileTauFF_QCD->Get("InclusiveQCDMR_DataDrivenSubtract_All_"+dm)->Clone();
+    cout << "Set map_TauFF_QCD[" << dm << "] TH1D @ " << map_TauFF_QCD[dm] << endl;
+    origDir->cd(); 
+  }
+
+  fileTauFF_QCD->Close();
+  delete fileTauFF_QCD;
+
+  TFile *fileTauFF_TT = new TFile(dir_TTFF+"/"+YearString+".root");
+  for(TString dm : DMs){
+    histDir->cd();
+    map_TauFF_TT[dm] = (TH1D*) fileTauFF_TT->Get("TTFakeMeasureRegion_FRSubtract_All_"+dm)->Clone();
+    cout << "Set map_TauFF_TT[" << dm << "] TH1D @ " << map_TauFF_TT[dm] << endl;
+    origDir->cd();
+  }
+
+  fileTauFF_TT->Close();
+  delete fileTauFF_TT;
 
 }
 

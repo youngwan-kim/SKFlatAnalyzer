@@ -54,6 +54,11 @@ std::map<std::string, const TF1*> extractTF1DMandPT(const TFile* file, const std
                 if (u.find("syst") != std::string::npos) {
                     syst_funcname = funcname;
                     syst_funcname.replace(syst_funcname.find("fit"), 3, u + "_" + x + "_fit");
+                } else if (u.find("TES") != std::string::npos) {
+                    std::string x_cap = x;
+                    x_cap[0] = std::toupper(x_cap[0]);
+                    syst_funcname = funcname;
+                    syst_funcname.replace(syst_funcname.find("fit"), 3, u + x_cap+"_fit");
                 } else {
                     syst_funcname = funcname + "_";
                     syst_funcname += u + "_" + x;
