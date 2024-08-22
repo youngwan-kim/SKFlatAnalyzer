@@ -746,7 +746,10 @@ void SKFlatNtuple::Init()
   fChain->SetBranchAddress("LHE_Status", &LHE_Status, &b_LHE_Status);
   fChain->SetBranchAddress("LHE_ID", &LHE_ID, &b_LHE_ID);
   if(fChain->GetBranch("weight_AlphaS")) fChain->SetBranchAddress("weight_AlphaS", &weight_AlphaS, &b_weight_AlphaS);
-  if(fChain->GetBranch("weight_PDF")) fChain->SetBranchAddress("weight_PDF", &weight_PDF, &b_weight_PDF);
+  if(fChain->GetBranch("weight_PDF")){
+    cout << "got branch weight_PDF" << endl;
+    fChain->SetBranchAddress("weight_PDF", &weight_PDF, &b_weight_PDF);
+  }
   if(fChain->GetBranch("weight_Scale")) fChain->SetBranchAddress("weight_Scale", &weight_Scale, &b_weight_Scale);
   if(fChain->GetBranch("weight_PSSyst")) fChain->SetBranchAddress("weight_PSSyst", &weight_PSSyst, &b_weight_PSSyst);
   if(fChain->GetBranch("weight_alpsfact")) fChain->SetBranchAddress("weight_alpsfact", &weight_alpsfact, &b_weight_alpsfact);

@@ -162,6 +162,8 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
   if(!PassMETFilter()) return;
 
+  bool isRunXsecSyst = HasFlag("RunXsecSyst") && param.syst_ == AnalyzerParameter::Central;
+
   Event ev = GetEvent();
   double weight(1.);
 
@@ -409,6 +411,13 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           FillPassingRegions(MassOptCutMap_reco,"RecoNuMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           FillPassingRegions(MassOptCutMap_mt,"TransMass",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
 
+        }
+
+        if(isRunXsecSyst){
+          cout << "ok" << endl;
+          for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
+            FillPassingRegions_XsecVar(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+          }
         }
 
         else{
