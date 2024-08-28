@@ -1,7 +1,7 @@
 #include "WRTau_Core.h"
 
 bool WRTau_Core::isSignalSample(){
-  return MCSample.Contains("WRtoTauNtoTauTauJets");
+  return (MCSample.Contains("WRtoTauNtoTauTauJets") || MCSample.Contains("WRtoNTautoTauTauJJ"));
 }
 
 bool WRTau_Core::isBoostedPreselection(const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons){
@@ -2094,7 +2094,7 @@ void WRTau_Core::FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,
 
 void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m_region,WRTau_Core::SearchRegion r,Particle METv, const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
-                        TString fillpath, double MCweight,std::tuple<int,int,int> idtuple, bool highpT){
+                        TString fillpath, double MCweight_,std::tuple<int,int,int> idtuple, bool highpT){
   
     if(m_region[r]==true){
 
@@ -2118,7 +2118,7 @@ void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m
           }
         }
       }
-      double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight;
+      double weight = GetMatchedWeight(taus,gens,leptons,idtuple,highpT) * MCweight_;
       weight *= GetTauIDLeptonFakeSF(idtuple,leptons,gens);
       WRTau_Core::Channel ch = GetChannel(leptons);
       if(TauPromptString!="") TauPromptString = "/"+TauPromptString;
@@ -2132,30 +2132,31 @@ void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m
       }
 
       // pdf uncertainty
-      cout << "PDF Weight n = " << weight_PDF->size() << endl;
+      //cout << "PDF Weight n = " << weight_PDF->size() << endl;
       for(unsigned int i=0; i<weight_PDF->size(); i++){
         for(const auto str : fillstr){
-          double w = weight_PDF->at(i);
-          cout << "[WRTau_Core::FillPassingRegions_XsecVar] weight_PDF "+TString::Itoa(i,10) << " = " << w << endl;
-          FillHist(str+"/Nevents_PDFWeight_"+TString::Itoa(i,10),0,weight*w,1,0.,1.);
+          double normweight = 1./sumW/weight_PDF->at(0);
+          //cout << "[WRTau_Core::FillPassingRegions_XsecVar] weight_PDF "+TString::Itoa(i,10) << " = " << w << endl;
+          FillHist(str+"/Nevents_PDFWeight_"+TString::Itoa(i,10),0,weight_PDF->at(i)*MCweight(false,true)*normweight,1,0.,1.);
   
           auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), r);
           auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), r);
-  
+
           if( it_b != BoostedRegions.end() ){
+
             for(unsigned int i=0; i<weight_PDF->size(); i++){}
             double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
             double M2 = GetBoostedSRMass(taus,fatjets,LooseLeptons);
-            if(M1>0) FillHist(str+"/ProperMTWR_PDFWeight_"+TString::Itoa(i,10),M1,weight*w,20000,0.,20000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR_PDFWeight_"+TString::Itoa(i,10),M2,weight*w,20000,0.,20000.);
+            if(M1>0) FillHist(str+"/ProperMTWR_PDFWeight_"+TString::Itoa(i,10),M1,weight_PDF->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR_PDFWeight_"+TString::Itoa(i,10),M2,weight_PDF->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
           }
   
           if( it_r != ResolvedRegions.end() ){
           
             double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
             double M2 = GetResolvedSRMass(taus,jets,TightLeptons);
-            if(M1>0) FillHist(str+"/ProperMTWR_PDFWeight_"+TString::Itoa(i,10),M1,weight*w,20000,0.,20000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR_PDFWeight_"+TString::Itoa(i,10),M2,weight*w,20000,0.,20000.);
+            if(M1>0) FillHist(str+"/ProperMTWR_PDFWeight_"+TString::Itoa(i,10),M1,weight_PDF->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR_PDFWeight_"+TString::Itoa(i,10),M2,weight_PDF->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
  
           }
         }
@@ -2164,8 +2165,8 @@ void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m
       // alphaS up down 
       for(unsigned int i=0; i<weight_AlphaS->size(); i++){
         for(const auto str : fillstr){
-          double w = weight_AlphaS->at(i);
-          FillHist(str+"/Nevents_PDFAlphaS_"+TString::Itoa(i,10),0,weight*w,1,0.,1.);
+          double normweight = 1./sumW/weight_PDF->at(0);
+          FillHist(str+"/Nevents_PDFAlphaS_"+TString::Itoa(i,10),0,weight_AlphaS->at(i)*MCweight(false,true)*normweight,1,0.,1.);
   
           auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), r);
           auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), r);
@@ -2174,16 +2175,16 @@ void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m
             for(unsigned int i=0; i<weight_PDF->size(); i++){}
             double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
             double M2 = GetBoostedSRMass(taus,fatjets,LooseLeptons);
-            if(M1>0) FillHist(str+"/ProperMTWR_PDFAlphaS_"+TString::Itoa(i,10),M1,weight*w,20000,0.,20000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR_PDFAlphaS_"+TString::Itoa(i,10),M2,weight*w,20000,0.,20000.);
+            if(M1>0) FillHist(str+"/ProperMTWR_PDFAlphaS_"+TString::Itoa(i,10),M1,weight_AlphaS->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR_PDFAlphaS_"+TString::Itoa(i,10),M2,weight_AlphaS->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
           }
   
           if( it_r != ResolvedRegions.end() ){
           
             double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
             double M2 = GetResolvedSRMass(taus,jets,TightLeptons);
-            if(M1>0) FillHist(str+"/ProperMTWR_PDFAlphaS_"+TString::Itoa(i,10),M1,weight*w,20000,0.,20000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR_PDFAlphaS_"+TString::Itoa(i,10),M2,weight*w,20000,0.,20000.);
+            if(M1>0) FillHist(str+"/ProperMTWR_PDFAlphaS_"+TString::Itoa(i,10),M1,weight_AlphaS->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR_PDFAlphaS_"+TString::Itoa(i,10),M2,weight_AlphaS->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
  
           }
         }
@@ -2191,10 +2192,10 @@ void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m
 
       // factorization, renormalization scale
       for(unsigned int i=0; i<weight_Scale->size(); i++){
+        double normweight = 1./sumW/weight_PDF->at(0);
         if(i==5 || i==7) continue; 
         for(const auto str : fillstr){
-          double w = weight_Scale->at(i);
-          FillHist(str+"/Nevents_Scale_"+TString::Itoa(i,10),0,weight*w,1,0.,1.);
+          FillHist(str+"/Nevents_Scale_"+TString::Itoa(i,10),0,weight_Scale->at(i)*MCweight(false,true)*normweight,1,0.,1.);
   
           auto it_b = std::find(BoostedRegions.begin(), BoostedRegions.end(), r);
           auto it_r = std::find(ResolvedRegions.begin(), ResolvedRegions.end(), r);
@@ -2203,16 +2204,16 @@ void WRTau_Core::FillPassingRegions_XsecVar(map<WRTau_Core::SearchRegion,bool> m
             for(unsigned int i=0; i<weight_PDF->size(); i++){}
             double M1 = GetBoostedSRMass(METv,taus,fatjets,LooseLeptons,false);
             double M2 = GetBoostedSRMass(taus,fatjets,LooseLeptons);
-            if(M1>0) FillHist(str+"/ProperMTWR_Scale_"+TString::Itoa(i,10),M1,weight*w,20000,0.,20000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR_Scale_"+TString::Itoa(i,10),M2,weight*w,20000,0.,20000.);
+            if(M1>0) FillHist(str+"/ProperMTWR_Scale_"+TString::Itoa(i,10),M1,weight_Scale->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR_Scale_"+TString::Itoa(i,10),M2,weight_Scale->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
           }
   
           if( it_r != ResolvedRegions.end() ){
           
             double M1 = GetResolvedSRMass(METv,taus,jets,TightLeptons,false);
             double M2 = GetResolvedSRMass(taus,jets,TightLeptons);
-            if(M1>0) FillHist(str+"/ProperMTWR_Scale_"+TString::Itoa(i,10),M1,weight*w,20000,0.,20000.);
-            if(M2>0) FillHist(str+"/ProperMeffWR_Scale_"+TString::Itoa(i,10),M2,weight*w,20000,0.,20000.);
+            if(M1>0) FillHist(str+"/ProperMTWR_Scale_"+TString::Itoa(i,10),M1,weight_Scale->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
+            if(M2>0) FillHist(str+"/ProperMeffWR_Scale_"+TString::Itoa(i,10),M2,weight_Scale->at(i)*MCweight(false,true)*normweight,20000,0.,20000.);
  
           }
         }

@@ -301,7 +301,20 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         FillHist(path+"/Cutflow",0.,weight,10,0.,10.);
 
-        if(MCSample.Contains("WRtoTauNtoTauTauJets") && HasFlag("SignalDebug")){
+        if(isRunXsecSyst){
+          double normweight = 1./sumW/weight_PDF->at(0); // k-factor
+          for(unsigned int i=0; i<weight_PDF->size(); i++){
+            FillHist("XsecSyst/PDFWeights_"+TString::Itoa(i,10),0.,weight_PDF->at(i)*MCweight(false,true)*normweight,1,0.,1.);
+          }
+          for(unsigned int i=0; i<weight_AlphaS->size(); i++){
+            FillHist("XsecSyst/PDFAlphaS_"+TString::Itoa(i,10),0.,weight_AlphaS->at(i)*MCweight(false,true)*normweight,1,0.,1.);
+          }
+          for(unsigned int i=0; i<weight_Scale->size(); i++){
+            FillHist("XsecSyst/Scale_"+TString::Itoa(i,10),0.,weight_Scale->at(i)*MCweight(false,true)*normweight,1,0.,1.);
+          }
+        }
+
+        if(isSignalSample() && HasFlag("SignalDebug")){
 
           vector<Tau> baselineTau = SelectTaus(AllTaus,"Baseline",50,2.4);
           vector<Tau> baseline_L_Tau = SelectTaus(AllTaus,"BaselineWithvJetLoose",50,2.4);
@@ -337,7 +350,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           continue;
         }
 
-        if(MCSample.Contains("WRtoTauNtoTauTauJets")){
+        if(isSignalSample()){
           std::map<WRTau_Core::SearchRegion,bool> genChannelMap = getGenLevelChannelMap(AllGens);
           for(auto const& region : genChannelMap){
 
@@ -414,7 +427,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
 
         if(isRunXsecSyst){
-          cout << "ok" << endl;
+          double normweight = 1./sumW/weight_PDF->at(0); // k-factor
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
             FillPassingRegions_XsecVar(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           }

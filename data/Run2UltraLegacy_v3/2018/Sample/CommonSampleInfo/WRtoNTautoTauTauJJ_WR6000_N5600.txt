@@ -1,0 +1,2 @@
+# alias PD xsec nmc sumsign sumw
+WRtoNTautoTauTauJJ_WR6000_N5600	WRtoNTautoTauTauJJ_WR6000_N5600_TuneCP5_13TeV_madgraph-pythia8	1.379e-06	151098	151098.0	1.510980000000e+05
