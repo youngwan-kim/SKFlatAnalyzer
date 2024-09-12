@@ -30,6 +30,12 @@ public:
   void SetDecayModeNewDM(bool dm_newdm);
   void SetDecayMode(int decay_mode);
 
+  //systematic
+  void SetPxUnSmeared(double px);
+  void SetPyUnSmeared(double py);
+  inline double PxUnSmeared()  const { return j_PxUnSmeared;}
+  inline double PyUnSmeared()  const { return j_PyUnSmeared;}
+
 
   /// ID bit 
   static const int N_SELECTOR = 27;
@@ -107,6 +113,8 @@ private:
   
   int j_decaymode;
   bool j_idDecayModeNewDMs;
+  double j_PxUnSmeared;
+  double j_PyUnSmeared;
 
   ClassDef(Tau,1)
     

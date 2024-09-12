@@ -214,12 +214,13 @@ public:
   
 
   // MET
+  Particle UpdateTESforMET(Particle METv, std::vector<Tau> taus);
   Particle GetvMET(TString METType);
   Particle GetvMET(TString METType, AnalyzerParameter param);
   Particle GetvMET(TString METType, AnalyzerParameter param,bool PropSmearing);
   Particle GetvMET(TString METType, AnalyzerParameter param,
                    std::vector<Jet> jets, std::vector<FatJet> fatjets,
-                   std::vector<Muon> muons, std::vector<Electron> electrons, bool PropSmearing);
+                   std::vector<Muon> muons, std::vector<Electron> electrons, std::vector<Tau> taus, bool PropSmearing);
   std::pair<double,double> METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false);
   Particle GetvCorrMET(TString METType, AnalyzerParameter param, Particle METUncorr);
   map<TString, Particle> METMap( AnalyzerParameter param);
@@ -258,7 +259,7 @@ public:
   WRTau_Core::Channel GetChannel(const std::vector<Lepton *> leps);
   TString GetChannelString(WRTau_Core::Channel channel);
   std::string GetRegionString(WRTau_Core::SearchRegion region);
-  map<WRTau_Core::SearchRegion,bool> GetRegion(Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+  map<WRTau_Core::SearchRegion,bool> GetRegion(AnalyzerParameter param, double weight,Particle METv, const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                                                const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons);
   map<WRTau_Core::SearchRegion,bool> GetGenRegion(const std::vector<Gen>& gens);
 

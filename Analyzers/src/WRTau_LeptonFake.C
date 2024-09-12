@@ -127,7 +127,7 @@ void WRTau_LeptonFake::executeEventFromParameter(AnalyzerParameter param){
   std::sort(muons_veto.begin(),muons_veto.end(),PtComparing);
 
 
-  map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
+  map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(param,weight,METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
   FillLeptonKinematics(map_regions,param,METv,AllGens,taus,LooseLeptons,TightLeptons,electrons,electrons_loose,electrons_veto,muons,muons_loose,muons_veto,jets,bjets,fatjets,param.Name,weight);
 
 }

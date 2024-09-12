@@ -406,6 +406,8 @@ std::vector<Tau> AnalyzerCore::GetAllTaus(){
   for(unsigned int i=0; i<tau_pt->size(); i++){
 
     Tau tau;
+    tau.SetPxUnSmeared(tau.Px());
+    tau.SetPyUnSmeared(tau.Py());
     tau.SetCharge(tau_charge->at(i));
     tau.SetPtEtaPhiM(tau_pt->at(i), tau_eta->at(i), tau_phi->at(i), tau_mass->at(i));
     tau.SetDecayMode(tau_decaymode->at(i));
@@ -1194,37 +1196,123 @@ std::vector<Tau> AnalyzerCore::ScaleTaus(const std::vector<Tau>& taus, int sys){
 
     Tau this_tau = taus.at(i);
     int this_DM = this_tau.DecayMode();
-    double shift = 1.;
+    double shift = -999;
+    double nominal_highPt = 0.;
+    double error_highPt = 0.;
+    double nominal_lowPt = 0.;
+    double error_lowPt = 0.;
 
     // ad-hoc high pt TES implementation from Prelegacy ReReco 
     // https://twiki.cern.ch/twiki/bin/viewauth/CMS/TauIDRecommendationForRun2#Corrections_to_be_applied_to_gen
 
     if(DataYear==2016){
 
-      if(this_DM == 0)          shift =  0.9910 + sys * 0.030;
-      else if(this_DM == 1)     shift =  1.0420 + sys * 0.020;
-      else if(this_DM == 10)    shift =  1.0040 + sys * 0.012;
-      else if(this_DM == 11)    shift =  0.9700 + sys * 0.027;
+      if(this_DM == 0){
+        nominal_highPt = 0.9910; error_highPt = 0.03;
+        if(DataEra == "2016preVFP"){
+          nominal_lowPt = 0.9870; error_lowPt = 0.01;
+        }
+        else if(DataEra=="2016postVFP"){
+          nominal_lowPt = 0.9930; error_lowPt = 0.009;
+        }
+      }
+      else if(this_DM == 1){
+        nominal_highPt = 1.0420; error_highPt = 0.02;
+        if(DataEra == "2016preVFP"){
+          nominal_lowPt = 0.9980; error_lowPt = 0.006;
+        }
+        else if(DataEra == "2016postVFP"){
+          nominal_lowPt = 0.9910; error_lowPt = 0.007;
+        }
+      }
+      else if(this_DM == 10){
+        nominal_highPt = 1.0040; error_highPt = 0.012;
+        if(DataEra == "2016preVFP"){
+          nominal_lowPt = 0.9840; error_lowPt = 0.008;
+        }
+        else if(DataEra == "2016postVFP"){
+          nominal_lowPt = 1.0010; error_lowPt = 0.007;
+        }
+      }
+      else if(this_DM == 11){
+        nominal_highPt = 0.9700; error_highPt = 0.027;
+        if(DataEra == "2016preVFP"){
+          nominal_lowPt = 0.9990; error_lowPt = 0.011;
+        }
+        else if(DataEra == "2016postVFP"){
+          nominal_lowPt = 0.9970; error_lowPt = 0.016;
+        }
+      }
     
     }
     else if(DataYear==2017){
 
-      if(this_DM == 0)          shift =  1.0040 + sys * 0.030;
-      else if(this_DM == 1)     shift =  1.0140 + sys * 0.027;
-      else if(this_DM == 10)    shift =  0.9780 + sys * 0.017;
-      else if(this_DM == 11)    shift =  0.9440 + sys * 0.040;
+      if(this_DM == 0){
+        nominal_highPt = 1.0040; error_highPt = 0.030;
+        nominal_lowPt = 0.9860; error_lowPt = 0.009;
+      }
+      else if(this_DM == 1){
+        nominal_highPt =  1.0140; error_highPt = 0.027;
+        nominal_lowPt = 0.9990; error_lowPt = 0.006;
+      }
+      else if(this_DM == 10){
+        nominal_highPt =  0.9780 ; error_highPt = 0.017;
+        nominal_lowPt = 0.9990; error_lowPt = 0.007;
+      }
+      else if(this_DM == 11){
+        nominal_highPt =  0.9440 ; error_highPt = 0.040;
+        nominal_lowPt = 0.9960; error_lowPt = 0.01;
+      }
 
     }
     else if(DataYear==2018){
 
-      if(this_DM == 0)          shift =  0.9840 + sys * 0.030;
-      else if(this_DM == 1)     shift =  1.0040 + sys * 0.020;
-      else if(this_DM == 10)    shift =  1.0060 + sys * 0.011;
-      else if(this_DM == 11)    shift =  0.9550 + sys * 0.039;
-
+      if(this_DM == 0){
+        nominal_highPt = 0.9840; error_highPt = 0.030;
+        nominal_lowPt = 0.9910; error_lowPt = 0.008;
+      }
+      else if(this_DM == 1){
+        nominal_highPt =  1.0040; error_highPt = 0.020;
+        nominal_lowPt = 1.0040; error_lowPt = 0.006;
+      }
+      else if(this_DM == 10){
+        nominal_highPt =  1.0060 ; error_highPt = 0.011;
+        nominal_lowPt = 0.9980; error_lowPt = 0.007;
+      }
+      else if(this_DM == 11){
+        nominal_highPt =  0.9550 ; error_highPt = 0.039;
+        nominal_lowPt = 1.0040; error_lowPt = 0.009;
+      }
     }
 
+    if(this_tau.Pt() > 170.){
+      shift = nominal_lowPt + sys * error_highPt ;
+    }
+    else if(this_tau.Pt() > 34.){
+      shift = nominal_lowPt + sys * ( (error_highPt-error_lowPt)/(170.-34.)*(this_tau.Pt()-34.) ) ;
+    }
+    else{
+      shift = nominal_lowPt + sys * error_lowPt;
+    }
+
+    
+    //if(HasFlag("TauEnDebug")){
+      //cout <<  "(" << run << ", " << lumi << ", " << event << ") Tau #" << i << " Before Shift " <<endl;
+      //cout << "\t" << "DM = " << this_DM << " , DataYear = " << DataYear << " , Shift = " << shift << ", TauES = " << sys << endl;
+      //cout << "\t\t" << "(Pt,Eta,Phi,M,E) =  " << this_tau.Pt() << " , " << this_tau.Eta() << " , " << this_tau.Phi() << " , " << this_tau.M() << " , " << this_tau.E() << " , " << endl;
+      //cout << "\t\t" << "(Px,Py,Pz) =  " << this_tau.Px() << " , " << this_tau.Py() << " , " << this_tau.Pz() << endl;
+      //cout << shift << endl;
+    //}
+
     this_tau *= shift;
+    /*
+    if(HasFlag("TauEnDebug")){
+      cout << "\t\t After shifting ... " << endl;
+      cout << "\t\t" << "(Pt,Eta,Phi,M,E) =  " << this_tau.Pt() << " , " << this_tau.Eta() << " , " << this_tau.Phi() << " , " << this_tau.M() << " , " << this_tau.E() << " , " << endl;
+      cout << "\t\t" << "(Px,Py,Pz) =  " << this_tau.Px() << " , " << this_tau.Py() << " , " << this_tau.Pz() << endl;
+    }*/
+    
+    //this_tau.SetPtEtaPhiM( this_tau.Pt() * shift, this_tau.Eta(), this_tau.Phi(), this_tau.M() * shift );
     out.push_back(this_tau);
 
   }
@@ -3582,7 +3670,7 @@ bool AnalyzerCore::IsFinalPhotonSt23(std::vector<Gen>& TruthColl){
 }
 
 
-Particle AnalyzerCore::UpdateMETSyst(AnalyzerParameter param, const Particle& METv, std::vector<Jet> jets, std::vector<FatJet> fatjets, std::vector<Muon> muons, std::vector<Electron> electrons){
+Particle AnalyzerCore::UpdateMETSyst(AnalyzerParameter param, const Particle& METv, std::vector<Jet> jets, std::vector<FatJet> fatjets, std::vector<Muon> muons, std::vector<Electron> electrons, std::vector<Tau> taus){
 
   double met_x = METv.Px();
   double met_y = METv.Py();
@@ -3632,6 +3720,15 @@ Particle AnalyzerCore::UpdateMETSyst(AnalyzerParameter param, const Particle& ME
       py_orig += electrons.at(i).UncorrectedPt() * TMath::Sin(electrons.at(i).Phi());
       px_corrected += electrons.at(i).Px();
       py_corrected += electrons.at(i).Py();
+    }
+  }
+
+  if(param.syst_ == AnalyzerParameter::TauEnUp || param.syst_ == AnalyzerParameter::TauEnDown){
+    for(unsigned int i=0; i<taus.size(); i++){
+      px_orig += taus.at(i).PxUnSmeared();
+      py_orig += taus.at(i).PyUnSmeared();
+      px_corrected += taus.at(i).Px();
+      py_corrected += taus.at(i).Py();
     }
   }
 

@@ -7,6 +7,8 @@ Tau::Tau(){
   j_IDBit = 0;
   j_decaymode=-1;
   j_idDecayModeNewDMs=false;
+  j_PxUnSmeared = -999.;
+  j_PyUnSmeared = -999.;
 
   this->SetLeptonFlavour(TAU);
 }
@@ -31,6 +33,13 @@ void Tau::SetDecayModeNewDM(bool DecayModeNewDMs){
   j_idDecayModeNewDMs= DecayModeNewDMs;
 }
 
+void Tau::SetPxUnSmeared(double px){
+  j_PxUnSmeared=px;
+}
+
+void Tau::SetPyUnSmeared(double py){
+  j_PyUnSmeared=py;
+}
 
    
 bool Tau::PassID(TString ID) const{

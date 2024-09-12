@@ -75,6 +75,20 @@ void WRTau_Analyzer::initializeAnalyzer(){
       WRTau_Core::BenchmarkBoostedPreselection
     };
 
+    if(HasFlag("TauEnDebug")){
+      RegionOfInterest.clear();
+        RegionOfInterest = {
+                      WRTau_Core::BoostedPreselection,
+                      WRTau_Core::ResolvedPreselection,
+                      WRTau_Core::BoostedLowMassControlRegion,
+                      WRTau_Core::ResolvedLowMassControlRegion,
+                      WRTau_Core::BoostedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegion,
+                      WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                      WRTau_Core::BoostedSignalRegionMETInvertMTSame
+                      };
+    }
+
   }
 
   if(HasFlag("RunTTEnrichedRegion")){
@@ -95,6 +109,10 @@ void WRTau_Analyzer::initializeAnalyzer(){
 }
 
 void WRTau_Analyzer::executeEvent(){
+
+  Syst_MuonRecoSF = 0.; Syst_ElectronRecoSF = 0. ; Syst_MuonIDSF = 0.; Syst_ElectronIDSF = 0. ;
+  Syst_MuonISOSF = 0. ; Syst_TauIDSF = "" ; Syst_TauTriggerSF = 0. ; Syst_LSFSF = 0.; Syst_PU = 0.;
+  Syst_Prefire = 0.; Syst_TauES = 0.;
 
   AnalyzerParameter param;
 
@@ -128,8 +146,23 @@ void WRTau_Analyzer::executeEvent(){
   AllLHEs = GetLHEs();
   TauFRErr = 0 ;
   executeEventFromParameter(param);
+  if(HasFlag("TauEnDebug")){
+    param.syst_ = AnalyzerParameter::TauEnUp;
+    param.Name = "Syst_"+param.GetSystType();
+    executeEventFromParameter(param);
+    param.syst_ = AnalyzerParameter::TauEnDown;
+    param.Name = "Syst_"+param.GetSystType();
+    executeEventFromParameter(param);
+    param.syst_ = AnalyzerParameter::JetEnUp;
+    param.Name = "Syst_"+param.GetSystType();
+    executeEventFromParameter(param);
+    param.syst_ = AnalyzerParameter::JetEnDown;
+    param.Name = "Syst_"+param.GetSystType();
+    executeEventFromParameter(param);
+    
+  }
   if(runSystematics){
-
+    
     RegionOfInterest = {
                       WRTau_Core::BoostedLowMassControlRegion,
                       WRTau_Core::ResolvedLowMassControlRegion,
@@ -176,6 +209,8 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   vector<Muon> this_AllMuons = UseTunePMuon(AllMuons);
   vector<Electron> this_AllElectrons = AllElectrons;
 
+
+
   if(param.syst_ == AnalyzerParameter::JetResUp){
     this_AllJets = SmearJets( this_AllJets, +1 );
     this_AllFatJets = SmearFatJets( this_AllFatJets, +1 );
@@ -192,9 +227,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
     this_AllJets = ScaleJets( this_AllJets, -1 );
     this_AllFatJets = ScaleFatJets( this_AllFatJets, -1 );
   }
-  /* For TuneP muons, MomentumShift() are set correctly from AnalyzerCore::UseTunePMuon()
-     So we can just use MomentumShift() */
-  else if(param.syst_ == AnalyzerParameter::MuonEnUp)           this_AllMuons = ScaleMuons(this_AllMuons,+1);
+  else if(param.syst_ == AnalyzerParameter::MuonEnUp)                this_AllMuons = ScaleMuons(this_AllMuons,+1);
   else if(param.syst_ == AnalyzerParameter::MuonEnDown)         this_AllMuons = ScaleMuons(this_AllMuons,-1);
   else if(param.syst_ == AnalyzerParameter::ElectronResUp)      this_AllElectrons = SmearElectrons(this_AllElectrons, +1); 
   else if(param.syst_ == AnalyzerParameter::ElectronResDown)    this_AllElectrons = SmearElectrons(this_AllElectrons, -1);
@@ -202,9 +235,6 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   else if(param.syst_ == AnalyzerParameter::ElectronEnDown)     this_AllElectrons = ScaleElectrons(this_AllElectrons, -1);
   else if(param.syst_ == AnalyzerParameter::TauEnUp)            this_AllTaus = ScaleTaus(this_AllTaus,+1);
   else if(param.syst_ == AnalyzerParameter::TauEnDown)          this_AllTaus = ScaleTaus(this_AllTaus,-1);
-  // TODO
-  //else if(param.syst_ == AnalyzerParameter::MuonRecoSFUp)       Syst_MuonRecoSF = +1;
-  //else if(param.syst_ == AnalyzerParameter::MuonRecoSFDown)     Syst_MuonRecoSF = -1; 
   else if(param.syst_ == AnalyzerParameter::MuonIDSFUp)         Syst_MuonIDSF   = +1;
   else if(param.syst_ == AnalyzerParameter::MuonIDSFDown)       Syst_MuonIDSF   = -1;
   else if(param.syst_ == AnalyzerParameter::MuonISOSFUp)        Syst_MuonISOSF  = +1;
@@ -228,12 +258,19 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
   if(!IsDATA){
     if(HasFlag("unweighted")) weight *= 1.;
-    else weight *= MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(Syst_Prefire) * GetPileUpWeight(nPileUp,Syst_PU) * GetTauTriggerSF(Syst_TauTriggerSF);
+    else{
+      weight *= MCweight(true,true) * ev.GetTriggerLumi("Full") * GetPrefireWeight(Syst_Prefire) * GetPileUpWeight(nPileUp,Syst_PU) * GetTauTriggerSF(Syst_TauTriggerSF);
+      //cout << "weight = " << weight << "@(" << run << " , " << lumi << " , " << event << "), " << param.Name << endl;
+      //cout << "\t" << weight << " = " <<  MCweight(true,true) << "*" << ev.GetTriggerLumi("Full") << "*" << GetPrefireWeight(Syst_Prefire) << "*" << GetPileUpWeight(nPileUp,Syst_PU) << "*" << GetTauTriggerSF(Syst_TauTriggerSF) << "@(" << run << " , " << lumi << " , " << event << "), " << param.Name << endl;
+      //cout << "\t\t Syst_TauTriggerSF = " <<  Syst_TauTriggerSF << endl;
+    }
   }
+  FillHist(param.Name+"/Weight",1,weight,4000,0.8,1.2);
+  
 
   // GetvMET function incorporates each systematic variations for every case 
-  Particle METv       = GetvMET("T1",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,false);
-  Particle METv_Puppi = GetvMET("Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,false);
+  Particle METv       = GetvMET("Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,this_AllTaus,false);
+  Particle METv_Puppi = GetvMET("Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,this_AllTaus,false);
 
   JetTagging::Parameters param_jetsM = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
 
@@ -300,9 +337,9 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         //cout << "[WRTau_Analyzer::Debug] Object vector sorted" << endl;
 
         FillHist(path+"/Cutflow",0.,weight,10,0.,10.);
-
+        /*
         if(isRunXsecSyst){
-          double normweight = 1./sumW/weight_PDF->at(0); // k-factor
+           
           for(unsigned int i=0; i<weight_PDF->size(); i++){
             FillHist("XsecSyst/PDFWeights_"+TString::Itoa(i,10),0.,weight_PDF->at(i)*MCweight(false,true)*normweight,1,0.,1.);
           }
@@ -310,9 +347,11 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
             FillHist("XsecSyst/PDFAlphaS_"+TString::Itoa(i,10),0.,weight_AlphaS->at(i)*MCweight(false,true)*normweight,1,0.,1.);
           }
           for(unsigned int i=0; i<weight_Scale->size(); i++){
+            if(i==5 || i==7) continue;
             FillHist("XsecSyst/Scale_"+TString::Itoa(i,10),0.,weight_Scale->at(i)*MCweight(false,true)*normweight,1,0.,1.);
           }
-        }
+          
+        }*/
 
         if(isSignalSample() && HasFlag("SignalDebug")){
 
@@ -344,6 +383,9 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
               FillHist(path+"/GenLevelChannel",region.first-100,weight,10,0.,10.);
               FillHist(path+"/GenLevelChannel_"+TString::Itoa(region.first-100,10)+"_nAllTaus",AllTaus.size(),weight,10,0.,10.);
               FillHist(path+"/GenLevelChannel_"+TString::Itoa(region.first-100,10)+"_nTaus",taus.size(),weight,10,0.,10.);
+              FillHist(path+"/GenLevelChannel_MCWeight",region.first-100,MCweight(true,true),10,0.,10.);
+              FillHist(path+"/GenLevelChannel_MCWeight_"+TString::Itoa(region.first-100,10)+"_nAllTaus",AllTaus.size(),MCweight(true,true),10,0.,10.);
+              FillHist(path+"/GenLevelChannel_MCWeight_"+TString::Itoa(region.first-100,10)+"_nTaus",taus.size(),MCweight(true,true),10,0.,10.);
             }
 
           }
@@ -388,7 +430,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         if(LooseLeptons.size()!=1) continue;
         
-        if(LooseLeptons.at(0)->IsMuon()) METv = METv_Puppi;
+        //if(LooseLeptons.at(0)->IsMuon()) METv = METv_Puppi;
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
 
         if(HasFlag("debug")) cout << "Pass Cut 4" << endl;
@@ -405,7 +447,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           continue;
         }
         
-        map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
+        map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(param,weight,METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
         if(HasFlag("debug")) cout << "Pass get map_region" << endl;
 
         if(HasFlag("LSFOpt")){
@@ -427,7 +469,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
         }
 
         if(isRunXsecSyst){
-          double normweight = 1./sumW/weight_PDF->at(0); // k-factor
+          //double normweight = 1./sumW/weight_PDF->at(0); // k-factor
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
             FillPassingRegions_XsecVar(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
           }
