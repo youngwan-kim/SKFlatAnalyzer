@@ -64,7 +64,7 @@ public:
   };*/
   enum Syst{
     Central,
-    JetMassSmearUp,JetMassSmearDown,
+    JetMassSmearUp,JetMassSmearDown, //TODO debug
     JetResUp, JetResDown,
     JetEnUp, JetEnDown,
     JetMassUp,JetMassDown,

@@ -25,6 +25,7 @@
 #pragma link C++ class WRTau_SingleLepton+;
 #pragma link C++ class WRTau_SignalStudy+;
 #pragma link C++ class TauQCDFakeStudy+;
+#pragma link C++ class TriggerTest+;
 #pragma link C++ class ZTauTau+;
 #pragma link C++ class EXO_16_023+;
 #pragma link C++ class LeptonicTauStudy+;

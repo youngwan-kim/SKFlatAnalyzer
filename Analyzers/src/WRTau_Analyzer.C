@@ -255,7 +255,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
   else if(param.syst_ == AnalyzerParameter::PUDown)             Syst_PU = -1;
   else if(param.syst_ == AnalyzerParameter::PrefireUp)          Syst_Prefire = +1;
   else if(param.syst_ == AnalyzerParameter::PrefireDown)        Syst_Prefire = -1;
-
+  
   if(!IsDATA){
     if(HasFlag("unweighted")) weight *= 1.;
     else{

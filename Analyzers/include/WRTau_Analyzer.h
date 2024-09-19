@@ -29,17 +29,27 @@ public:
                                               };
 
   vector<AnalyzerParameter::Syst> whiteSysts = {
-
-       // initial iteration of systematics : JES / TES / Tau ID / Tau Trigger / pdf (?) / Fakes
-
                                                 AnalyzerParameter::JetEnUp, AnalyzerParameter::JetEnDown,
-                                                AnalyzerParameter::TauIDSFSystUp, AnalyzerParameter::TauIDSFSystDown,
-                                                AnalyzerParameter::TauIDSFStatUp, AnalyzerParameter::TauIDSFStatDown,
-                                                AnalyzerParameter::TauIDSFExtUp, AnalyzerParameter::TauIDSFExtDown,
-                                                AnalyzerParameter::TauTriggerSFUp, AnalyzerParameter::TauTriggerSFDown,
-                                                AnalyzerParameter::TauEnUp,AnalyzerParameter::TauEnDown
+                                                AnalyzerParameter::JetResUp, AnalyzerParameter::JetResDown,
+                                                AnalyzerParameter::JetMassUp, AnalyzerParameter::JetMassDown,
                                                 
-                                                                                                
+                                                AnalyzerParameter::MuonEnUp, AnalyzerParameter::MuonEnDown,
+                                                AnalyzerParameter::MuonIDSFUp, AnalyzerParameter::MuonIDSFDown,
+                                                AnalyzerParameter::MuonISOSFUp, AnalyzerParameter::MuonISOSFDown,         
+
+                                                AnalyzerParameter::ElectronEnUp, AnalyzerParameter::ElectronEnDown,       //
+                                                AnalyzerParameter::ElectronIDSFUp, AnalyzerParameter::ElectronIDSFDown,   //
+                                                AnalyzerParameter::ElectronResUp, AnalyzerParameter::ElectronResDown,     // ? 
+                                                
+                                                AnalyzerParameter::TauIDSFSystUp, AnalyzerParameter::TauIDSFSystDown,     //
+                                                AnalyzerParameter::TauIDSFStatUp, AnalyzerParameter::TauIDSFStatDown,     //
+                                                AnalyzerParameter::TauIDSFExtUp, AnalyzerParameter::TauIDSFExtDown,       //
+                                                AnalyzerParameter::TauTriggerSFUp, AnalyzerParameter::TauTriggerSFDown,   //
+                                                AnalyzerParameter::TauEnUp,AnalyzerParameter::TauEnDown,                  //
+
+                                                AnalyzerParameter::METUnclUp, AnalyzerParameter::METUnclDown,             //
+                                                AnalyzerParameter::PrefireUp, AnalyzerParameter::PrefireDown,             //
+                                                AnalyzerParameter::PUUp, AnalyzerParameter::PUDown                        //
   };
 
   vector<Muon> AllMuons;
