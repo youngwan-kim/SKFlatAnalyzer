@@ -502,35 +502,34 @@ double MCCorrection::ElectronID_SF(TString ID, double sceta, double pt, int sys)
     double this_SF_staterr(0.); // absolute value
     double this_SF_systerr(0.); // absolute value
     double this_SF_err(0.);
-
+    // UPDATED : https://twiki.cern.ch/twiki/bin/view/CMS/EgammaUL2016To2018
     if(DataYear==2016){
-      this_SF         = (IsBarrel ? 0.971 : 0.983);
+      //this_SF         = (IsBarrel ? 0.971 : 0.983);
+      this_SF         = (IsBarrel ? 0.985 : 0.990);
       this_SF_staterr = (IsBarrel ? 0.001 : 0.001);
-
-      if(IsBarrel) this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0022,3.)*0.01) * this_SF;
-      else         this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0143,4.)*0.01) * this_SF;
-
+      this_SF_systerr = (IsBarrel ? 0.004 : 0.007);
+      /*if(IsBarrel) this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0022,3.)*0.01) * this_SF;
+      else         this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0143,4.)*0.01) * this_SF;*/
       this_SF_err = sqrt(this_SF_staterr*this_SF_staterr+this_SF_systerr*this_SF_systerr);
     }
     else if(DataYear==2017){ 
-      this_SF         = (IsBarrel ? 0.967 : 0.973);
+      //this_SF         = (IsBarrel ? 0.967 : 0.973);
+      this_SF         = (IsBarrel ? 0.979 : 0.987);
       this_SF_staterr = (IsBarrel ? 0.001 : 0.002);
-      
-      if(IsBarrel) this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0022,3.)*0.01) * this_SF;
-      else         this_SF_systerr = (pt<90. ? 0.02 : min(1.+(pt-90.)*0.0143,5.)*0.01) * this_SF;
-      
+      this_SF_systerr = (IsBarrel ? 0.005 : 0.010);
+      /*if(IsBarrel) this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0022,3.)*0.01) * this_SF;
+      else         this_SF_systerr = (pt<90. ? 0.02 : min(1.+(pt-90.)*0.0143,5.)*0.01) * this_SF;*/
       this_SF_err = sqrt(this_SF_staterr*this_SF_staterr+this_SF_systerr*this_SF_systerr);
     }
     else if(DataYear==2018){
 
       //==== https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaRunIIRecommendations#HEEPv7_0_2018Prompt
-
-      this_SF         = (IsBarrel ? 0.969 : 0.984);
-      this_SF_staterr = (IsBarrel ? 0.000 : 0.001);
-
-      if(IsBarrel) this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0022,3.)*0.01) * this_SF;
-      else         this_SF_systerr = (pt<90. ? 0.02 : min(1.+(pt-90.)*0.0143,5.)*0.01) * this_SF;
-
+      //this_SF         = (IsBarrel ? 0.969 : 0.984);
+      this_SF         = (IsBarrel ? 0.973 : 0.980);
+      this_SF_staterr = (IsBarrel ? 0.001 : 0.002);
+      this_SF_systerr = (IsBarrel ? 0.004 : 0.011);
+      /*if(IsBarrel) this_SF_systerr = (pt<90. ? 0.01 : min(1.+(pt-90.)*0.0022,3.)*0.01) * this_SF;
+      else         this_SF_systerr = (pt<90. ? 0.02 : min(1.+(pt-90.)*0.0143,5.)*0.01) * this_SF;*/
       this_SF_err = sqrt(this_SF_staterr*this_SF_staterr+this_SF_systerr*this_SF_systerr);
     }
     else{
