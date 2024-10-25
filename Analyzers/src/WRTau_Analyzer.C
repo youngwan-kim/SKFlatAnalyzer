@@ -34,25 +34,22 @@ void WRTau_Analyzer::initializeAnalyzer(){
   RegionOfInterest = {
                       WRTau_Core::BoostedPreselection,
                       WRTau_Core::ResolvedPreselection,
-                      WRTau_Core::BoostedLowMassControlRegion,
-                      WRTau_Core::ResolvedLowMassControlRegion,
                       WRTau_Core::BoostedSignalRegion,
                       WRTau_Core::ResolvedSignalRegion,
-                      WRTau_Core::ResolvedSignalRegionMETInvert,
-                      WRTau_Core::BoostedSignalRegionMETInvert,
-                      //WRTau_Core::BenchmarkResolvedPreselection,
-                      //WRTau_Core::BenchmarkBoostedPreselection,
+                      WRTau_Core::ResolvedFakeControlRegion,
+                      WRTau_Core::BoostedFakeControlRegion,
                       WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
                       WRTau_Core::BoostedSignalRegionMETInvertMTSame
                       };
 
   if(HasFlag("RunApplicationRegion")){
     RegionOfInterest = { 
-                      WRTau_Core::BoostedLowMassControlRegion,
-                      WRTau_Core::ResolvedLowMassControlRegion,
                       WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
                       WRTau_Core::BoostedSignalRegionMETInvertMTSame,
+                      WRTau_Core::FakeControlRegion,
                       WRTau_Core::BoostedSignalRegion,
+                      //WRTau_Core::ResolvedMassOptSel,
+                      //WRTau_Core::BoostedMassOptSel,
                       WRTau_Core::ResolvedSignalRegion};
   }
 
@@ -60,8 +57,8 @@ void WRTau_Analyzer::initializeAnalyzer(){
       RegionOfInterest = {
                       WRTau_Core::BoostedSignalRegion,
                       WRTau_Core::ResolvedSignalRegion,
-                      WRTau_Core::BoostedLowMassControlRegion,
-                      WRTau_Core::ResolvedLowMassControlRegion,
+                      WRTau_Core::ResolvedFakeControlRegion,
+                      WRTau_Core::BoostedFakeControlRegion,
                       WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
                       WRTau_Core::BoostedSignalRegionMETInvertMTSame
                       };
@@ -168,12 +165,17 @@ void WRTau_Analyzer::executeEvent(){
                       WRTau_Core::ResolvedLowMassControlRegion,
                       WRTau_Core::BoostedSignalRegion,
                       WRTau_Core::ResolvedSignalRegion,
+                      WRTau_Core::FakeControlRegion,
                       WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
                       WRTau_Core::BoostedSignalRegionMETInvertMTSame };
     
     for(unsigned int i=0; i<AnalyzerParameter::NSyst; i++){
       param.syst_ = AnalyzerParameter::Syst(i);
       // cout << "[WRTau_Analyzer::Debug] Syst : " << i << endl;
+      Syst_MuonRecoSF = 0.; Syst_ElectronRecoSF = 0. ; Syst_MuonIDSF = 0.; Syst_ElectronIDSF = 0. ;
+      Syst_MuonISOSF = 0. ; Syst_TauIDSF = "" ; Syst_TauTriggerSF = 0. ; Syst_LSFSF = 0.; Syst_PU = 0.;
+      Syst_Prefire = 0.; Syst_TauES = 0.;
+
       param.Name = "Syst_"+ param.GetSystType();
       auto it = std::find(whiteSysts.begin(), whiteSysts.end(), param.syst_);
       if (it != whiteSysts.end()) executeEventFromParameter(param);
@@ -263,14 +265,16 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
       //cout << "weight = " << weight << "@(" << run << " , " << lumi << " , " << event << "), " << param.Name << endl;
       //cout << "\t" << weight << " = " <<  MCweight(true,true) << "*" << ev.GetTriggerLumi("Full") << "*" << GetPrefireWeight(Syst_Prefire) << "*" << GetPileUpWeight(nPileUp,Syst_PU) << "*" << GetTauTriggerSF(Syst_TauTriggerSF) << "@(" << run << " , " << lumi << " , " << event << "), " << param.Name << endl;
       //cout << "\t\t Syst_TauTriggerSF = " <<  Syst_TauTriggerSF << endl;
+      //cout << "\t\t nPileUp = " << nPileUp << " , PUSyst = " << Syst_PU << " , PUweight = " << GetPileUpWeight(nPileUp,Syst_PU) << endl;
     }
   }
-  FillHist(param.Name+"/Weight",1,weight,4000,0.8,1.2);
+  FillHist(param.Name+"/Weight",weight,1.,40000,0.8,1.2);
+  FillHist(param.Name+"/nPU_unweighted",nPileUp,1.,80,0.,80.);
   
 
   // GetvMET function incorporates each systematic variations for every case 
-  Particle METv       = GetvMET("Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,this_AllTaus,false);
-  Particle METv_Puppi = GetvMET("Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,this_AllTaus,false);
+  Particle METv       = GetvMET("T1Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,this_AllTaus,true);
+  Particle METv_Puppi = GetvMET("T1Puppi",param,this_AllJets,this_AllFatJets,this_AllMuons,this_AllElectrons,this_AllTaus,true);
 
   JetTagging::Parameters param_jetsM = JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::comb);
 
@@ -420,7 +424,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         if(HasFlag("debug")) cout << "Pass Cut 2" << endl;
 
-        if(taus.at(0).Pt()<190) continue;
+        if(taus.at(0).Pt()<TriggerSafeTauPtCut) continue;
         FillHist(path+"/Cutflow",3.,weight,10,0.,10.);
 
         //if(HasFlag("debug")) cout << "Pass Cut 3" << endl;
@@ -428,7 +432,7 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           if()
         }*/
 
-        if(LooseLeptons.size()!=1) continue;
+        //if(LooseLeptons.size()!=1) continue;
         
         //if(LooseLeptons.at(0)->IsMuon()) METv = METv_Puppi;
         FillHist(path+"/Cutflow",4.,weight,10,0.,10.);
@@ -447,9 +451,23 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
           continue;
         }
         
+        /*
+        bool isBoostedFakeControlRegion(false);
+        bool isResolvedFakeControlRegion(false);
+        
+        if(jets.size()>1){
+          if(METv.Pt()<METCut) isResolvedFakeControlRegion = true ;
+        }
+        else if(fatjets.size()>0){
+          if(METv.Pt()<METCut) isBoostedFakeControlRegion  = true ;
+        }*/
+        
         map<WRTau_Core::SearchRegion,bool> map_regions = GetRegion(param,weight,METv,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons);
         if(HasFlag("debug")) cout << "Pass get map_region" << endl;
-
+        /*
+        map_regions.insert({WRTau_Core::ResolvedFakeControlRegion,isResolvedFakeControlRegion});
+        map_regions.insert({WRTau_Core::BoostedFakeControlRegion,isBoostedFakeControlRegion});
+        */
         if(HasFlag("LSFOpt")){
           map<pair<WRTau_Core::SearchRegion,double>, bool> LSFOptCutMap = LSFCutter(map_regions,{0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85},fatjets);
           FillPassingRegions(LSFOptCutMap,"LSF",METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
@@ -477,8 +495,12 @@ void WRTau_Analyzer::executeEventFromParameter(AnalyzerParameter param){
 
         else{
           for(unsigned int l=0; l<RegionOfInterest.size() ; l++){
+            if(HasFlag("debugFill")) cout << GetRegionString(RegionOfInterest.at(l)) << " Fill start " << endl;
             if(HasFlag("2DScan")) FillPassingRegions_2DScan(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
-            else FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+            else{ 
+              FillPassingRegions(map_regions,RegionOfInterest.at(l),METv,AllGens,taus,jets,bjets,fatjets,LooseLeptons,TightLeptons,path,weight,IDtuple,true);
+              if(HasFlag("debugFill")) cout << GetRegionString(RegionOfInterest.at(l)) << " Fill end " << endl;
+            }
           }
           /*if(MCSample.Contains("WRtoTauNtoTauTauJets")){
             if(map_regions[WRTau_Core::BoostedSignalRegion]) cout << "(run,lumi,event) = " << run << ", " << lumi << ", " << event << endl;

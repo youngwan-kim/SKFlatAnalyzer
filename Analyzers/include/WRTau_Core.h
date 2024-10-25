@@ -112,6 +112,9 @@ public:
     ResolvedSignalRegionMETInvertMTSame,
     TTEnrichedRegion,
     TTFakeMeasureRegion,
+    ResolvedFakeControlRegion,
+    BoostedFakeControlRegion,
+    FakeControlRegion,
 
     //Generator level regions ()
     GenDebug                    = 100,
@@ -153,6 +156,7 @@ public:
                                                      WRTau_Core::BoostedSignalRegionMass1,
                                                      WRTau_Core::BoostedSignalRegionMETInvert,
                                                      WRTau_Core::BoostedSignalRegionMETInvertMTSame,
+                                                     WRTau_Core::BoostedFakeControlRegion,
                                                      WRTau_Core::BenchmarkBoostedPreselection};
 
   vector<WRTau_Core::SearchRegion> ResolvedRegions = {WRTau_Core::ResolvedLowMassControlRegionMass1,
@@ -162,6 +166,7 @@ public:
                                                       WRTau_Core::ResolvedSignalRegionMass1,
                                                       WRTau_Core::ResolvedSignalRegionMETInvert,
                                                       WRTau_Core::ResolvedSignalRegionMETInvertMTSame,
+                                                      WRTau_Core::ResolvedFakeControlRegion,
                                                       WRTau_Core::BenchmarkResolvedPreselection};
 
 
@@ -306,6 +311,9 @@ public:
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
                         TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
   void FillPassingRegions(map<WRTau_Core::SearchRegion,bool> m_region,WRTau_Core::SearchRegion r,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
+                        const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
+                        TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
+  void FillCR(map<WRTau_Core::SearchRegion,bool> m_region,WRTau_Core::SearchRegion r,Particle METv,const std::vector<Gen>& gens,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,
                         const std::vector<FatJet>& fatjets,const std::vector<Lepton *> LooseLeptons, const std::vector<Lepton *> TightLeptons,
                         TString fillpath, double MCweight, std::tuple<int,int,int> idtuple, bool highpT);
   void FillPreselHists(TString region,const std::vector<Tau>& taus, const std::vector<Jet>& jets, const std::vector<Jet>& bjets,

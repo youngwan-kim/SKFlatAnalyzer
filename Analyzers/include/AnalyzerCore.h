@@ -146,7 +146,6 @@ public:
   std::vector<FatJet> SmearFatJets(const std::vector<FatJet>& jets, int sys);
   std::vector<FatJet> ScaleSDMassFatJets(const std::vector<FatJet>& jets, int sys);
   std::vector<FatJet> SmearSDMassFatJets(const std::vector<FatJet>& jets, int sys);
-  std:
 
   //====================
   //==== Event Filters

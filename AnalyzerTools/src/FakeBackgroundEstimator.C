@@ -152,7 +152,7 @@ void FakeBackgroundEstimator::ReadHistograms(){
   std::vector<TString> DMs = {"DM0","DM1","DM10","DM11"};
   std::vector<TString> DMsInclusive = {"DM0","DM1","DM10","DM11","DM1prong","DM3prong"};
   std::vector<TString> Bkgs = {"TT","QCD"};
-  std::vector<TString> regions = {"SignalRegion","LowMassControlRegion","SignalRegionMETInvertMTSame"};
+  std::vector<TString> regions = {"SignalRegion","LowMassControlRegion","SignalRegionMETInvertMTSame","FakeControlRegion"};
 
   TFile *fileTauFF_Ratio = new TFile(dir_Ratio+"/"+GetEra()+".root");
   for(TString region : regions){

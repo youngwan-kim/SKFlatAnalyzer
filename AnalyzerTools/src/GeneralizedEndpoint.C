@@ -8,31 +8,112 @@ using std::endl;
 
 GeneralizedEndpoint::GeneralizedEndpoint(){
   //Corrections from 2D matrix in MuonPOG presentation in c/TeV.
-  //[-2.4, -2.1]
-  _Correction[0][0] = -0.388122; _CorrectionError[0][0] = 0.045881; //-180,-60
-  _Correction[0][1] =  0.376061; _CorrectionError[0][1] = 0.090062; //-60,60
-  _Correction[0][2] =  -0.153950; _CorrectionError[0][2] = 0.063053; //60,180
-  //[-2.1, -1.2]                                                                                           
-  _Correction[1][0] =  -0.039346; _CorrectionError[1][0] = 0.031655;
-  _Correction[1][1] =  0.041069;  _CorrectionError[1][1] = 0.030070;
-  _Correction[1][2] =  -0.113320; _CorrectionError[1][2] = 0.028683;
-  //[-1.2, 0.]
-  _Correction[2][0] =  0.0;      _CorrectionError[2][0] = 0.025;
-  _Correction[2][1] =  0.0;      _CorrectionError[2][1] = 0.025;
-  _Correction[2][2] =  0.0;      _CorrectionError[2][2] = 0.025;
-  //[-0., 1.2]
-  _Correction[3][0] =  0.0;      _CorrectionError[3][0] = 0.025;
-  _Correction[3][1] =  0.0;      _CorrectionError[3][1] = 0.025;
-  _Correction[3][2] =  0.0;      _CorrectionError[3][2] = 0.025;
-  //[1.2, 2.1]
-  _Correction[4][0] =  0.005114; _CorrectionError[4][0] = 0.033115;
-  _Correction[4][1] =  0.035573; _CorrectionError[4][1] = 0.038574;
-  _Correction[4][2] =  0.070002; _CorrectionError[4][2] = 0.035002;
-  //[2.1, 2.4]
-  _Correction[5][0] =  -0.235470; _CorrectionError[5][0] = 0.077534;
-  _Correction[5][1] =  -0.122719; _CorrectionError[5][1] = 0.061283;
-  _Correction[5][2] =  0.091502;  _CorrectionError[5][2] = 0.074502;
+  
+  if(DataEra=="2016preVFP"){
+    //[-2.4, -2.1]
+    _Correction[0][0] = -0.075;   _CorrectionError[0][0] = 0.088; //-180,-60
+    _Correction[0][1] =  0.049;   _CorrectionError[0][1] = 0.101; //-60,60
+    _Correction[0][2] =  -0.007;  _CorrectionError[0][2] = 0.060; //60,180
+    //[-2.1, -1.2]                                                                                           
+    _Correction[1][0] =  -0.053;  _CorrectionError[1][0] = 0.055;
+    _Correction[1][1] =  -0.100;  _CorrectionError[1][1] = 0.040;
+    _Correction[1][2] =  0.003;   _CorrectionError[1][2] = 0.038;
+    //[-1.2, 0.]
+    _Correction[2][0] =  -0.020;  _CorrectionError[2][0] = 0.029;
+    _Correction[2][1] =  0.072;   _CorrectionError[2][1] = 0.030;
+    _Correction[2][2] =  -0.015;  _CorrectionError[2][2] = 0.030;
+    //[-0., 1.2]
+    _Correction[3][0] =  -0.009;   _CorrectionError[3][0] = 0.029;
+    _Correction[3][1] =  0.057;    _CorrectionError[3][1] = 0.034;
+    _Correction[3][2] =  -0.015;   _CorrectionError[3][2] = 0.036;
+    //[1.2, 2.1]
+    _Correction[4][0] =  -0.010;   _CorrectionError[4][0] = 0.040;
+    _Correction[4][1] =  -0.036;   _CorrectionError[4][1] = 0.043;
+    _Correction[4][2] =  0.060;    _CorrectionError[4][2] = 0.040;
+    //[2.1, 2.4]
+    _Correction[5][0] =  0.078;     _CorrectionError[5][0] = 0.067;
+    _Correction[5][1] =  -0.073;    _CorrectionError[5][1] = 0.102;
+    _Correction[5][2] =  -0.196;    _CorrectionError[5][2] = 0.084;
+  }
+  else if(DataEra == "2016postVFP"){
+    //[-2.4, -2.1]
+    _Correction[0][0] =  0.002;       _CorrectionError[0][0] = 0.078;    //-180,-60
+    _Correction[0][1] =  -0.005;      _CorrectionError[0][1] = 0.089;    //-60,60
+    _Correction[0][2] =  0.026;       _CorrectionError[0][2] = 0.086;    //60,180
+    //[-2.1, -1.2]                                                                                           
+    _Correction[1][0] =  0.049;      _CorrectionError[1][0] = 0.046;
+    _Correction[1][1] =  -0.064;     _CorrectionError[1][1] = 0.039;
+    _Correction[1][2] =  -0.142;     _CorrectionError[1][2] = 0.046;
+    //[-1.2, 0.]
+    _Correction[2][0] =  -0.045;     _CorrectionError[2][0] = 0.033;
+    _Correction[2][1] =  0.023;      _CorrectionError[2][1] = 0.032;
+    _Correction[2][2] =  0.039;      _CorrectionError[2][2] = 0.031;
+    //[-0., 1.2]
+    _Correction[3][0] =  -0.061;     _CorrectionError[3][0] = 0.033;
+    _Correction[3][1] =  -0.004;     _CorrectionError[3][1] = 0.031;
+    _Correction[3][2] =   0.000;     _CorrectionError[3][2] = 0.032;
+    //[1.2, 2.1]
+    _Correction[4][0] =  0.016;      _CorrectionError[4][0] = 0.043;
+    _Correction[4][1] =  0.041;      _CorrectionError[4][1] = 0.045;
+    _Correction[4][2] =  0.003;      _CorrectionError[4][2] = 0.042;
+    //[2.1, 2.4]
+    _Correction[5][0] =  -0.108;     _CorrectionError[5][0] = 0.109;
+    _Correction[5][1] =  -0.023;     _CorrectionError[5][1] = 0.114;
+    _Correction[5][2] =  -0.091;     _CorrectionError[5][2] = 0.073;
+  }
+  else if(DataEra == "2017"){
+    //[-2.4, -2.1]
+    _Correction[0][0] =  -0.049;       _CorrectionError[0][0] = 0.070;    //-180,-60
+    _Correction[0][1] =  -0.048;       _CorrectionError[0][1] = 0.044;    //-60,60
+    _Correction[0][2] =  -0.025;       _CorrectionError[0][2] = 0.044;    //60,180
+    //[-2.1, -1.2]                                                                                           
+    _Correction[1][0] =  -0.032;     _CorrectionError[1][0] = 0.029;
+    _Correction[1][1] =   0.001;     _CorrectionError[1][1] = 0.031;
+    _Correction[1][2] =  -0.019;     _CorrectionError[1][2] = 0.030;
+    //[-1.2, 0.]
+    _Correction[2][0] =  0.027;      _CorrectionError[2][0] = 0.024;
+    _Correction[2][1] =  0.039;      _CorrectionError[2][1] = 0.027;
+    _Correction[2][2] = -0.049;      _CorrectionError[2][2] = 0.021;
+    //[-0., 1.2]
+    _Correction[3][0] =  -0.026;     _CorrectionError[3][0] = 0.021;
+    _Correction[3][1] =   0.027;     _CorrectionError[3][1] = 0.022;
+    _Correction[3][2] =   0.018;     _CorrectionError[3][2] = 0.025;
+    //[1.2, 2.1]
+    _Correction[4][0] =  0.012;      _CorrectionError[4][0] = 0.025;
+    _Correction[4][1] = -0.007;      _CorrectionError[4][1] = 0.023;
+    _Correction[4][2] =  0.000;      _CorrectionError[4][2] = 0.026;
+    //[2.1, 2.4]
+    _Correction[5][0] =  -0.151;     _CorrectionError[5][0] = 0.087;
+    _Correction[5][1] =   0.058;     _CorrectionError[5][1] = 0.057;
+    _Correction[5][2] =   0.004;     _CorrectionError[5][2] = 0.063;
+  }
 
+  else if(DataEra == "2018"){
+    //[-2.4, -2.1]
+    _Correction[0][0] =  -0.089;       _CorrectionError[0][0] = 0.050;    //-180,-60
+    _Correction[0][1] =   0.057;       _CorrectionError[0][1] = 0.052;    //-60,60
+    _Correction[0][2] =   0.149;       _CorrectionError[0][2] = 0.057;    //60,180
+    //[-2.1, -1.2]                                                                                           
+    _Correction[1][0] =  -0.005;     _CorrectionError[1][0] = 0.025;
+    _Correction[1][1] =  -0.028;     _CorrectionError[1][1] = 0.025;
+    _Correction[1][2] =   0.021;     _CorrectionError[1][2] = 0.021;
+    //[-1.2, 0.]
+    _Correction[2][0] = -0.014;      _CorrectionError[2][0] = 0.018;
+    _Correction[2][1] = -0.009;      _CorrectionError[2][1] = 0.017;
+    _Correction[2][2] = -0.028;      _CorrectionError[2][2] = 0.017;
+    //[-0., 1.2]
+    _Correction[3][0] =   0.020;     _CorrectionError[3][0] = 0.017;
+    _Correction[3][1] =   0.007;     _CorrectionError[3][1] = 0.019;
+    _Correction[3][2] =   0.000;     _CorrectionError[3][2] = 0.020;
+    //[1.2, 2.1]
+    _Correction[4][0] =  0.042;      _CorrectionError[4][0] = 0.031;
+    _Correction[4][1] = -0.068;      _CorrectionError[4][1] = 0.027;
+    _Correction[4][2] = -0.059;      _CorrectionError[4][2] = 0.027;
+    //[2.1, 2.4]
+    _Correction[5][0] =  -0.012;     _CorrectionError[5][0] = 0.044;
+    _Correction[5][1] =  -0.235;     _CorrectionError[5][1] = 0.054;
+    _Correction[5][2] =   0.025;     _CorrectionError[5][2] = 0.039;
+  }
 
 };
 

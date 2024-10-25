@@ -38,7 +38,7 @@ AnalyzerParameter param;
   AllLHEs = GetLHEs();
 
   executeEventFromParameter(param);
-  TriggerList.clear()
+  TriggerList.clear();
 
 
 }
